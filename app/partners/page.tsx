@@ -1,0 +1,141 @@
+"use client"
+
+import Link from "next/link"
+import Image from "next/image"
+import { ChevronLeft, Star, Plus, Minus } from "lucide-react"
+import { Card } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { allPartners, type Partner } from "@/lib/partners-data"
+import { useState } from "react"
+
+export default function PartnersPage() {
+  const [openTier, setOpenTier] = useState<string | null>("Diamantpartner") // State to manage open tier
+
+  const handleToggle = (tierName: string) => {
+    setOpenTier((prevOpenTier) => (prevOpenTier === tierName ? null : tierName))
+  }
+
+  const partnersByTier: Record<string, Partner[]> = allPartners.reduce(
+    (acc, partner) => {
+      if (!acc[partner.tier]) {
+        acc[partner.tier] = []
+      }
+      acc[partner.tier].push(partner)
+      return acc
+    },
+    {} as Record<string, Partner[]>,
+  )
+
+  const tierOrder = ["Diamantpartner", "Platinapartner", "Guldpartner", "Silverpartner", "Bronspartner"]
+
+  return (
+    <div className="flex flex-col min-h-screen bg-white">
+      <main className="flex-1 py-8 px-4 md:px-6 lg:px-8 max-w-7xl mx-auto w-full">
+        <Link href="/" className="inline-flex items-center text-green-700 hover:underline mb-8">
+          <ChevronLeft className="w-4 h-4 mr-2" />
+          Tillbaka till startsidan
+        </Link>
+
+        <h1 className="text-5xl font-bold text-green-700 mb-4 text-center">Våra Partners</h1>
+        <p className="text-xl text-gray-700 mb-12 text-center max-w-3xl mx-auto">
+          Vi är stolta över att samarbeta med lokala företag och organisationer som stödjer vår verksamhet och hjälper
+          oss att utveckla handbollen och föreningen i Härnösand.
+        </p>
+
+        {tierOrder.map(
+          (tierName) =>
+            partnersByTier[tierName] && (
+              <section key={tierName} className="mb-8 border-b border-gray-200 pb-4">
+                <div
+                  className="flex justify-between items-center mb-4 cursor-pointer"
+                  onClick={() => handleToggle(tierName)}
+                >
+                  <h2 className="text-3xl font-bold text-orange-500">{tierName}</h2>
+                  <Button variant="ghost" size="icon" aria-expanded={openTier === tierName}>
+                    {openTier === tierName ? (
+                      <Minus className="w-6 h-6 text-green-700" />
+                    ) : (
+                      <Plus className="w-6 h-6 text-green-700" />
+                    )}
+                  </Button>
+                </div>
+                {openTier === tierName && (
+                  <div className="flex justify-center animate-fade-in">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
+                      {partnersByTier[tierName].map((partner, index) => {
+                        const isDiamant = partner.tier === "Diamantpartner"
+                        const content = (
+                          <Card
+                            key={index}
+                            className={`relative p-4 shadow-lg rounded-lg flex flex-col items-center justify-center h-36 w-full text-center
+                            ${isDiamant ? "border-2 border-yellow-500" : "bg-white/80"}
+                          `}
+                          >
+                            {isDiamant && (
+                              <Star className="absolute top-1 right-1 w-5 h-5 text-yellow-500 fill-yellow-500" />
+                            )}
+                            <div className="relative w-full h-20 mb-2">
+                              <Image
+                                src={partner.src || "/placeholder.svg"}
+                                alt={partner.alt}
+                                layout="fill"
+                                objectFit="contain"
+                                className="transition-transform duration-300 hover:scale-105"
+                              />
+                            </div>
+                            <h3 className={`text-sm font-semibold ${isDiamant ? "text-gray-900" : "text-gray-800"}`}>
+                              {partner.alt}
+                            </h3>
+                            {partner.benefits.length > 0 && (
+                              <p className={`text-xs mt-1 ${isDiamant ? "text-gray-700" : "text-gray-500"}`}>
+                                {partner.benefits[0]}
+                              </p>
+                            )}
+                          </Card>
+                        )
+                        return partner.linkUrl ? (
+                          <Link
+                            key={partner.id}
+                            href={partner.linkUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            title="Besök sponsor"
+                          >
+                            {content}
+                          </Link>
+                        ) : (
+                          <div key={partner.id} title={partner.linkUrl ? "Besök sponsor" : undefined}>
+                            {content}
+                          </div>
+                        )
+                      })}
+                    </div>
+                  </div>
+                )}
+              </section>
+            ),
+        )}
+
+        <section className="bg-green-700 text-white p-8 rounded-lg shadow-lg text-center mt-12">
+          <h2 className="text-3xl font-bold mb-4">Vill du stödja Härnösands HF?</h2>
+          <p className="text-lg mb-8">
+            Vi välkomnar nya partners som vill stödja vår verksamhet och bidra till utvecklingen av handbollen i
+            regionen.
+          </p>
+          <div className="flex flex-col sm:flex-row justify-center gap-4">
+            <Button asChild className="bg-orange-500 hover:bg-orange-600 text-white px-8 py-3 rounded-md">
+              <Link href="/kontakt">Kontakta oss</Link>
+            </Button>
+            <Button
+              asChild
+              variant="outline"
+              className="border-white text-white hover:bg-white hover:text-green-700 px-8 py-3 rounded-md bg-transparent"
+            >
+              <Link href="#">Mer information</Link>
+            </Button>
+          </div>
+        </section>
+      </main>
+    </div>
+  )
+}
