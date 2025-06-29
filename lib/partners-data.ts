@@ -86,7 +86,7 @@ export const allPartners: Partner[] = [
     height: 75,
     tier: "Diamantpartner",
     benefits: ["Huvudsponsor", "Logotyp på matchställ", "Exklusiva event"],
-    visibleInCarousel: true,
+    visibleInCarousel: false,
     linkUrl: "https://nsifastigheter.se", // Link: Yes
   },
   {
@@ -169,7 +169,7 @@ export const allPartners: Partner[] = [
     height: 75,
     tier: "Silverpartner",
     benefits: ["Logotyp på hemsida"],
-    visibleInCarousel: true,
+    visibleInCarousel: false,
     linkUrl: undefined, // Link: No
   },
   {

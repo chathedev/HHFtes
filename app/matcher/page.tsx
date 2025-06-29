@@ -5,42 +5,42 @@ import { ChevronLeft, CalendarDays, Clock } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { useEffect, useState, useMemo } from "react"
 
-interface Match {
-  date: string // YYYY-MM-DD
-  time: string // HH:MM or "Heldag" or "HH:MM - HH:MM"
-  title: string // Match title
+interface Training {
+  date: string
+  time: string
+  title: string
 }
 
-interface GroupedMatches {
-  [monthYear: string]: Match[]
+interface GroupedTrainings {
+  [monthYear: string]: Training[]
 }
 
-export default function MatchesPage() {
-  const [allMatches, setAllMatches] = useState<Match[]>([])
+export default function TrainingsPage() {
+  const [allTrainings, setAllTrainings] = useState<Training[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    const fetchMatches = async () => {
+    const fetchTrainings = async () => {
       try {
         setLoading(true)
         const startDate = new Date()
-        const fetchedMatches: Match[] = []
+        const fetchedTrainings: Training[] = []
 
         for (let i = 0; i < 4; i++) {
-          let year = startDate.getFullYear()
-          let month = startDate.getMonth() + i
-          if (month > 11) {
-            month -= 12
-            year++
+          let currentYear = startDate.getFullYear()
+          let currentMonth = startDate.getMonth() + i
+          if (currentMonth > 11) {
+            currentMonth -= 12
+            currentYear++
           }
 
-          const paddedMonth = (month + 1).toString().padStart(2, "0")
-          const url = `https://www.laget.se/HarnosandsHF/Event/FilterEvents?Year=${year}&Month=${paddedMonth}&PrintMode=False&SiteType=Club&Visibility=2&types=6`
+          const paddedMonth = (currentMonth + 1).toString().padStart(2, "0")
+          const url = `https://www.laget.se/HarnosandsHF/Event/FilterEvents?Year=${currentYear}&Month=${paddedMonth}&PrintMode=False&SiteType=Club&Visibility=2&types=2`
 
           const response = await fetch(url)
           if (!response.ok) {
-            console.warn(`Failed to fetch matches for ${year}-${paddedMonth}: ${response.statusText}`)
+            console.warn(`Failed to fetch trainings for ${currentYear}-${paddedMonth}: ${response.statusText}`)
             continue
           }
 
@@ -52,13 +52,9 @@ export default function MatchesPage() {
             const dateAttribute = dayElement.getAttribute("data-day")
             if (!dateAttribute) return
 
-            const fullDate = `${year}-${paddedMonth}-${dateAttribute.padStart(2, "0")}`
+            const fullDate = `${currentYear}-${paddedMonth}-${dateAttribute.padStart(2, "0")}`
 
             dayElement.querySelectorAll(".fullCalendar__list li").forEach((liElement) => {
-              // Skip if it's a training
-              const textContent = liElement.textContent?.toLowerCase() || ""
-              if (textContent.includes("träning")) return
-
               let time = "Okänd tid"
               let title = ""
 
@@ -76,7 +72,7 @@ export default function MatchesPage() {
 
               if (time === "Okänd tid") {
                 const timeRegex = /\b(\d{2}:\d{2})\b/g
-                const foundTimes: string[] = []
+                const foundTimes = []
                 let match
                 while ((match = timeRegex.exec(rawTitle)) !== null) {
                   foundTimes.push(match[1])
@@ -101,71 +97,77 @@ export default function MatchesPage() {
                 .trim()
 
               if (title) {
-                fetchedMatches.push({ date: fullDate, time, title })
+                fetchedTrainings.push({ date: fullDate, time, title })
               }
             })
           })
         }
 
-        const now = new Date()
-        const filteredAndSortedMatches = fetchedMatches
-          .filter((match) => {
-            if (match.time === "Heldag") {
-              const dateOnly = new Date(match.date)
-              return dateOnly >= new Date(now.getFullYear(), now.getMonth(), now.getDate())
+        const nowDateTime = new Date()
+        const filteredAndSortedTrainings = fetchedTrainings
+          .filter((training) => {
+            if (training.time === "Heldag") {
+              const trainingDateOnly = new Date(training.date)
+              const nowOnly = new Date(nowDateTime.getFullYear(), nowDateTime.getMonth(), nowDateTime.getDate())
+              return trainingDateOnly >= nowOnly
             }
-            const dateTime = new Date(
-              `${match.date}T${match.time.split(" ")[0].replace("Okänd tid", "00:00")}`
+
+            const trainingDateTime = new Date(
+              `${training.date}T${training.time.split(" ")[0].replace("Okänd tid", "00:00")}`
             )
-            return dateTime >= now
+            return trainingDateTime >= nowDateTime
           })
           .sort((a, b) => {
-            const dateA = new Date(
+            const dateTimeA = new Date(
               `${a.date}T${a.time.split(" ")[0].replace("Okänd tid", "00:00").replace("Heldag", "00:00")}`
             )
-            const dateB = new Date(
+            const dateTimeB = new Date(
               `${b.date}T${b.time.split(" ")[0].replace("Okänd tid", "00:00").replace("Heldag", "00:00")}`
             )
-            return dateA.getTime() - dateB.getTime()
+            return dateTimeA.getTime() - dateTimeB.getTime()
           })
 
-        setAllMatches(filteredAndSortedMatches)
+        setAllTrainings(filteredAndSortedTrainings)
       } catch (e: any) {
-        setError(e.message || "Failed to fetch matches.")
-        console.error(e)
+        setError(e.message || "Failed to fetch trainings.")
+        console.error("Client-side fetch error:", e)
       } finally {
         setLoading(false)
       }
     }
 
-    fetchMatches()
+    fetchTrainings()
   }, [])
 
-  const groupedMatches = useMemo(() => {
-    const grouped: GroupedMatches = allMatches.reduce((acc, match) => {
-      const matchDate = new Date(match.date)
-      const monthYearKey = matchDate.toLocaleDateString("sv-SE", { year: "numeric", month: "long" })
-      if (!acc[monthYearKey]) acc[monthYearKey] = []
-      acc[monthYearKey].push(match)
+  const groupedTrainings = useMemo(() => {
+    const grouped: GroupedTrainings = allTrainings.reduce((acc, training) => {
+      const trainingDate = new Date(training.date)
+      const monthYearKey = trainingDate.toLocaleDateString("sv-SE", { year: "numeric", month: "long" })
+      if (!acc[monthYearKey]) {
+        acc[monthYearKey] = []
+      }
+      acc[monthYearKey].push(training)
       return acc
-    }, {} as GroupedMatches)
+    }, {} as GroupedTrainings)
 
-    return Object.keys(grouped)
+    const sortedGrouped: GroupedTrainings = Object.keys(grouped)
       .sort((a, b) => {
-        const parseMonthYear = (str: string) => {
-          const [monthName, year] = str.split(" ")
-          const monthIndex = new Date(Date.parse(`${monthName} 1, 2000`)).getMonth()
+        const parse = (s: string) => {
+          const [month, year] = s.split(" ")
+          const monthIndex = new Date(Date.parse(month + " 1, 2000")).getMonth()
           return new Date(Number(year), monthIndex, 1)
         }
-        return parseMonthYear(a).getTime() - parseMonthYear(b).getTime()
+        return parse(a).getTime() - parse(b).getTime()
       })
-      .reduce((sorted, key) => {
-        sorted[key] = grouped[key]
-        return sorted
-      }, {} as GroupedMatches)
-  }, [allMatches])
+      .reduce((obj, key) => {
+        obj[key] = grouped[key]
+        return obj
+      }, {} as GroupedTrainings)
 
-  const formatDate = (dateString: string) => {
+    return sortedGrouped
+  }, [allTrainings])
+
+  const formatTrainingDate = (dateString: string) => {
     const date = new Date(dateString)
     return date.toLocaleDateString("sv-SE", { day: "numeric", month: "short" })
   }
@@ -178,40 +180,40 @@ export default function MatchesPage() {
           Tillbaka till startsidan
         </Link>
 
-        <h1 className="text-5xl font-bold text-green-700 mb-4 text-center">Kommande Matcher</h1>
+        <h1 className="text-5xl font-bold text-green-700 mb-4 text-center">Kommande Träningar</h1>
         <p className="text-xl text-gray-700 mb-12 text-center max-w-3xl mx-auto">
-          Här hittar du alla kommande matcher för Härnösands HF.
+          Här hittar du alla kommande träningar för Härnösands HF.
         </p>
 
-        {loading && <p className="text-center text-gray-600">Laddar matcher...</p>}
+        {loading && <p className="text-center text-gray-600">Laddar träningar...</p>}
         {error && (
           <p className="text-center text-red-500">
             Fel: {error}. Detta kan bero på CORS-begränsningar från källwebbplatsen när du försöker hämta data direkt från webbläsaren.
           </p>
         )}
 
-        {!loading && !error && Object.keys(groupedMatches).length === 0 && (
-          <p className="text-center text-gray-600">Inga matcher planerade.</p>
+        {!loading && !error && Object.keys(groupedTrainings).length === 0 && (
+          <p className="text-center text-gray-600">Inga träningar planerade.</p>
         )}
 
         {!loading && !error && (
           <div className="space-y-12">
-            {Object.entries(groupedMatches).map(([monthYear, matches]) => (
+            {Object.entries(groupedTrainings).map(([monthYear, trainings]) => (
               <section key={monthYear}>
                 <h2 className="text-4xl font-bold text-orange-500 mb-8 text-center md:text-left">{monthYear}</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {matches.map((match) => (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {trainings.map((training) => (
                     <Card
-                      key={match.date + match.time + match.title}
-                      className="bg-white/90 shadow-lg rounded-lg flex flex-col transition hover:shadow-xl"
+                      key={training.date + training.time + training.title}
+                      className="bg-white border border-gray-200 hover:shadow-lg transition rounded-lg flex flex-col"
                     >
                       <CardHeader>
-                        <CardTitle className="text-xl font-semibold text-gray-800 mb-2">{match.title}</CardTitle>
+                        <CardTitle className="text-xl font-semibold text-gray-800 mb-2">{training.title}</CardTitle>
                         <div className="flex items-center text-sm text-gray-500">
                           <CalendarDays className="w-4 h-4 mr-1" />
-                          <span>{formatDate(match.date)}</span>
+                          <span>{formatTrainingDate(training.date)}</span>
                           <Clock className="w-4 h-4 ml-4 mr-1" />
-                          <span>{match.time}</span>
+                          <span>{training.time}</span>
                         </div>
                       </CardHeader>
                       <CardContent className="flex-grow flex flex-col justify-between" />
