@@ -9,11 +9,11 @@ export default function Hero() {
       <Image
         src="https://az316141.cdn.laget.se/2317159/11348130.jpg"
         alt="Härnösands HF Team"
-        layout="fill"
-        objectFit="cover"
+        fill
         quality={90}
         priority
-        className="z-0"
+        unoptimized
+        className="object-cover z-0"
       />
       <div className="absolute inset-0 bg-black/60 z-10" /> {/* Darker, full overlay */}
       <div className="relative z-20 text-white text-center px-4 max-w-4xl mx-auto">

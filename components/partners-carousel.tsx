@@ -80,9 +80,9 @@ export default function PartnersCarousel() {
                                 <Image
                                   src={partner.src || "/placeholder.svg"}
                                   alt={partner.alt}
-                                  layout="fill"
-                                  objectFit="contain"
-                                  className="transition-transform duration-300 group-hover:scale-105"
+                                  fill
+                                  unoptimized
+                                  className="object-contain transition-transform duration-300 group-hover:scale-105"
                                 />
                               </div>
                               <h4 className={`text-sm font-semibold ${isDiamant ? "text-gray-900" : "text-gray-800"}`}>

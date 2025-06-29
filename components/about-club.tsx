@@ -60,7 +60,7 @@ export default function AboutClub() {
           <div className="relative">
             <div className="relative h-[400px] rounded-lg overflow-hidden shadow-xl">
               <Image
-                src="/placeholder.svg?height=400&width=600"
+                src="https://az729104.cdn.laget.se/1376504/7904013.png;width=1000;height=800;format=jpeg;mode=crop;scale=both;anchor=middlecenter;v=1"
                 alt="Härnösands HF Team"
                 fill
                 className="object-cover"

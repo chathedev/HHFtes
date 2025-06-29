@@ -79,17 +79,6 @@ export const allPartners: Partner[] = [
     linkUrl: "https://ohmy.se", // Link: Yes
   },
   {
-    id: "nsi-fastigheter",
-    src: "https://az729104.cdn.laget.se/11314735.jpg",
-    alt: "NSI Fastigheter",
-    width: 150,
-    height: 75,
-    tier: "Diamantpartner",
-    benefits: ["Huvudsponsor", "Logotyp på matchställ", "Exklusiva event"],
-    visibleInCarousel: false,
-    linkUrl: "https://nsifastigheter.se", // Link: Yes
-  },
-  {
     id: "westerlinds",
     src: "https://westerlinds.nu/wp-content/themes/westerlinds20/img/logo-new-full.svg",
     alt: "Westerlinds",
