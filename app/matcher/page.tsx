@@ -7,15 +7,15 @@ import { useEffect, useState, useMemo } from "react"
 
 interface Match {
   date: string // YYYY-MM-DD
-  time: string // HH:MM or "Heldag"
+  time: string // HH:MM or "Heldag" or "HH:MM - HH:MM"
   title: string // Match title
 }
 
 interface GroupedMatches {
-  [monthYear: string]: Match[] // e.g., "April 2025": [...]
+  [monthYear: string]: Match[]
 }
 
-export default function MatcherPage() {
+export default function MatchesPage() {
   const [allMatches, setAllMatches] = useState<Match[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -24,28 +24,24 @@ export default function MatcherPage() {
     const fetchMatches = async () => {
       try {
         setLoading(true)
-        // Use the actual current date for dynamic fetching
-        const now = new Date()
+        const startDate = new Date()
         const fetchedMatches: Match[] = []
 
-        // Loop over the current month and the next 5 months (total 6 months)
-        for (let i = 0; i < 6; i++) {
-          let currentYear = now.getFullYear()
-          let currentMonth = now.getMonth() + i // 0-indexed month
-
-          // Adjust year and month if we go past December
-          if (currentMonth > 11) {
-            currentMonth -= 12
-            currentYear++
+        for (let i = 0; i < 4; i++) {
+          let year = startDate.getFullYear()
+          let month = startDate.getMonth() + i
+          if (month > 11) {
+            month -= 12
+            year++
           }
 
-          const paddedMonth = (currentMonth + 1).toString().padStart(2, "0") // Convert to 1-indexed and pad
-          const url = `https://www.laget.se/HarnosandsHF/Event/FilterEvents?Year=${currentYear}&Month=${paddedMonth}&PrintMode=False&SiteType=Club&Visibility=2&types=6`
+          const paddedMonth = (month + 1).toString().padStart(2, "0")
+          const url = `https://www.laget.se/HarnosandsHF/Event/FilterEvents?Year=${year}&Month=${paddedMonth}&PrintMode=False&SiteType=Club&Visibility=2&types=6`
 
           const response = await fetch(url)
           if (!response.ok) {
-            console.warn(`Failed to fetch matches for ${currentYear}-${paddedMonth}: ${response.statusText}`)
-            continue // Continue to next month even if one fails
+            console.warn(`Failed to fetch matches for ${year}-${paddedMonth}: ${response.statusText}`)
+            continue
           }
 
           const html = await response.text()
@@ -56,10 +52,13 @@ export default function MatcherPage() {
             const dateAttribute = dayElement.getAttribute("data-day")
             if (!dateAttribute) return
 
-            // The date from data-day is already YYYY-MM-DD
-            const fullDate = dateAttribute
+            const fullDate = `${year}-${paddedMonth}-${dateAttribute.padStart(2, "0")}`
 
             dayElement.querySelectorAll(".fullCalendar__list li").forEach((liElement) => {
+              // Skip if it's a training
+              const textContent = liElement.textContent?.toLowerCase() || ""
+              if (textContent.includes("träning")) return
+
               let time = "Okänd tid"
               let title = ""
 
@@ -68,25 +67,37 @@ export default function MatcherPage() {
                 time = timeElement.textContent?.trim() || "Okänd tid"
               }
 
-              // Get all text content of the li, then clean it up
               let rawTitle = liElement.textContent?.trim() || ""
 
-              // Remove the time string if present
-              if (time !== "Okänd tid") {
-                rawTitle = rawTitle.replace(time, "").trim()
-              }
-
-              // Check for "Heldag" and clean up
               if (rawTitle.includes("Heldag")) {
                 time = "Heldag"
                 rawTitle = rawTitle.replace(/Heldag/i, "").trim()
               }
 
-              // Remove common unwanted strings like "Läs mer" and week numbers (e.g., "v.14")
+              if (time === "Okänd tid") {
+                const timeRegex = /\b(\d{2}:\d{2})\b/g
+                const foundTimes: string[] = []
+                let match
+                while ((match = timeRegex.exec(rawTitle)) !== null) {
+                  foundTimes.push(match[1])
+                }
+
+                if (foundTimes.length >= 2) {
+                  time = `${foundTimes[0]} - ${foundTimes[foundTimes.length - 1]}`
+                  rawTitle = rawTitle
+                    .replace(foundTimes[0], "")
+                    .replace(foundTimes[foundTimes.length - 1], "")
+                    .trim()
+                } else if (foundTimes.length === 1) {
+                  time = foundTimes[0]
+                  rawTitle = rawTitle.replace(foundTimes[0], "").trim()
+                }
+              }
+
               title = rawTitle
                 .replace(/Läs mer/i, "")
                 .replace(/v\.\d+/i, "")
-                .replace(/\s+/g, " ") // Replace multiple spaces with single space
+                .replace(/\s+/g, " ")
                 .trim()
 
               if (title) {
@@ -96,17 +107,32 @@ export default function MatcherPage() {
           })
         }
 
-        // Sort all matches by date and time
-        fetchedMatches.sort((a, b) => {
-          const dateTimeA = new Date(`${a.date}T${a.time.replace("Okänd tid", "00:00").replace("Heldag", "00:00")}`)
-          const dateTimeB = new Date(`${b.date}T${b.time.replace("Okänd tid", "00:00").replace("Heldag", "00:00")}`)
-          return dateTimeA.getTime() - dateTimeB.getTime()
-        })
+        const now = new Date()
+        const filteredAndSortedMatches = fetchedMatches
+          .filter((match) => {
+            if (match.time === "Heldag") {
+              const dateOnly = new Date(match.date)
+              return dateOnly >= new Date(now.getFullYear(), now.getMonth(), now.getDate())
+            }
+            const dateTime = new Date(
+              `${match.date}T${match.time.split(" ")[0].replace("Okänd tid", "00:00")}`
+            )
+            return dateTime >= now
+          })
+          .sort((a, b) => {
+            const dateA = new Date(
+              `${a.date}T${a.time.split(" ")[0].replace("Okänd tid", "00:00").replace("Heldag", "00:00")}`
+            )
+            const dateB = new Date(
+              `${b.date}T${b.time.split(" ")[0].replace("Okänd tid", "00:00").replace("Heldag", "00:00")}`
+            )
+            return dateA.getTime() - dateB.getTime()
+          })
 
-        setAllMatches(fetchedMatches)
+        setAllMatches(filteredAndSortedMatches)
       } catch (e: any) {
         setError(e.message || "Failed to fetch matches.")
-        console.error("Client-side fetch error:", e)
+        console.error(e)
       } finally {
         setLoading(false)
       }
@@ -119,37 +145,27 @@ export default function MatcherPage() {
     const grouped: GroupedMatches = allMatches.reduce((acc, match) => {
       const matchDate = new Date(match.date)
       const monthYearKey = matchDate.toLocaleDateString("sv-SE", { year: "numeric", month: "long" })
-      if (!acc[monthYearKey]) {
-        acc[monthYearKey] = []
-      }
+      if (!acc[monthYearKey]) acc[monthYearKey] = []
       acc[monthYearKey].push(match)
       return acc
     }, {} as GroupedMatches)
 
-    // Sort months chronologically
-    const sortedGrouped: GroupedMatches = Object.keys(grouped)
+    return Object.keys(grouped)
       .sort((a, b) => {
         const parseMonthYear = (str: string) => {
           const [monthName, year] = str.split(" ")
-          // Create a dummy date to get the month index (e.g., "Juli 1, 2000")
-          const monthIndex = new Date(Date.parse(monthName + " 1, 2000")).getMonth()
+          const monthIndex = new Date(Date.parse(`${monthName} 1, 2000`)).getMonth()
           return new Date(Number(year), monthIndex, 1)
         }
         return parseMonthYear(a).getTime() - parseMonthYear(b).getTime()
       })
-      .reduce((obj, key) => {
-        obj[key] = grouped[key].sort((a, b) => {
-          const dateTimeA = new Date(`${a.date}T${a.time.replace("Okänd tid", "00:00").replace("Heldag", "00:00")}`)
-          const dateTimeB = new Date(`${b.date}T${b.time.replace("Okänd tid", "00:00").replace("Heldag", "00:00")}`)
-          return dateTimeA.getTime() - dateTimeB.getTime()
-        })
-        return obj
+      .reduce((sorted, key) => {
+        sorted[key] = grouped[key]
+        return sorted
       }, {} as GroupedMatches)
-
-    return sortedGrouped
   }, [allMatches])
 
-  const formatMatchDate = (dateString: string) => {
+  const formatDate = (dateString: string) => {
     const date = new Date(dateString)
     return date.toLocaleDateString("sv-SE", { day: "numeric", month: "short" })
   }
@@ -170,8 +186,7 @@ export default function MatcherPage() {
         {loading && <p className="text-center text-gray-600">Laddar matcher...</p>}
         {error && (
           <p className="text-center text-red-500">
-            Fel: {error}. Detta kan bero på CORS-begränsningar från källwebbplatsen när du försöker hämta data direkt
-            från webbläsaren.
+            Fel: {error}. Detta kan bero på CORS-begränsningar från källwebbplatsen när du försöker hämta data direkt från webbläsaren.
           </p>
         )}
 
@@ -187,21 +202,19 @@ export default function MatcherPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {matches.map((match) => (
                     <Card
-                      key={match.date + match.time + match.title} // Unique key for matches
-                      className="bg-white/80 shadow-lg rounded-lg flex flex-col"
+                      key={match.date + match.time + match.title}
+                      className="bg-white/90 shadow-lg rounded-lg flex flex-col transition hover:shadow-xl"
                     >
                       <CardHeader>
                         <CardTitle className="text-xl font-semibold text-gray-800 mb-2">{match.title}</CardTitle>
                         <div className="flex items-center text-sm text-gray-500">
                           <CalendarDays className="w-4 h-4 mr-1" />
-                          <span>{formatMatchDate(match.date)}</span>
+                          <span>{formatDate(match.date)}</span>
                           <Clock className="w-4 h-4 ml-4 mr-1" />
                           <span>{match.time}</span>
                         </div>
                       </CardHeader>
-                      <CardContent className="flex-grow flex flex-col justify-between">
-                        {/* No separate description field as per new API format */}
-                      </CardContent>
+                      <CardContent className="flex-grow flex flex-col justify-between" />
                     </Card>
                   ))}
                 </div>
