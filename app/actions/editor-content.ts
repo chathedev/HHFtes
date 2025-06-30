@@ -69,7 +69,7 @@ export async function saveEditorContentServer(content: PageContent): Promise<{ s
       headers: {
         "Content-Type": "application/json",
         // Ensure API_SECRET is available as an environment variable on the server
-        Authorization: `Bearer ${process.env.API_SECRET}`,
+        Authorization: `Bearer ${process.env.API_SECRET}`, // Use Bearer token as per your backend
       },
       body: JSON.stringify(content),
     })

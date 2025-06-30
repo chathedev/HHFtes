@@ -1,10 +1,37 @@
-import { loadContent, type PageContent, type FAQItem } from "@/lib/content-store"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Mail, MapPin, Users } from "lucide-react"
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
+"use client"
 
-export default async function KontaktPage() {
-  const content: PageContent = await loadContent()
+import { useEffect, useState } from "react"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
+import { Mail, MapPin, Users } from "lucide-react"
+import { loadContent, type PageContent } from "@/lib/content-store"
+
+export default function KontaktPage() {
+  const [content, setContent] = useState<PageContent | null>(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const fetchContent = async () => {
+      setLoading(true)
+      const fetchedContent = await loadContent()
+      setContent(fetchedContent)
+      setLoading(false)
+    }
+    fetchContent()
+  }, [])
+
+  if (loading) {
+    return <div className="flex justify-center items-center min-h-screen">Laddar innehåll...</div>
+  }
+
+  if (!content) {
+    return (
+      <div className="flex justify-center items-center min-h-screen text-red-500">
+        Kunde inte ladda innehåll för kontaktsidan.
+      </div>
+    )
+  }
+
   const { kontaktPage } = content
 
   return (
@@ -15,55 +42,49 @@ export default async function KontaktPage() {
       </p>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
-        <Card className="flex flex-col items-center text-center p-6">
+        <Card className="text-center">
           <CardHeader>
-            <Mail className="h-12 w-12 text-orange-500 mb-4" />
-            <CardTitle className="text-2xl font-semibold">{kontaktPage.emailTitle}</CardTitle>
+            <Mail className="mx-auto h-12 w-12 text-orange-500" />
+            <CardTitle className="mt-4">{kontaktPage.emailTitle}</CardTitle>
+            <CardDescription>{kontaktPage.emailDescription}</CardDescription>
           </CardHeader>
           <CardContent>
-            <p className="text-gray-600 mb-2">{kontaktPage.emailDescription}</p>
-            <a href={`mailto:${kontaktPage.emailAddress}`} className="text-green-700 hover:underline font-medium">
-              {kontaktPage.emailAddress}
-            </a>
+            <p className="text-lg font-semibold text-gray-800">{kontaktPage.emailAddress}</p>
           </CardContent>
         </Card>
 
-        <Card className="flex flex-col items-center text-center p-6">
+        <Card className="text-center">
           <CardHeader>
-            <MapPin className="h-12 w-12 text-orange-500 mb-4" />
-            <CardTitle className="text-2xl font-semibold">{kontaktPage.addressTitle}</CardTitle>
+            <MapPin className="mx-auto h-12 w-12 text-orange-500" />
+            <CardTitle className="mt-4">{kontaktPage.addressTitle}</CardTitle>
+            <CardDescription>{kontaktPage.addressDescription}</CardDescription>
           </CardHeader>
           <CardContent>
-            <p className="text-gray-600 mb-2">{kontaktPage.addressDescription}</p>
-            <p className="text-green-700 font-medium">{kontaktPage.addressLocation}</p>
+            <p className="text-lg font-semibold text-gray-800">{kontaktPage.addressLocation}</p>
           </CardContent>
         </Card>
 
-        <Card className="flex flex-col items-center text-center p-6">
+        <Card className="text-center">
           <CardHeader>
-            <Users className="h-12 w-12 text-orange-500 mb-4" />
-            <CardTitle className="text-2xl font-semibold">{kontaktPage.boardTitle}</CardTitle>
+            <Users className="mx-auto h-12 w-12 text-orange-500" />
+            <CardTitle className="mt-4">{kontaktPage.boardTitle}</CardTitle>
+            <CardDescription>{kontaktPage.boardDescription}</CardDescription>
           </CardHeader>
           <CardContent>
-            <p className="text-gray-600 mb-2">{kontaktPage.boardDescription}</p>
-            <p className="text-green-700 font-medium">{kontaktPage.boardContact}</p>
+            <p className="text-lg font-semibold text-gray-800">{kontaktPage.boardContact}</p>
           </CardContent>
         </Card>
       </div>
 
-      <div className="max-w-3xl mx-auto">
-        <h2 className="text-3xl font-bold text-green-700 mb-6 text-center">{kontaktPage.faqTitle}</h2>
-        <Accordion type="single" collapsible className="w-full">
-          {kontaktPage.faqItems.map((item: FAQItem, index: number) => (
-            <AccordionItem key={index} value={`item-${index}`}>
-              <AccordionTrigger className="text-lg font-semibold text-gray-800 hover:no-underline">
-                {item.question}
-              </AccordionTrigger>
-              <AccordionContent className="text-gray-700">{item.answer}</AccordionContent>
-            </AccordionItem>
-          ))}
-        </Accordion>
-      </div>
+      <h2 className="text-3xl font-bold text-green-700 mb-6 text-center">{kontaktPage.faqTitle}</h2>
+      <Accordion type="single" collapsible className="w-full max-w-3xl mx-auto">
+        {kontaktPage.faqItems.map((item, index) => (
+          <AccordionItem key={index} value={`item-${index}`}>
+            <AccordionTrigger className="text-left text-lg font-medium">{item.question}</AccordionTrigger>
+            <AccordionContent className="text-gray-700">{item.answer}</AccordionContent>
+          </AccordionItem>
+        ))}
+      </Accordion>
     </div>
   )
 }

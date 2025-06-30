@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect, useCallback } from "react"
+import { useRouter } from "next/navigation" // Import useRouter
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
@@ -14,23 +15,34 @@ import {
   saveEditorContentServer,
   resetEditorContentServer,
 } from "@/app/actions/editor-content"
+import { useAuth } from "@/components/auth-provider" // Import useAuth
+import { logout } from "@/app/actions/auth" // Import logout action
 
 export default function EditorPage() {
+  const router = useRouter()
+  const { isAuthenticated, loading: authLoading, setIsAuthenticated } = useAuth() // Get auth state
   const [content, setContent] = useState<PageContent | null>(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
 
   useEffect(() => {
-    const fetchContent = async () => {
-      setLoading(true)
-      // Always fetch the latest from the server via Server Action
-      const fetchedContent = await loadEditorContentServer()
-      setContent(fetchedContent)
-      saveContentToLocalStorage(fetchedContent) // Update local storage with server content
-      setLoading(false)
+    if (!authLoading && !isAuthenticated) {
+      router.push("/login") // Redirect to login if not authenticated
     }
-    fetchContent()
-  }, [])
+  }, [isAuthenticated, authLoading, router])
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      const fetchContent = async () => {
+        setLoading(true)
+        const fetchedContent = await loadEditorContentServer()
+        setContent(fetchedContent)
+        saveContentToLocalStorage(fetchedContent) // Update local storage with server content
+        setLoading(false)
+      }
+      fetchContent()
+    }
+  }, [isAuthenticated]) // Fetch content only if authenticated
 
   const handleInputChange = useCallback(
     (page: keyof PageContent, field: string, value: string | number) => {
@@ -108,10 +120,9 @@ export default function EditorPage() {
   const handleSave = useCallback(async () => {
     if (!content) return
     setSaving(true)
-    // Save to backend via Server Action
     const result = await saveEditorContentServer(content)
     if (result.success) {
-      saveContentToLocalStorage(content) // Also update local storage on successful backend save
+      saveContentToLocalStorage(content)
       toast({
         title: "Innehåll sparat!",
         description: result.message,
@@ -130,11 +141,10 @@ export default function EditorPage() {
   const handleReset = useCallback(async () => {
     if (window.confirm("Är du säker på att du vill återställa allt innehåll till standard? Detta kan inte ångras.")) {
       setLoading(true)
-      resetContent() // Clear localStorage
-      // Load default content from server (which will fall back to default if backend is not available)
+      resetContent()
       const fetchedContent = await resetEditorContentServer()
       setContent(fetchedContent)
-      saveContentToLocalStorage(fetchedContent) // Update local storage with reset content
+      saveContentToLocalStorage(fetchedContent)
       setLoading(false)
       toast({
         title: "Innehåll återställt!",
@@ -144,8 +154,19 @@ export default function EditorPage() {
     }
   }, [])
 
-  if (loading) {
+  const handleLogout = useCallback(async () => {
+    await logout()
+    setIsAuthenticated(false) // Update client-side state
+    router.push("/login")
+  }, [router, setIsAuthenticated])
+
+  if (authLoading || (isAuthenticated && loading)) {
     return <div className="flex justify-center items-center min-h-screen">Laddar redigerare...</div>
+  }
+
+  if (!isAuthenticated) {
+    // This case should be handled by the useEffect redirect, but as a fallback
+    return null
   }
 
   if (!content) {
@@ -169,6 +190,9 @@ export default function EditorPage() {
         </Button>
         <Button onClick={handleReset} variant="outline" disabled={saving}>
           Återställ till standard
+        </Button>
+        <Button onClick={handleLogout} variant="secondary">
+          Logga ut
         </Button>
       </div>
 
