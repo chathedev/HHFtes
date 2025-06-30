@@ -9,7 +9,6 @@ export default function AboutClub() {
         <div className="grid md:grid-cols-2 gap-12 items-center">
           <div>
             <h2 className="text-4xl font-bold text-green-600 mb-2">Härnösands HF</h2>
-            <h3 className="text-3xl font-bold text-orange-500 mb-6">Förening</h3>
 
             <p className="text-gray-700 mb-6">
               Vi är en handbollsklubb som värnar om gemenskap, utveckling och sund konkurrens. Med våra 23 lag från
