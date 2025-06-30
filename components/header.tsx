@@ -1,84 +1,113 @@
 "use client"
 
-import Image from "next/image"
+import { useState, useEffect } from "react"
 import Link from "next/link"
-import { MenuIcon } from "lucide-react"
-import { Sheet, SheetTrigger, SheetContent } from "@/components/ui/sheet"
-import { Button } from "@/components/ui/button"
-import { usePathname } from "next/navigation" // Import usePathname
-import { cn } from "@/lib/utils" // Import cn utility
+import Image from "next/image"
+import { Menu, X } from "lucide-react"
+import { usePathname } from "next/navigation"
 
-/**
- * Top navigation bar for the entire site.
- *
- * • Named export  : Header
- * • Default export: Header  (for legacy imports)
- */
-export function Header() {
-  const pathname = usePathname() // Get current pathname
+function Header() {
+  const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const [scrolled, setScrolled] = useState(false) // New state for scroll
+  const pathname = usePathname()
+
+  useEffect(() => {
+    const handleScroll = () => {
+      if (window.scrollY > 50) {
+        // Adjust scroll threshold as needed
+        setScrolled(true)
+      } else {
+        setScrolled(false)
+      }
+    }
+
+    window.addEventListener("scroll", handleScroll)
+    return () => {
+      window.removeEventListener("scroll", handleScroll)
+    }
+  }, [])
 
   const navLinks = [
-    { href: "/", label: "Hem" },
-    { href: "/lag", label: "Lag" },
-    { href: "/matcher", label: "Matcher" },
-    { href: "/kalender", label: "Kalender" },
-    { href: "/nyheter", label: "Nyheter" },
-    { href: "/partners", label: "Partners" },
-    { href: "/kontakt", label: "Kontakt" },
-    { href: "/editor", label: "Redigerare" }, // Added editor link
+    { name: "Hem", href: "/" },
+    { name: "Nyheter", href: "/nyheter" }, // Changed from Arena to Nyheter
+    { name: "Partners", href: "/partners" },
+    { name: "Lag", href: "/lag" },
+    { name: "Kontakt", href: "/kontakt" },
   ]
 
   return (
-    <header className="flex h-20 w-full shrink-0 items-center px-4 md:px-6 bg-white dark:bg-gray-950 shadow-sm">
-      <Link href="/" className="mr-6 flex items-center" prefetch={false}>
-        <Image src="/logo.png" alt="Härnösands HF Logo" width={50} height={50} className="h-12 w-12" />
-        <span className="sr-only">Härnösands HF</span>
-      </Link>
-      <nav className="hidden md:flex gap-6 lg:gap-8">
-        {navLinks.map((link) => (
-          <Link
-            key={link.href}
-            href={link.href}
-            className={cn(
-              "text-lg font-medium transition-colors hover:text-primary",
-              pathname === link.href ? "text-primary" : "text-gray-600 dark:text-gray-400",
-            )}
-            prefetch={false}
-          >
-            {link.label}
-          </Link>
-        ))}
-      </nav>
-      <div className="ml-auto md:hidden">
-        <Sheet>
-          <SheetTrigger asChild>
-            <Button variant="outline" size="icon">
-              <MenuIcon className="h-6 w-6" />
-              <span className="sr-only">Toggle navigation menu</span>
-            </Button>
-          </SheetTrigger>
-          <SheetContent side="right">
-            <div className="flex flex-col gap-6 pt-6">
-              {navLinks.map((link) => (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  className={cn(
-                    "text-lg font-medium hover:text-primary",
-                    pathname === link.href ? "text-primary" : "text-gray-800 dark:text-gray-200",
-                  )}
-                  prefetch={false}
-                >
-                  {link.label}
-                </Link>
-              ))}
-            </div>
-          </SheetContent>
-        </Sheet>
+    <header
+      className={`fixed top-0 left-0 w-full z-50 text-white shadow-lg transition-all duration-300
+  ${
+    pathname === "/"
+      ? scrolled
+        ? "bg-black/90 backdrop-blur-md"
+        : "bg-transparent backdrop-blur-none"
+      : "bg-black/90 backdrop-blur-md"
+  }
+`}
+    >
+      <div className="container mx-auto px-4 py-4 flex justify-between items-center">
+        <Link href="/" className="flex items-center gap-3">
+          <div className="relative w-12 h-12">
+            <Image src="/logo.png" alt="Härnösands HF Logo" fill className="object-contain" priority />
+          </div>
+          <div>
+            <div className="font-bold text-xl">Härnösands HF</div>
+            {/* Removed "Förening" text */}
+          </div>
+        </Link>
+
+        {/* Mobile menu button */}
+        <button
+          className="md:hidden p-2"
+          onClick={() => setIsMenuOpen(!isMenuOpen)}
+          aria-label="Toggle navigation menu"
+        >
+          {isMenuOpen ? <X size={28} /> : <Menu size={28} />}
+        </button>
+
+        {/* Desktop navigation */}
+        <nav className="hidden md:flex items-center gap-8">
+          {navLinks.map((link) => (
+            <Link
+              key={link.href}
+              href={link.href}
+              className={`relative text-lg font-medium py-2 group transition-colors duration-300
+                ${pathname === link.href ? "text-orange-500" : "text-white hover:text-gray-300"}
+              `}
+            >
+              {link.name}
+              <span
+                className={`absolute bottom-0 left-0 h-[3px] bg-orange-500 transition-all duration-300 ease-out
+                  ${pathname === link.href ? "w-full" : "w-0 group-hover:w-full"}
+                `}
+              />
+            </Link>
+          ))}
+        </nav>
       </div>
+
+      {/* Mobile navigation */}
+      {isMenuOpen && (
+        <nav className="md:hidden bg-black/90 py-4 px-4 flex flex-col gap-4 border-t border-gray-800">
+          {navLinks.map((link) => (
+            <Link
+              key={link.href}
+              href={link.href}
+              className={`relative text-lg font-medium py-2
+                ${pathname === link.href ? "text-orange-500" : "text-white hover:text-gray-300"}
+              `}
+              onClick={() => setIsMenuOpen(false)} // Close menu on link click
+            >
+              {link.name}
+            </Link>
+          ))}
+        </nav>
+      )}
     </header>
   )
 }
 
-// Allow `import Header from "@/components/header"`
 export default Header
+export { Header }

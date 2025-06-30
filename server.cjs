@@ -15,15 +15,7 @@ app.use(bodyParser.json()); // För att parsa JSON-body i förfrågningar
 function authenticate(req, res, next) {
   // TODO: Byt ut mot riktig JWT-/API-nyckel-verifiering
   const token = req.headers['authorization'];
-  // KORRIGERING: Använd API_SECRET_TOKEN som miljövariabelnamn
-  const expectedSecret = process.env.API_SECRET_TOKEN; 
-
-  if (!expectedSecret) {
-    console.error('API_SECRET_TOKEN environment variable is not set!');
-    return res.status(500).json({ message: 'Server configuration error: API_SECRET_TOKEN missing.' });
-  }
-
-  if (!token || token !== `Bearer ${expectedSecret}`) {
+  if (!token || token !== `Bearer ${process.env.API_SECRET}`) {
     console.warn('Unauthorized access attempt:', req.ip, token);
     return res.status(401).json({ message: 'Unauthorized' });
   }
@@ -147,5 +139,5 @@ app.post('/api/sections', authenticate, (req, res) => {
 // Starta servern
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
-  console.log(`API_SECRET_TOKEN: ${process.env.API_SECRET_TOKEN ? 'SET' : 'NOT SET'}`);
+  console.log(`API_SECRET: ${process.env.API_SECRET ? 'SET' : 'NOT SET'}`);
 });

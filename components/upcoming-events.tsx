@@ -1,23 +1,17 @@
 "use client"
 
-import { useEffect, useState } from "react"
-import Link from "next/link"
 import { CalendarDays, Clock, ArrowRight, Goal } from "lucide-react"
+import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { useEffect, useState } from "react"
 
 interface Match {
   date: string // YYYY-MM-DD
   time: string // HH:MM or "Heldag"
-  title: string
+  title: string // Match title
 }
 
-/**
- * Large card listing the next five events.
- *
- * • Default export
- * • Named  export UpcomingEvents (required by build)
- */
 export default function UpcomingEvents() {
   const [upcomingMatches, setUpcomingMatches] = useState<Match[]>([])
   const [loading, setLoading] = useState(true)
@@ -41,8 +35,6 @@ export default function UpcomingEvents() {
           }
 
           const paddedMonth = (currentMonth + 1).toString().padStart(2, "0") // Convert to 1-indexed and pad
-          // This URL is client-side fetched, so it needs to be accessible from the browser.
-          // If this URL is causing CORS issues, you might need a proxy API route on your Next.js server.
           const url = `https://www.laget.se/HarnosandsHF/Event/FilterEvents?Year=${currentYear}&Month=${paddedMonth}&PrintMode=False&SiteType=Club&Visibility=2&types=6`
 
           const response = await fetch(url)
@@ -194,6 +186,3 @@ export default function UpcomingEvents() {
     </section>
   )
 }
-
-// Make UpcomingEvents available as a *named* export
-export { UpcomingEvents }
