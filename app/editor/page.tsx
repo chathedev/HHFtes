@@ -7,8 +7,13 @@ import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { Card } from "@/components/ui/card"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
-import { loadContent, saveContent, resetContent, type PageContent, type FAQItem } from "@/lib/content-store"
 import { toast } from "@/components/ui/use-toast"
+import { type PageContent, type FAQItem, saveContentToLocalStorage, resetContent } from "@/lib/content-store"
+import {
+  loadEditorContentServer,
+  saveEditorContentServer,
+  resetEditorContentServer,
+} from "@/app/actions/editor-content"
 
 export default function EditorPage() {
   const [content, setContent] = useState<PageContent | null>(null)
@@ -18,8 +23,10 @@ export default function EditorPage() {
   useEffect(() => {
     const fetchContent = async () => {
       setLoading(true)
-      const fetchedContent = await loadContent()
+      // Always fetch the latest from the server via Server Action
+      const fetchedContent = await loadEditorContentServer()
       setContent(fetchedContent)
+      saveContentToLocalStorage(fetchedContent) // Update local storage with server content
       setLoading(false)
     }
     fetchContent()
@@ -101,17 +108,19 @@ export default function EditorPage() {
   const handleSave = useCallback(async () => {
     if (!content) return
     setSaving(true)
-    const success = await saveContent(content)
-    if (success) {
+    // Save to backend via Server Action
+    const result = await saveEditorContentServer(content)
+    if (result.success) {
+      saveContentToLocalStorage(content) // Also update local storage on successful backend save
       toast({
         title: "Innehåll sparat!",
-        description: "Dina ändringar har sparats framgångsrikt.",
+        description: result.message,
         variant: "default",
       })
     } else {
       toast({
         title: "Fel vid sparning",
-        description: "Kunde inte spara innehållet. Kontrollera konsolen för mer information.",
+        description: result.message,
         variant: "destructive",
       })
     }
@@ -121,9 +130,11 @@ export default function EditorPage() {
   const handleReset = useCallback(async () => {
     if (window.confirm("Är du säker på att du vill återställa allt innehåll till standard? Detta kan inte ångras.")) {
       setLoading(true)
-      resetContent() // Rensa localStorage
-      const fetchedContent = await loadContent() // Ladda standardinnehållet igen
+      resetContent() // Clear localStorage
+      // Load default content from server (which will fall back to default if backend is not available)
+      const fetchedContent = await resetEditorContentServer()
       setContent(fetchedContent)
+      saveContentToLocalStorage(fetchedContent) // Update local storage with reset content
       setLoading(false)
       toast({
         title: "Innehåll återställt!",

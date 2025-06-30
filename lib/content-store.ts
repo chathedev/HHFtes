@@ -66,15 +66,10 @@ export interface PageContent {
     callToActionLinkText: string
     callToActionLink: string
   }
-  // Lägg till en sektion för att hantera ordningen av sektioner om du vill implementera drag & drop på frontend
   sections?: string[]
 }
 
 const LOCAL_STORAGE_KEY = "hhf_website_content"
-const BACKEND_API_URL = "https://api.nuredo.se/api/content" // Din backend-URL
-// VARNING: Att hårdkoda en token i klientkoden är INTE säkert för produktionsmiljöer.
-// För en riktig applikation bör denna token hämtas säkert efter inloggning.
-const AUTH_TOKEN = "NUR3doAuthT0ken2025xQ92vMBw7dLz8HyKcAFt3ZRnPeJ6uYo1gTDXrLmqEiVGbnCW09UsKaQ5"
 
 // Default content for the website (should match public/default-content.json)
 export const defaultContent: PageContent = {
@@ -165,10 +160,49 @@ export const defaultContent: PageContent = {
     callToActionLinkText: "Kontakta oss",
     callToActionLink: "/kontakt",
   },
-  sections: [], // Lägg till denna för att matcha backend-strukturen
+  sections: [],
 }
 
-// Helper function for deep merging objects
+// Client-side functions for localStorage
+export async function loadContentFromLocalStorage(): Promise<PageContent> {
+  if (typeof window === "undefined") {
+    return defaultContent // Return default on server
+  }
+  try {
+    const storedContent = localStorage.getItem(LOCAL_STORAGE_KEY)
+    if (storedContent) {
+      // Use deepMerge to ensure all default fields are present even if stored content is partial
+      return deepMerge(defaultContent, JSON.parse(storedContent) as Partial<PageContent>)
+    }
+  } catch (error) {
+    console.warn("Failed to parse content from localStorage, returning default:", error)
+  }
+  return defaultContent
+}
+
+export function saveContentToLocalStorage(content: PageContent) {
+  if (typeof window === "undefined") {
+    return // Do nothing on server-side
+  }
+  try {
+    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(content))
+  } catch (error) {
+    console.error("Failed to save content to localStorage:", error)
+  }
+}
+
+export function resetContent() {
+  if (typeof window === "undefined") {
+    return // Do nothing on server-side
+  }
+  try {
+    localStorage.removeItem(LOCAL_STORAGE_KEY)
+  } catch (error) {
+    console.error("Failed to reset content in localStorage:", error)
+  }
+}
+
+// Helper function for deep merging objects (kept here for client-side localStorage merging)
 function deepMerge<T extends object>(target: T, source: Partial<T>): T {
   const output = { ...target } as T
 
@@ -179,8 +213,6 @@ function deepMerge<T extends object>(target: T, source: Partial<T>): T {
         const sourceValue = source[key as keyof T]
 
         if (Array.isArray(targetValue) && Array.isArray(sourceValue)) {
-          // For arrays, replace or concatenate based on desired behavior.
-          // Here, we replace the array.
           output[key as keyof T] = sourceValue as T[keyof T]
         } else if (
           typeof targetValue === "object" &&
@@ -190,110 +222,12 @@ function deepMerge<T extends object>(target: T, source: Partial<T>): T {
           !Array.isArray(targetValue) &&
           !Array.isArray(sourceValue)
         ) {
-          // Deep merge objects
           output[key as keyof T] = deepMerge(targetValue as object, sourceValue as object) as T[keyof T]
         } else {
-          // Replace primitive values or non-object types
           output[key as keyof T] = sourceValue as T[keyof T]
         }
       }
     })
   }
   return output
-}
-
-// Function to load content from backend or localStorage
-export async function loadContent(): Promise<PageContent> {
-  // Headers for GET request (no Authorization needed based on your server.cjs)
-  const getHeaders = {
-    "Content-Type": "application/json",
-  }
-
-  let fetchedContent: PageContent | null = null
-
-  if (typeof window === "undefined") {
-    // Server-side rendering: try to fetch from backend directly
-    try {
-      const response = await fetch(BACKEND_API_URL, { headers: getHeaders })
-      if (response.ok) {
-        fetchedContent = (await response.json()) as PageContent
-      } else {
-        console.warn(`Server-side fetch failed with status ${response.status}, falling back to default content.`)
-      }
-    } catch (error) {
-      console.error("Server-side fetch failed, falling back to default content:", error)
-    }
-  } else {
-    // Client-side: try localStorage first, then backend
-    try {
-      const storedContent = localStorage.getItem(LOCAL_STORAGE_KEY)
-      if (storedContent) {
-        fetchedContent = JSON.parse(storedContent) as PageContent
-      }
-    } catch (error) {
-      console.warn("Failed to parse content from localStorage, trying backend:", error)
-    }
-
-    if (!fetchedContent) {
-      // Only fetch from backend if not found in localStorage
-      try {
-        const response = await fetch(BACKEND_API_URL, { headers: getHeaders }) // No auth token for GET
-        if (response.ok) {
-          fetchedContent = (await response.json()) as PageContent
-          localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(fetchedContent)) // Cache in localStorage
-        } else {
-          console.warn(`Client-side fetch failed with status ${response.status}, falling back to default content.`)
-        }
-      } catch (error) {
-        console.error("Client-side fetch failed, falling back to default content:", error)
-      }
-    }
-  }
-
-  // Merge fetched content with default content to ensure full structure
-  // This is crucial to prevent 'undefined' errors if backend returns partial data
-  return deepMerge(defaultContent, fetchedContent || {})
-}
-
-// Function to save content to backend and localStorage
-export async function saveContent(content: PageContent): Promise<boolean> {
-  if (typeof window === "undefined") {
-    console.warn("Attempted to save content on server-side. This function should be called client-side.")
-    return false
-  }
-  try {
-    const response = await fetch(BACKEND_API_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${AUTH_TOKEN}`, // Authorization is required for POST
-      },
-      body: JSON.stringify(content),
-    })
-
-    if (response.ok) {
-      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(content))
-      return true
-    } else {
-      const errorData = await response.json()
-      console.error("Failed to save content to backend:", response.status, errorData)
-      return false
-    }
-  } catch (error) {
-    console.error("Network error during content save:", error)
-    return false
-  }
-}
-
-// Function to reset content to default (removes from localStorage, does not affect backend)
-export function resetContent() {
-  if (typeof window === "undefined") {
-    return // Do nothing on server-side
-  }
-  try {
-    localStorage.removeItem(LOCAL_STORAGE_KEY)
-    // Om du vill återställa backend också, skulle du behöva en specifik backend-endpoint för det
-  } catch (error) {
-    console.error("Failed to reset content in localStorage:", error)
-  }
 }
