@@ -7,6 +7,8 @@ backend:
   client_secret: "${env:NETLIFY_CMS_CLIENT_SECRET}"
 
 media_folder: "public/uploads"
+media_library:
+  name: git-gateway
 public_folder: "/uploads"
 
 collections:
