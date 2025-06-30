@@ -170,15 +170,15 @@ export const defaultContent: PageContent = {
 
 // Function to load content from backend or localStorage
 export async function loadContent(): Promise<PageContent> {
-  const headers = {
-    Authorization: `Bearer ${AUTH_TOKEN}`,
+  // Headers for GET request (no Authorization needed based on your server.cjs)
+  const getHeaders = {
     "Content-Type": "application/json",
   }
 
   if (typeof window === "undefined") {
     // Server-side rendering: try to fetch from backend directly
     try {
-      const response = await fetch(BACKEND_API_URL, { headers })
+      const response = await fetch(BACKEND_API_URL, { headers: getHeaders })
       if (response.ok) {
         return (await response.json()) as PageContent
       } else {
@@ -200,7 +200,7 @@ export async function loadContent(): Promise<PageContent> {
     }
 
     try {
-      const response = await fetch(BACKEND_API_URL, { headers })
+      const response = await fetch(BACKEND_API_URL, { headers: getHeaders }) // No auth token for GET
       if (response.ok) {
         const fetchedContent = (await response.json()) as PageContent
         localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(fetchedContent)) // Cache in localStorage
@@ -226,7 +226,7 @@ export async function saveContent(content: PageContent): Promise<boolean> {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${AUTH_TOKEN}`, // Lägg till autentiseringstoken här
+        Authorization: `Bearer ${AUTH_TOKEN}`, // Authorization is required for POST
       },
       body: JSON.stringify(content),
     })
