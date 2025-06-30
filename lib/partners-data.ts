@@ -12,6 +12,10 @@ export interface Partner {
   description?: string
 }
 
+/**
+ * The full partner list. (truncated for brevity but contains real data)
+ * Feel free to append more items.
+ */
 export const allPartners: Partner[] = [
   // Diamantpartners (Standardized size, premium decal)
   {
@@ -396,3 +400,6 @@ export const allPartners: Partner[] = [
     description: "Håller oss uppdaterade med de senaste nyheterna och stöder lokal sportjournalistik.",
   },
 ]
+
+// Alias so `{ partners }` works everywhere
+export const partners = allPartners
