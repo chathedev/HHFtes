@@ -1,3 +1,5 @@
+"use client"
+
 import Image from "next/image"
 import Link from "next/link"
 import { Heart, TrendingUp, Users } from "lucide-react"
@@ -63,6 +65,8 @@ export default function AboutClub() {
                 alt="Härnösands HF Team"
                 fill
                 className="object-cover"
+                onContextMenu={(e) => e.preventDefault()}
+                onDragStart={(e) => e.preventDefault()}
               />
             </div>
 
