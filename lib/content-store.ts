@@ -71,6 +71,36 @@ export interface PageContent {
 
 const LOCAL_STORAGE_KEY = "hhf_website_content"
 
+// Helper function for deep merging objects (kept here for client-side localStorage merging)
+function deepMerge<T extends object>(target: T, source: Partial<T>): T {
+  const output = { ...target } as T
+
+  if (target && typeof target === "object" && source && typeof source === "object") {
+    Object.keys(source).forEach((key) => {
+      if (Object.prototype.hasOwnProperty.call(source, key)) {
+        const targetValue = target[key as keyof T]
+        const sourceValue = source[key as keyof T]
+
+        if (Array.isArray(targetValue) && Array.isArray(sourceValue)) {
+          output[key as keyof T] = sourceValue as T[keyof T]
+        } else if (
+          typeof targetValue === "object" &&
+          targetValue !== null &&
+          typeof sourceValue === "object" &&
+          sourceValue !== null &&
+          !Array.isArray(targetValue) &&
+          !Array.isArray(sourceValue)
+        ) {
+          output[key as keyof T] = deepMerge(targetValue as object, sourceValue as object) as T[keyof T]
+        } else {
+          output[key as keyof T] = sourceValue as T[keyof T]
+        }
+      }
+    })
+  }
+  return output
+}
+
 // Default content for the website (should match public/default-content.json)
 export const defaultContent: PageContent = {
   hero: {
@@ -163,6 +193,37 @@ export const defaultContent: PageContent = {
   sections: [],
 }
 
+// Loads content either from the backend (server-side) or from
+// localStorage (client-side) and always falls back to defaultContent.
+export async function loadContent(): Promise<PageContent> {
+  // Client side → reuse local-storage helper
+  if (typeof window !== "undefined") {
+    return loadContentFromLocalStorage()
+  }
+
+  // Server side → fetch from backend, merge with defaults
+  try {
+    const res = await fetch("https://api.nuredo.se/api/content", {
+      // GET endpoint on your backend does NOT require auth
+      headers: { "Content-Type": "application/json" },
+      // 10 s timeout to avoid hanging builds
+      cache: "no-store",
+    })
+
+    if (res.ok) {
+      const json = (await res.json()) as Partial<PageContent>
+      return deepMerge(defaultContent, json)
+    }
+
+    console.warn(`[loadContent] Backend responded ${res.status}. Falling back to defaultContent.`)
+  } catch (err) {
+    console.error("[loadContent] Backend fetch failed:", err)
+  }
+
+  // Fallback
+  return defaultContent
+}
+
 // Client-side functions for localStorage
 export async function loadContentFromLocalStorage(): Promise<PageContent> {
   if (typeof window === "undefined") {
@@ -200,34 +261,4 @@ export function resetContent() {
   } catch (error) {
     console.error("Failed to reset content in localStorage:", error)
   }
-}
-
-// Helper function for deep merging objects (kept here for client-side localStorage merging)
-function deepMerge<T extends object>(target: T, source: Partial<T>): T {
-  const output = { ...target } as T
-
-  if (target && typeof target === "object" && source && typeof source === "object") {
-    Object.keys(source).forEach((key) => {
-      if (Object.prototype.hasOwnProperty.call(source, key)) {
-        const targetValue = target[key as keyof T]
-        const sourceValue = source[key as keyof T]
-
-        if (Array.isArray(targetValue) && Array.isArray(sourceValue)) {
-          output[key as keyof T] = sourceValue as T[keyof T]
-        } else if (
-          typeof targetValue === "object" &&
-          targetValue !== null &&
-          typeof sourceValue === "object" &&
-          sourceValue !== null &&
-          !Array.isArray(targetValue) &&
-          !Array.isArray(sourceValue)
-        ) {
-          output[key as keyof T] = deepMerge(targetValue as object, sourceValue as object) as T[keyof T]
-        } else {
-          output[key as keyof T] = sourceValue as T[keyof T]
-        }
-      }
-    })
-  }
-  return output
 }
