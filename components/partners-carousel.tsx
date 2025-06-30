@@ -10,6 +10,7 @@ import { useState } from "react"
 
 export default function PartnersCarousel() {
   const [openTier, setOpenTier] = useState<string | null>("Diamantpartner") // Default to Diamantpartner open
+  const [hoveredCardId, setHoveredCardId] = useState<string | null>(null) // State to manage hovered card
 
   const handleToggle = (tierName: string) => {
     setOpenTier((prevOpenTier) => (prevOpenTier === tierName ? null : tierName))
@@ -63,10 +64,13 @@ export default function PartnersCarousel() {
                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
                       {partnersByTier[tierName].map((partner) => {
                         const isDiamant = partner.tier === "Diamantpartner"
+                        const isHighcon = partner.id === "highcon"
                         return (
                           <div
                             key={partner.id}
-                            className="relative group w-full h-36" // Added group for hover effect
+                            className="relative group w-full h-36"
+                            onMouseEnter={() => setHoveredCardId(partner.id)}
+                            onMouseLeave={() => setHoveredCardId(null)}
                           >
                             <Card
                               className={`p-4 shadow-lg rounded-lg flex flex-col items-center justify-center h-full w-full text-center
@@ -76,7 +80,7 @@ export default function PartnersCarousel() {
                               {isDiamant && (
                                 <Star className="absolute top-1 right-1 w-5 h-5 text-yellow-500 fill-yellow-500" />
                               )}
-                              <div className="relative w-full h-20 mb-2">
+                              <div className={`relative w-full mb-2 ${isHighcon ? "h-24" : "h-20"}`}>
                                 <Image
                                   src={partner.src || "/placeholder.svg"}
                                   alt={partner.alt}
@@ -88,6 +92,18 @@ export default function PartnersCarousel() {
                               <h4 className={`text-sm font-semibold ${isDiamant ? "text-gray-900" : "text-gray-800"}`}>
                                 {partner.alt}
                               </h4>
+
+                              {/* Hover Overlay */}
+                              {hoveredCardId === partner.id && partner.linkUrl && (
+                                <div className="absolute inset-0 bg-black bg-opacity-70 flex items-center justify-center rounded-lg transition-opacity duration-300 opacity-0 group-hover:opacity-100">
+                                  <Button
+                                    onClick={() => window.open(partner.linkUrl, "_blank")}
+                                    className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-md"
+                                  >
+                                    Gå till
+                                  </Button>
+                                </div>
+                              )}
                             </Card>
                           </div>
                         )
@@ -109,12 +125,7 @@ export default function PartnersCarousel() {
             <Link href="/kontakt" className="bg-orange-500 hover:bg-orange-600 text-white px-8 py-3 rounded-md">
               Kontakta oss
             </Link>
-            <Link
-              href="#"
-              className="border border-white text-white hover:bg-white hover:text-green-700 px-8 py-3 rounded-md"
-            >
-              Mer information
-            </Link>
+            {/* Removed "Mer information" link */}
           </div>
         </section>
       </div>

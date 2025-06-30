@@ -14,7 +14,7 @@ export const allPartners: Partner[] = [
   // Diamantpartners (Standardized size, premium decal)
   {
     id: "highcon",
-    src: "https://az729104.cdn.laget.se/11314774.png",
+    src: "https://highcon.se/media/w5zbh52t/logotype.svg",
     alt: "Highcon",
     width: 150,
     height: 75,
@@ -89,6 +89,17 @@ export const allPartners: Partner[] = [
     visibleInCarousel: true,
     linkUrl: "https://westerlinds.nu", // Link: Yes
   },
+  {
+    id: "sundfrakt", // Moved from Platinapartner
+    src: "https://az729104.cdn.laget.se/11313552.jpg",
+    alt: "Sundfrakt",
+    width: 150,
+    height: 75,
+    tier: "Diamantpartner",
+    benefits: ["Huvudsponsor", "Logotyp på matchställ", "Exklusiva event"],
+    visibleInCarousel: true,
+    linkUrl: "https://www.sundfrakt.se", // Link: Yes
+  },
 
   // Platinapartners
   {
@@ -101,17 +112,6 @@ export const allPartners: Partner[] = [
     benefits: ["Logotyp på hemsida", "Synlighet vid hemmamatcher"],
     visibleInCarousel: true,
     linkUrl: "https://forsakringskonsult.se", // Link: Yes
-  },
-  {
-    id: "sundfrakt",
-    src: "https://az729104.cdn.laget.se/11313552.jpg",
-    alt: "Sundfrakt",
-    width: 150,
-    height: 75,
-    tier: "Platinapartner",
-    benefits: ["Logotyp på hemsida", "Synlighet vid hemmamatcher"],
-    visibleInCarousel: true,
-    linkUrl: "https://www.sundfrakt.se", // Link: Yes
   },
 
   // Guldpartners

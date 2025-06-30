@@ -54,7 +54,7 @@ function Header() {
           </div>
           <div>
             <div className="font-bold text-xl">Härnösands HF</div>
-            <div className="text-sm text-gray-300">Förening</div>
+            {/* Removed "Förening" text */}
           </div>
         </Link>
 

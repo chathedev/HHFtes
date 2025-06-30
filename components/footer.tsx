@@ -15,7 +15,6 @@ function Footer() {
               </div>
               <div>
                 <div className="font-bold text-lg">Härnösands HF</div>
-                <div className="text-xs text-gray-400">Förening</div>
               </div>
             </div>
             <p className="text-gray-400 text-sm mb-4">
