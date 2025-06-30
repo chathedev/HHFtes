@@ -168,6 +168,40 @@ export const defaultContent: PageContent = {
   sections: [], // Lägg till denna för att matcha backend-strukturen
 }
 
+// Helper function for deep merging objects
+function deepMerge<T extends object>(target: T, source: Partial<T>): T {
+  const output = { ...target } as T
+
+  if (target && typeof target === "object" && source && typeof source === "object") {
+    Object.keys(source).forEach((key) => {
+      if (Object.prototype.hasOwnProperty.call(source, key)) {
+        const targetValue = target[key as keyof T]
+        const sourceValue = source[key as keyof T]
+
+        if (Array.isArray(targetValue) && Array.isArray(sourceValue)) {
+          // For arrays, replace or concatenate based on desired behavior.
+          // Here, we replace the array.
+          output[key as keyof T] = sourceValue as T[keyof T]
+        } else if (
+          typeof targetValue === "object" &&
+          targetValue !== null &&
+          typeof sourceValue === "object" &&
+          sourceValue !== null &&
+          !Array.isArray(targetValue) &&
+          !Array.isArray(sourceValue)
+        ) {
+          // Deep merge objects
+          output[key as keyof T] = deepMerge(targetValue as object, sourceValue as object) as T[keyof T]
+        } else {
+          // Replace primitive values or non-object types
+          output[key as keyof T] = sourceValue as T[keyof T]
+        }
+      }
+    })
+  }
+  return output
+}
+
 // Function to load content from backend or localStorage
 export async function loadContent(): Promise<PageContent> {
   // Headers for GET request (no Authorization needed based on your server.cjs)
@@ -175,44 +209,50 @@ export async function loadContent(): Promise<PageContent> {
     "Content-Type": "application/json",
   }
 
+  let fetchedContent: PageContent | null = null
+
   if (typeof window === "undefined") {
     // Server-side rendering: try to fetch from backend directly
     try {
       const response = await fetch(BACKEND_API_URL, { headers: getHeaders })
       if (response.ok) {
-        return (await response.json()) as PageContent
+        fetchedContent = (await response.json()) as PageContent
       } else {
         console.warn(`Server-side fetch failed with status ${response.status}, falling back to default content.`)
       }
     } catch (error) {
       console.error("Server-side fetch failed, falling back to default content:", error)
     }
-    return defaultContent
   } else {
-    // Client-side: try localStorage first, then backend, then default
+    // Client-side: try localStorage first, then backend
     try {
       const storedContent = localStorage.getItem(LOCAL_STORAGE_KEY)
       if (storedContent) {
-        return JSON.parse(storedContent) as PageContent
+        fetchedContent = JSON.parse(storedContent) as PageContent
       }
     } catch (error) {
       console.warn("Failed to parse content from localStorage, trying backend:", error)
     }
 
-    try {
-      const response = await fetch(BACKEND_API_URL, { headers: getHeaders }) // No auth token for GET
-      if (response.ok) {
-        const fetchedContent = (await response.json()) as PageContent
-        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(fetchedContent)) // Cache in localStorage
-        return fetchedContent
-      } else {
-        console.warn(`Client-side fetch failed with status ${response.status}, falling back to default content.`)
+    if (!fetchedContent) {
+      // Only fetch from backend if not found in localStorage
+      try {
+        const response = await fetch(BACKEND_API_URL, { headers: getHeaders }) // No auth token for GET
+        if (response.ok) {
+          fetchedContent = (await response.json()) as PageContent
+          localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(fetchedContent)) // Cache in localStorage
+        } else {
+          console.warn(`Client-side fetch failed with status ${response.status}, falling back to default content.`)
+        }
+      } catch (error) {
+        console.error("Client-side fetch failed, falling back to default content:", error)
       }
-    } catch (error) {
-      console.error("Client-side fetch failed, falling back to default content:", error)
     }
-    return defaultContent
   }
+
+  // Merge fetched content with default content to ensure full structure
+  // This is crucial to prevent 'undefined' errors if backend returns partial data
+  return deepMerge(defaultContent, fetchedContent || {})
 }
 
 // Function to save content to backend and localStorage

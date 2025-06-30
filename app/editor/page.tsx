@@ -13,7 +13,7 @@ import { toast } from "@/components/ui/use-toast"
 export default function EditorPage() {
   const [content, setContent] = useState<PageContent | null>(null)
   const [loading, setLoading] = useState(true)
-  const [isSaving, setIsSaving] = useState(false)
+  const [saving, setSaving] = useState(false)
 
   useEffect(() => {
     const fetchContent = async () => {
@@ -26,21 +26,73 @@ export default function EditorPage() {
   }, [])
 
   const handleInputChange = useCallback(
-    (section: keyof PageContent, field: string, value: string | number | FAQItem[]) => {
+    (page: keyof PageContent, field: string, value: string | number) => {
       if (!content) return
       setContent((prevContent) => {
         if (!prevContent) return null
-        const newContent = { ...prevContent } as any // Use any for dynamic access
-        if (section === "faq") {
-          // Special handling for FAQ array
-          newContent[section] = value as FAQItem[]
-        } else {
-          newContent[section] = {
-            ...(newContent[section] || {}),
-            [field]: value,
-          }
+        const updatedPage = {
+          ...prevContent[page],
+          [field]: value,
         }
-        return newContent
+        return {
+          ...prevContent,
+          [page]: updatedPage,
+        }
+      })
+    },
+    [content],
+  )
+
+  const handleFAQChange = useCallback(
+    (index: number, field: keyof FAQItem, value: string) => {
+      if (!content) return
+      setContent((prevContent) => {
+        if (!prevContent) return null
+        const updatedFaqItems = [...prevContent.kontaktPage.faqItems]
+        updatedFaqItems[index] = {
+          ...updatedFaqItems[index],
+          [field]: value,
+        }
+        return {
+          ...prevContent,
+          kontaktPage: {
+            ...prevContent.kontaktPage,
+            faqItems: updatedFaqItems,
+          },
+        }
+      })
+    },
+    [content],
+  )
+
+  const handleAddFAQ = useCallback(() => {
+    if (!content) return
+    setContent((prevContent) => {
+      if (!prevContent) return null
+      const updatedFaqItems = [...prevContent.kontaktPage.faqItems, { question: "", answer: "" }]
+      return {
+        ...prevContent,
+        kontaktPage: {
+          ...prevContent.kontaktPage,
+          faqItems: updatedFaqItems,
+        },
+      }
+    })
+  }, [content])
+
+  const handleRemoveFAQ = useCallback(
+    (index: number) => {
+      if (!content) return
+      setContent((prevContent) => {
+        if (!prevContent) return null
+        const updatedFaqItems = prevContent.kontaktPage.faqItems.filter((_, i) => i !== index)
+        return {
+          ...prevContent,
+          kontaktPage: {
+            ...prevContent.kontaktPage,
+            faqItems: updatedFaqItems,
+          },
+        }
       })
     },
     [content],
@@ -48,61 +100,38 @@ export default function EditorPage() {
 
   const handleSave = useCallback(async () => {
     if (!content) return
-    setIsSaving(true)
+    setSaving(true)
     const success = await saveContent(content)
     if (success) {
       toast({
         title: "Innehåll sparat!",
         description: "Dina ändringar har sparats framgångsrikt.",
+        variant: "default",
       })
     } else {
       toast({
-        title: "Fel vid sparande",
+        title: "Fel vid sparning",
         description: "Kunde inte spara innehållet. Kontrollera konsolen för mer information.",
         variant: "destructive",
       })
     }
-    setIsSaving(false)
+    setSaving(false)
   }, [content])
 
   const handleReset = useCallback(async () => {
-    if (window.confirm("Är du säker på att du vill återställa allt innehåll till standardvärden?")) {
+    if (window.confirm("Är du säker på att du vill återställa allt innehåll till standard? Detta kan inte ångras.")) {
       setLoading(true)
-      resetContent() // Resets localStorage
-      const fetchedContent = await loadContent() // Reloads default (or from backend if localStorage is empty)
+      resetContent() // Rensa localStorage
+      const fetchedContent = await loadContent() // Ladda standardinnehållet igen
       setContent(fetchedContent)
       setLoading(false)
       toast({
         title: "Innehåll återställt!",
-        description: "Innehållet har återställts till standardvärden.",
+        description: "Allt innehåll har återställts till standardvärden.",
+        variant: "default",
       })
     }
   }, [])
-
-  const handleAddFaq = useCallback(() => {
-    if (!content) return
-    const newFaqItems = [...(content.kontaktPage.faqItems || []), { question: "", answer: "" }]
-    handleInputChange("kontaktPage", "faqItems", newFaqItems)
-  }, [content, handleInputChange])
-
-  const handleRemoveFaq = useCallback(
-    (index: number) => {
-      if (!content) return
-      const newFaqItems = content.kontaktPage.faqItems.filter((_, i) => i !== index)
-      handleInputChange("kontaktPage", "faqItems", newFaqItems)
-    },
-    [content, handleInputChange],
-  )
-
-  const handleFaqChange = useCallback(
-    (index: number, field: "question" | "answer", value: string) => {
-      if (!content) return
-      const newFaqItems = [...content.kontaktPage.faqItems]
-      newFaqItems[index] = { ...newFaqItems[index], [field]: value }
-      handleInputChange("kontaktPage", "faqItems", newFaqItems)
-    },
-    [content, handleInputChange],
-  )
 
   if (loading) {
     return <div className="flex justify-center items-center min-h-screen">Laddar redigerare...</div>
@@ -117,23 +146,26 @@ export default function EditorPage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="text-4xl font-bold text-center mb-8">Webbplatsredigerare</h1>
+    <div className="container mx-auto px-4 py-8 pt-24">
+      <h1 className="text-4xl font-bold text-green-700 mb-8 text-center">Webbplatsredigerare</h1>
+      <p className="text-center text-gray-700 mb-12 max-w-2xl mx-auto">
+        Redigera text, bilder och länkar för din webbplats. Ändringar sparas lokalt och till din backend.
+      </p>
 
-      <div className="flex justify-end gap-4 mb-8">
-        <Button onClick={handleReset} variant="outline" disabled={isSaving}>
-          Återställ till standard
+      <div className="flex justify-center gap-4 mb-8">
+        <Button onClick={handleSave} disabled={saving} className="bg-orange-500 hover:bg-orange-600 text-white">
+          {saving ? "Sparar..." : "Spara ändringar"}
         </Button>
-        <Button onClick={handleSave} disabled={isSaving}>
-          {isSaving ? "Sparar..." : "Spara ändringar"}
+        <Button onClick={handleReset} variant="outline" disabled={saving}>
+          Återställ till standard
         </Button>
       </div>
 
       <Accordion type="multiple" className="w-full">
         {/* Hero Section */}
         <AccordionItem value="item-hero">
-          <AccordionTrigger className="text-xl font-semibold">Startsida: Hero-sektion</AccordionTrigger>
-          <AccordionContent className="space-y-4 p-4">
+          <AccordionTrigger className="text-xl font-semibold text-gray-800">Startsida: Hero-sektion</AccordionTrigger>
+          <AccordionContent className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4">
             <div>
               <Label htmlFor="heroTitle">Titel</Label>
               <Input
@@ -151,7 +183,7 @@ export default function EditorPage() {
               />
             </div>
             <div>
-              <Label htmlFor="heroImageUrl">Bild-URL</Label>
+              <Label htmlFor="heroImageUrl">Bild URL</Label>
               <Input
                 id="heroImageUrl"
                 value={content.hero.imageUrl}
@@ -195,8 +227,8 @@ export default function EditorPage() {
 
         {/* Stats Section */}
         <AccordionItem value="item-stats">
-          <AccordionTrigger className="text-xl font-semibold">Startsida: Statistik-sektion</AccordionTrigger>
-          <AccordionContent className="space-y-4 p-4">
+          <AccordionTrigger className="text-xl font-semibold text-gray-800">Startsida: Statistik</AccordionTrigger>
+          <AccordionContent className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4">
             <div>
               <Label htmlFor="statsTotalTeams">Totalt antal lag</Label>
               <Input
@@ -237,8 +269,8 @@ export default function EditorPage() {
 
         {/* About Club Section */}
         <AccordionItem value="item-about-club">
-          <AccordionTrigger className="text-xl font-semibold">Startsida: Om Klubben-sektion</AccordionTrigger>
-          <AccordionContent className="space-y-4 p-4">
+          <AccordionTrigger className="text-xl font-semibold text-gray-800">Startsida: Om Klubben</AccordionTrigger>
+          <AccordionContent className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4">
             <div>
               <Label htmlFor="aboutClubTitle">Titel</Label>
               <Input
@@ -320,7 +352,7 @@ export default function EditorPage() {
               />
             </div>
             <div>
-              <Label htmlFor="aboutClubImageSrc">Bild-URL</Label>
+              <Label htmlFor="aboutClubImageSrc">Bild URL</Label>
               <Input
                 id="aboutClubImageSrc"
                 value={content.aboutClub.imageSrc}
@@ -345,7 +377,7 @@ export default function EditorPage() {
               />
             </div>
             <div>
-              <Label htmlFor="aboutClubTotalTeamsCalloutText">Antal lag text (callout)</Label>
+              <Label htmlFor="aboutClubTotalTeamsCalloutText">Text för antal lag (callout)</Label>
               <Input
                 id="aboutClubTotalTeamsCalloutText"
                 value={content.aboutClub.totalTeamsCalloutText}
@@ -357,8 +389,10 @@ export default function EditorPage() {
 
         {/* Partners Carousel Section */}
         <AccordionItem value="item-partners-carousel">
-          <AccordionTrigger className="text-xl font-semibold">Startsida: Partners-sektion</AccordionTrigger>
-          <AccordionContent className="space-y-4 p-4">
+          <AccordionTrigger className="text-xl font-semibold text-gray-800">
+            Startsida: Partners Karusell
+          </AccordionTrigger>
+          <AccordionContent className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4">
             <div>
               <Label htmlFor="partnersCarouselTitle">Titel</Label>
               <Input
@@ -412,8 +446,8 @@ export default function EditorPage() {
 
         {/* Kontakt Page Section */}
         <AccordionItem value="item-kontakt-page">
-          <AccordionTrigger className="text-xl font-semibold">Kontaktsida</AccordionTrigger>
-          <AccordionContent className="space-y-4 p-4">
+          <AccordionTrigger className="text-xl font-semibold text-gray-800">Kontaktsida</AccordionTrigger>
+          <AccordionContent className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4">
             <div>
               <Label htmlFor="kontaktEmailTitle">E-post Titel</Label>
               <Input
@@ -439,7 +473,7 @@ export default function EditorPage() {
               />
             </div>
             <div>
-              <Label htmlFor="kontaktAddressTitle">Adress Titel</Label>
+              <Label htmlFor="kontaktAddressTitle">Besöksadress Titel</Label>
               <Input
                 id="kontaktAddressTitle"
                 value={content.kontaktPage.addressTitle}
@@ -447,7 +481,7 @@ export default function EditorPage() {
               />
             </div>
             <div>
-              <Label htmlFor="kontaktAddressDescription">Adress Beskrivning</Label>
+              <Label htmlFor="kontaktAddressDescription">Besöksadress Beskrivning</Label>
               <Textarea
                 id="kontaktAddressDescription"
                 value={content.kontaktPage.addressDescription}
@@ -455,7 +489,7 @@ export default function EditorPage() {
               />
             </div>
             <div>
-              <Label htmlFor="kontaktAddressLocation">Adress Plats</Label>
+              <Label htmlFor="kontaktAddressLocation">Besöksadress Plats</Label>
               <Input
                 id="kontaktAddressLocation"
                 value={content.kontaktPage.addressLocation}
@@ -486,51 +520,40 @@ export default function EditorPage() {
                 onChange={(e) => handleInputChange("kontaktPage", "boardContact", e.target.value)}
               />
             </div>
-            <div>
-              <Label htmlFor="kontaktFaqTitle">FAQ Titel</Label>
-              <Input
-                id="kontaktFaqTitle"
-                value={content.kontaktPage.faqTitle}
-                onChange={(e) => handleInputChange("kontaktPage", "faqTitle", e.target.value)}
-              />
-            </div>
-
-            <h3 className="text-lg font-semibold mt-6">Vanliga frågor (FAQ)</h3>
-            {content.kontaktPage.faqItems.map((faq, index) => (
-              <Card key={index} className="p-4 border border-gray-200 rounded-md">
-                <div className="space-y-2">
-                  <div>
-                    <Label htmlFor={`faq-question-${index}`}>Fråga {index + 1}</Label>
-                    <Input
-                      id={`faq-question-${index}`}
-                      value={faq.question}
-                      onChange={(e) => handleFaqChange(index, "question", e.target.value)}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor={`faq-answer-${index}`}>Svar {index + 1}</Label>
-                    <Textarea
-                      id={`faq-answer-${index}`}
-                      value={faq.answer}
-                      onChange={(e) => handleFaqChange(index, "answer", e.target.value)}
-                    />
-                  </div>
-                  <Button variant="destructive" size="sm" onClick={() => handleRemoveFaq(index)}>
-                    Ta bort fråga
+            <div className="md:col-span-2">
+              <h3 className="text-lg font-semibold mb-2">Vanliga frågor (FAQ)</h3>
+              {content.kontaktPage.faqItems.map((faq, index) => (
+                <Card key={index} className="mb-4 p-4">
+                  <Label htmlFor={`faqQuestion-${index}`}>Fråga {index + 1}</Label>
+                  <Input
+                    id={`faqQuestion-${index}`}
+                    value={faq.question}
+                    onChange={(e) => handleFAQChange(index, "question", e.target.value)}
+                    className="mb-2"
+                  />
+                  <Label htmlFor={`faqAnswer-${index}`}>Svar {index + 1}</Label>
+                  <Textarea
+                    id={`faqAnswer-${index}`}
+                    value={faq.answer}
+                    onChange={(e) => handleFAQChange(index, "answer", e.target.value)}
+                    className="mb-2"
+                  />
+                  <Button variant="destructive" size="sm" onClick={() => handleRemoveFAQ(index)}>
+                    Ta bort FAQ
                   </Button>
-                </div>
-              </Card>
-            ))}
-            <Button onClick={handleAddFaq} className="mt-4">
-              Lägg till fråga
-            </Button>
+                </Card>
+              ))}
+              <Button onClick={handleAddFAQ} className="mt-4">
+                Lägg till FAQ
+              </Button>
+            </div>
           </AccordionContent>
         </AccordionItem>
 
         {/* Partners Page Section */}
         <AccordionItem value="item-partners-page">
-          <AccordionTrigger className="text-xl font-semibold">Partnersida</AccordionTrigger>
-          <AccordionContent className="space-y-4 p-4">
+          <AccordionTrigger className="text-xl font-semibold text-gray-800">Partnersida</AccordionTrigger>
+          <AccordionContent className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4">
             <div>
               <Label htmlFor="partnersPageTitle">Titel</Label>
               <Input
