@@ -1,6 +1,7 @@
 import Link from "next/link"
 import { ChevronLeft, Mail, MapPin, Users } from "lucide-react"
 import { Card } from "@/components/ui/card"
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 
 export default function KontaktPage() {
   return (
@@ -43,21 +44,45 @@ export default function KontaktPage() {
         </section>
 
         <section className="mb-12">
-          <h2 className="text-3xl font-bold text-orange-500 mb-6">Vanliga frågor</h2>
-          <ul className="space-y-4 text-lg text-gray-700">
-            <li>
-              <span className="font-semibold text-gray-800">• Nya spelare:</span> Kontakta oss för provträningar
-            </li>
-            <li>
-              <span className="font-semibold text-gray-800">• Sponsring:</span> E-posta för partnerskapsmöjligheter
-            </li>
-            <li>
-              <span className="font-semibold text-gray-800">• Hallar:</span> Information om våra träningsanläggningar
-            </li>
-            <li>
-              <span className="font-semibold text-gray-800">• Matcher:</span> Schema finns på lagspecifika sidor
-            </li>
-          </ul>
+          <h2 className="text-3xl font-bold text-orange-500 mb-6 text-center md:text-left">Vanliga frågor</h2>
+          <Accordion type="single" collapsible className="w-full">
+            <AccordionItem value="item-1">
+              <AccordionTrigger className="text-lg font-semibold text-gray-800 hover:no-underline">
+                Hur blir jag en ny spelare?
+              </AccordionTrigger>
+              <AccordionContent className="text-gray-700 text-base animate-fade-in">
+                Kontakta oss via e-post eller telefon för att få information om provträningar och hur du anmäler dig
+                till ett av våra lag. Vi välkomnar spelare i alla åldrar och nivåer!
+              </AccordionContent>
+            </AccordionItem>
+            <AccordionItem value="item-2">
+              <AccordionTrigger className="text-lg font-semibold text-gray-800 hover:no-underline">
+                Hur kan mitt företag sponsra Härnösands HF?
+              </AccordionTrigger>
+              <AccordionContent className="text-gray-700 text-base animate-fade-in">
+                Vi är alltid öppna för nya partnerskap. Vänligen e-posta oss på info@harnosandshf.se för att diskutera
+                sponsringsmöjligheter och hur vi kan samarbeta.
+              </AccordionContent>
+            </AccordionItem>
+            <AccordionItem value="item-3">
+              <AccordionTrigger className="text-lg font-semibold text-gray-800 hover:no-underline">
+                Var finns era träningsanläggningar?
+              </AccordionTrigger>
+              <AccordionContent className="text-gray-700 text-base animate-fade-in">
+                Våra huvudsakliga träningsanläggningar är Öbacka Sporthall och Landgrenshallen i Härnösand. Specifika
+                tider och hallar för varje lag finns på respektive lagsida.
+              </AccordionContent>
+            </AccordionItem>
+            <AccordionItem value="item-4">
+              <AccordionTrigger className="text-lg font-semibold text-gray-800 hover:no-underline">
+                Var hittar jag matchschemat?
+              </AccordionTrigger>
+              <AccordionContent className="text-gray-700 text-base animate-fade-in">
+                Matchscheman för alla våra lag finns på de lagspecifika sidorna under "Lag" i menyn. Du kan också hitta
+                en översikt över kommande matcher på vår "Matcher"-sida.
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
         </section>
       </main>
     </div>
