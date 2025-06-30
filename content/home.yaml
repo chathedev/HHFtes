@@ -1,0 +1,57 @@
+main_title: "Härnösands HF Team"
+nav:
+  - "Hem"
+  - "Nyheter"
+  - "Partners"
+  - "Lag"
+  - "Kontakt"
+hero:
+  tagline: "LAGET FÖRE ALLT"
+  subtitle: "Härnösands HF - En förening med stolthet, gemenskap och passion för sporten."
+stats:
+  total_teams: 23
+  a_teams: 2
+  youth_teams: 21
+  history_years: 50
+features:
+  - title: "Passion"
+    description: "Vi brinner för handboll"
+  - title: "Utveckling"
+    description: "Alla kan bli bättre"
+  - title: "Gemenskap"
+    description: "Tillsammans är vi starka"
+ctas:
+  view_teams: "Visa Lag"
+  latest_news: "Senaste Nytt"
+  contact_us:  "Kontakta Oss"
+partners_section:
+  title: "Våra Partners"
+  intro: >
+    Vi är stolta över att samarbeta med lokala företag och organisationer
+    som stödjer vår verksamhet och hjälper oss att utveckla handbollen i Härnösand.
+  tiers:
+    - label: "Diamantpartner"
+      partners:
+        - "Highcon"
+        - "HSTA"
+        - "Härnösands Plåtslageri"
+        - "Jasab"
+        - "JJ Bygg"
+        - "Ohmy"
+        - "Westerlinds"
+        - "Sundfrakt"
+    - label: "Platinapartner"
+      partners:
+        - "Försäkringskonsult"
+    - label: "Guldpartner"
+      partners:
+        - "Bärgab"
+        - "Mekonomen"
+        - "SCA"
+    - label: "Silverpartner"
+      partners:
+        - "Ekebro Utveckling"
+        - "Härnösandshus"
+        - "J Sjölunds Värme"
+        - "Norrskydd"
+        - "Länsförsäkringar"
