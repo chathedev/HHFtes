@@ -1,97 +1,74 @@
 "use server"
 
-import { type PageContent, defaultContent } from "@/lib/content-store"
+import { defaultContent, type PageContent } from "@/lib/content-store"
 
-const BACKEND_API_URL = "https://api.nuredo.se/api/content"
+const API_BASE_URL = "https://api.nuredo.se/api"
 
-// Helper function for deep merging objects (copied from lib/content-store.ts for server-side use)
-function deepMerge<T extends object>(target: T, source: Partial<T>): T {
-  const output = { ...target } as T
+interface ApiResponse {
+  message: string
+  content?: PageContent
+  sections?: string[]
+}
 
-  if (target && typeof target === "object" && source && typeof source === "object") {
-    Object.keys(source).forEach((key) => {
-      if (Object.prototype.hasOwnProperty.call(source, key)) {
-        const targetValue = target[key as keyof T]
-        const sourceValue = source[key as keyof T]
-
-        if (Array.isArray(targetValue) && Array.isArray(sourceValue)) {
-          output[key as keyof T] = sourceValue as T[keyof T]
-        } else if (
-          typeof targetValue === "object" &&
-          targetValue !== null &&
-          typeof sourceValue === "object" &&
-          sourceValue !== null &&
-          !Array.isArray(targetValue) &&
-          !Array.isArray(sourceValue)
-        ) {
-          output[key as keyof T] = deepMerge(targetValue as object, sourceValue as object) as T[keyof T]
-        } else {
-          output[key as keyof T] = sourceValue as T[keyof T]
-        }
-      }
-    })
+async function fetchWithAuth(url: string, options?: RequestInit): Promise<Response> {
+  const headers = new Headers(options?.headers)
+  // Only add Authorization header for POST/PATCH requests
+  if (options?.method === "POST" || options?.method === "PATCH") {
+    headers.set("Authorization", `Bearer ${process.env.API_SECRET}`)
   }
-  return output
+  return fetch(url, { ...options, headers })
 }
 
 export async function loadEditorContentServer(): Promise<PageContent> {
   try {
-    // GET /api/content does NOT require authentication based on your backend snippet
-    const response = await fetch(BACKEND_API_URL, {
-      headers: {
-        "Content-Type": "application/json",
-      },
-      // Disable caching for editor content to always get the latest
-      cache: "no-store",
+    const response = await fetchWithAuth(`${API_BASE_URL}/content`, {
+      method: "GET",
+      next: { revalidate: 0 }, // Ensure fresh data on every request
     })
 
-    if (response.ok) {
-      const fetchedContent = (await response.json()) as PageContent
-      // Merge fetched content with default to ensure all fields exist
-      return deepMerge(defaultContent, fetchedContent)
-    } else {
-      console.warn(
-        `Failed to fetch content from backend (status: ${response.status}), falling back to default content.`,
-      )
+    if (!response.ok) {
+      console.error(`Failed to fetch content: ${response.status} ${response.statusText}`)
+      // Fallback to default content if backend fetch fails
       return defaultContent
     }
+
+    const data = await response.json()
+    return data as PageContent
   } catch (error) {
-    console.error("Network error during server-side content fetch, falling back to default content:", error)
+    console.error("Error loading editor content from backend:", error)
+    // Fallback to default content if there's a network error
     return defaultContent
   }
 }
 
 export async function saveEditorContentServer(content: PageContent): Promise<{ success: boolean; message: string }> {
   try {
-    // POST /api/content REQUIRES authentication based on your backend snippet
-    const response = await fetch(BACKEND_API_URL, {
+    const response = await fetchWithAuth(`${API_BASE_URL}/content`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        // Ensure API_SECRET is available as an environment variable on the server
-        Authorization: `Bearer ${process.env.API_SECRET}`, // Use Bearer token as per your backend
       },
       body: JSON.stringify(content),
     })
 
-    if (response.ok) {
-      return { success: true, message: "Innehåll sparat framgångsrikt!" }
-    } else {
-      const errorData = await response.json()
-      console.error("Failed to save content to backend:", response.status, errorData)
-      return { success: false, message: `Kunde inte spara innehållet: ${errorData.message || response.statusText}` }
+    const result: ApiResponse = await response.json()
+
+    if (!response.ok) {
+      console.error("Failed to save content:", result.message || response.statusText)
+      return { success: false, message: result.message || "Kunde inte spara innehåll." }
     }
+
+    return { success: true, message: result.message || "Innehåll sparat framgångsrikt!" }
   } catch (error) {
-    console.error("Network error during server-side content save:", error)
-    return { success: false, message: "Nätverksfel vid sparande av innehåll." }
+    console.error("Error saving editor content to backend:", error)
+    return { success: false, message: "Nätverksfel vid sparning av innehåll." }
   }
 }
 
-// This function will simply return default content, as there's no specific backend endpoint for "resetting" all content
 export async function resetEditorContentServer(): Promise<PageContent> {
-  // In a real scenario, if you had a backend endpoint to reset content, you'd call it here.
-  // For now, it just returns the default content.
-  console.log("Resetting editor content to default values (server-side).")
-  await new Promise((resolve) => setTimeout(resolve, 200)) // Simulate delay
+  // In a real scenario, this might trigger a backend reset or simply return default.
+  // For this demo, we'll just return the default content.
+  // If your backend has a specific reset endpoint, you'd call it here.
+  console.log("Resetting content to default values (server-side simulation).")
   return defaultContent
 }
