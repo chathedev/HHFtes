@@ -1,0 +1,102 @@
+backend:
+  name: github
+  repo: chathedev/HHFNAF
+  branch: main
+  auth_scope: "repo"
+  client_id: "${env:NETLIFY_CMS_CLIENT_ID}"
+  client_secret: "${env:NETLIFY_CMS_CLIENT_SECRET}"
+
+media_folder: "public/uploads"
+public_folder: "/uploads"
+
+collections:
+  - name: "home"
+    label: "Hem"
+    files:
+      - file: "content/home.yaml"
+        label: "Hem (innehåll)"
+        name: "home"
+        fields:
+          - { label: "Huvudrubrik", name: "main_title", widget: "string" }
+          - { label: "Navigation", name: "nav", widget: "list", field: { label: "Etikett", name: "label", widget: "string" } }
+          - label: "Hero"
+            name: "hero"
+            widget: object
+            fields:
+              - { label: "Tagline", name: "tagline", widget: "string" }
+              - { label: "Undertext", name: "subtitle", widget: "text" }
+          - label: "Statistik"
+            name: "stats"
+            widget: "object"
+            fields:
+              - { label: "Totalt Lag", name: "total_teams", widget: "number" }
+              - { label: "A-lag", name: "a_teams", widget: "number" }
+              - { label: "Ungdomslag", name: "youth_teams", widget: "number" }
+              - { label: "År av Historia", name: "history_years", widget: "number" }
+          - label: "Kärnvärden"
+            name: "features"
+            widget: "list"
+            fields:
+              - { label: "Titel", name: "title", widget: "string" }
+              - { label: "Beskrivning", name: "description", widget: "text" }
+          - label: "Knapptexter"
+            name: "ctas"
+            widget: "object"
+            fields:
+              - { label: "Visa Lag", name: "view_teams", widget: "string" }
+              - { label: "Senaste Nytt", name: "latest_news", widget: "string" }
+              - { label: "Kontakta Oss", name: "contact_us", widget: "string" }
+          - label: "Partners-sektion"
+            name: "partners_section"
+            widget: object
+            fields:
+              - { label: "Rubrik", name: "title", widget: "string" }
+              - { label: "Intro-text", name: "intro", widget: "text" }
+              - label: "Nivåer"
+                name: "tiers"
+                widget: "list"
+                fields:
+                  - { label: "Etikett", name: "label", widget: "string" }
+                  - label: "Företag"
+                    name: "partners"
+                    widget: "list"
+                    fields:
+                      - { label: "Namn", name: "name", widget: "string" }
+
+  - name: "teams"
+    label: "Lag"
+    files:
+      - file: "content/teams.yaml"
+        label: "Lag (innehåll)"
+        name: "teams"
+        fields:
+          - { label: "Introduktion", name: "intro", widget: "text" }
+          - label: "Kategorier"
+            name: "categories"
+            widget: "list"
+            fields:
+              - { label: "Kategori-namn", name: "name", widget: "string" }
+              - label: "Lag"
+                name: "items"
+                widget: "list"
+                fields:
+                  - { label: "Namn", name: "name", widget: "string" }
+                  - { label: "Länk", name: "link", widget: "string" }
+
+  - name: "contact"
+    label: "Kontakt"
+    files:
+      - file: "content/contact.yaml"
+        label: "Kontakt (innehåll)"
+        name: "contact"
+        fields:
+          - { label: "Titel", name: "title", widget: "string" }
+          - { label: "Underrubrik", name: "subtitle", widget: "text" }
+          - { label: "E-post", name: "email", widget: "string" }
+          - { label: "Adress", name: "address", widget: "string" }
+          - label: "FAQ"
+            name: "faq"
+            widget: "list"
+            fields:
+              - { label: "Fråga", name: "question", widget: "string" }
+              - { label: "Svar", name: "answer", widget: "text" }
