@@ -9,36 +9,22 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { login } from "@/app/actions/auth"
 import { useAuth } from "@/components/auth-provider"
 import { useEffect } from "react"
-import { toast } from "@/components/ui/use-toast"
 
 export default function LoginPage() {
   const router = useRouter()
   const [state, formAction, isPending] = useActionState(login, null)
   const { isAuthenticated, setIsAuthenticated } = useAuth()
 
-  // If already authenticated on the client, redirect to editor
   useEffect(() => {
     if (isAuthenticated) {
       router.push("/editor")
     }
   }, [isAuthenticated, router])
 
-  // Handle server action result
   useEffect(() => {
     if (state?.success) {
-      setIsAuthenticated(true) // Update client-side auth state
-      toast({
-        title: "Inloggad!",
-        description: "Du är nu inloggad till redigeraren.",
-        variant: "default",
-      })
+      setIsAuthenticated(true)
       router.push("/editor")
-    } else if (state?.message) {
-      toast({
-        title: "Inloggningsfel",
-        description: state.message,
-        variant: "destructive",
-      })
     }
   }, [state, setIsAuthenticated, router])
 
@@ -55,6 +41,7 @@ export default function LoginPage() {
               <Label htmlFor="password">Lösenord</Label>
               <Input id="password" name="password" type="password" required />
             </div>
+            {state?.message && <p className="text-red-500 text-sm">{state.message}</p>}
             <Button type="submit" className="w-full" disabled={isPending}>
               {isPending ? "Loggar in..." : "Logga in"}
             </Button>

@@ -6,25 +6,31 @@ import { createContext, useContext, useState, useEffect } from "react"
 interface AuthContextType {
   isAuthenticated: boolean
   setIsAuthenticated: (value: boolean) => void
-  loading: boolean // Indicates if the client-side auth check is still loading (e.g., from localStorage)
+  loading: boolean
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
-export function AuthProvider({
-  children,
-  initialIsAuthenticated,
-}: {
-  children: React.ReactNode
-  initialIsAuthenticated: boolean
-}) {
-  const [isAuthenticated, setIsAuthenticated] = useState(initialIsAuthenticated)
-  const [loading, setLoading] = useState(false) // No longer loading from localStorage initially
+export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [loading, setLoading] = useState(true)
 
-  // Use localStorage for client-side persistence after the initial server render
   useEffect(() => {
-    // Only update localStorage if the state changes from the initial server-provided state
-    // or subsequent client-side interactions.
+    const checkAuth = async () => {
+      // In a real app, you'd fetch a session from an API or check a secure cookie.
+      // For this demo, we'll use a simple localStorage flag.
+      // NOTE: This is NOT secure for production. For production, use NextAuth.js or similar.
+      const storedAuth = localStorage.getItem("hhf_is_authenticated")
+      if (storedAuth === "true") {
+        setIsAuthenticated(true)
+      }
+      setLoading(false)
+    }
+    checkAuth()
+  }, [])
+
+  // Function to update localStorage when isAuthenticated changes
+  useEffect(() => {
     localStorage.setItem("hhf_is_authenticated", isAuthenticated.toString())
   }, [isAuthenticated])
 

@@ -4,9 +4,8 @@ import { Inter } from "next/font/google"
 import "./globals.css"
 import Header from "@/components/header"
 import Footer from "@/components/footer"
-import { AuthProvider } from "@/components/auth-provider"
-import { Toaster } from "@/components/ui/toaster"
-import { isAuthenticatedServer } from "@/app/actions/auth" // Import server-side auth check
+import { AuthProvider } from "@/components/auth-provider" // Import AuthProvider
+import { Toaster } from "@/components/ui/toaster" // Import Toaster
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -17,21 +16,21 @@ export const metadata: Metadata = {
   generator: "v0.dev",
 }
 
-export default async function RootLayout({
+export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode
 }>) {
-  const initialIsAuthenticated = await isAuthenticatedServer() // Get auth state on the server
-
   return (
     <html lang="sv">
       <body className={`${inter.className} bg-white`}>
-        <AuthProvider initialIsAuthenticated={initialIsAuthenticated}>
+        <AuthProvider>
+          {" "}
+          {/* Wrap with AuthProvider */}
           <Header />
           <main>{children}</main>
           <Footer />
-          <Toaster />
+          <Toaster /> {/* Add Toaster for toasts */}
         </AuthProvider>
       </body>
     </html>
