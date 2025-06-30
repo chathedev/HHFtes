@@ -29,8 +29,7 @@ function Header() {
 
   const navLinks = [
     { name: "Hem", href: "/" },
-    { name: "Nyheter", href: "/nyheter" }, // Changed from Arena to Nyheter
-    { name: "Partners", href: "/partners" },
+    { name: "Nyheter", href: "/nyheter" },
     { name: "Lag", href: "/lag" },
     { name: "Kontakt", href: "/kontakt" },
   ]
