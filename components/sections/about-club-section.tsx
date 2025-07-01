@@ -173,7 +173,7 @@ export default function AboutClubSection({ content, isEditing = false, onContent
           <div className="relative">
             <div className="relative h-[400px] rounded-lg overflow-hidden shadow-xl">
               <Image
-                src={content.imageSrc || "/placeholder.svg"} // Removed placeholder fallback
+                src={content.imageSrc || "https://i.ibb.co/Zt8gppK/491897759-17872413642339702-3719173158843008539-n.jpg"} // Removed placeholder fallback
                 alt={content.imageAlt}
                 fill
                 className="object-cover"

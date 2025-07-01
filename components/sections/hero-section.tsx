@@ -37,7 +37,7 @@ export default function HeroSection({ content, isEditing = false, onContentChang
     <section className="relative w-full h-screen flex items-center justify-center overflow-hidden">
       <div className="absolute inset-0 z-0">
         <Image
-          src={content.imageUrl || "/placeholder.svg"} // Removed placeholder fallback
+          src={content.imageUrl || " https://az316141.cdn.laget.se/2317159/11348130.jpg"} // Removed placeholder fallback
           alt="Härnösands FF Team"
           fill
           quality={90}
