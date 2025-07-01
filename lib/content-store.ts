@@ -1,4 +1,4 @@
-// lib/content-store.ts
+import type { ReadonlyURLSearchParams } from "next/navigation"
 
 export interface FAQItem {
   question: string
@@ -6,6 +6,7 @@ export interface FAQItem {
 }
 
 export interface PageContent {
+  sections: string[]
   hero: {
     title: string
     description: string
@@ -55,7 +56,6 @@ export interface PageContent {
     boardTitle: string
     boardDescription: string
     boardContact: string
-    faqTitle: string
     faqItems: FAQItem[]
   }
   partnersPage: {
@@ -66,13 +66,147 @@ export interface PageContent {
     callToActionLinkText: string
     callToActionLink: string
   }
-  sections?: string[]
 }
 
-const LOCAL_STORAGE_KEY = "hhf_website_content"
+export const defaultContent: PageContent = {
+  sections: ["hero", "stats", "aboutClub", "partnersCarousel"],
+  hero: {
+    title: "Välkommen till Härnösands FF",
+    description:
+      "Härnösands FF är en fotbollsklubb med en rik historia och en stark gemenskap. Vi strävar efter att utveckla både spelare och människor, från ungdom till elit.",
+    imageUrl: "/placeholder.svg?height=800&width=1200",
+    button1Text: "Våra lag",
+    button1Link: "/lag",
+    button2Text: "Kalender",
+    button2Link: "/kalender",
+  },
+  stats: {
+    totalTeams: 15,
+    aTeams: 2,
+    youthTeams: 13,
+    historyYears: "1900-tal",
+  },
+  aboutClub: {
+    title: "Om Härnösands FF",
+    paragraph1:
+      "Härnösands FF grundades med en vision om att skapa en inkluderande och framgångsrik fotbollsmiljö. Sedan dess har vi vuxit till en av regionens mest respekterade klubbar, känd för vår starka gemenskap och engagemang för ungdomsfotboll.",
+    paragraph2:
+      "Vi tror på att fotboll är mer än bara ett spel – det är en plattform för personlig utveckling, lagarbete och att bygga livslånga vänskaper. Våra tränare och ledare är dedikerade till att inspirera och vägleda varje spelare att nå sin fulla potential, både på och utanför planen.",
+    passionText: "Passion för fotboll",
+    developmentText: "Utveckling för alla",
+    communityText: "Stark gemenskap",
+    button1Text: "Bli medlem",
+    button1Link: "/bli-medlem",
+    button2Text: "Kontakta oss",
+    button2Link: "/kontakt",
+    imageSrc: "/placeholder.svg?height=400&width=600",
+    imageAlt: "Härnösands FF lag i en ring",
+    totalTeamsCallout: 15,
+    totalTeamsCalloutText: "Aktiva lag",
+  },
+  partnersCarousel: {
+    title: "Våra Partners",
+    description:
+      "Vi är stolta över våra samarbeten med lokala företag och organisationer som delar vår passion för fotboll och samhällsengagemang. Tillsammans bygger vi en starkare framtid för Härnösands FF.",
+    callToActionTitle: "Bli Partner",
+    callToActionDescription:
+      "Är ditt företag intresserat av att stödja Härnösands FF och bidra till vår fortsatta framgång? Kontakta oss för att diskutera olika partnerskapsmöjligheter.",
+    callToActionLinkText: "Läs mer om partnerskap",
+    callToActionLink: "/partners",
+  },
+  kontaktPage: {
+    emailTitle: "E-post",
+    emailDescription: "För allmänna frågor och information.",
+    emailAddress: "info@harnosandsff.se",
+    addressTitle: "Besöksadress",
+    addressDescription: "Välkommen att besöka oss på vår anläggning.",
+    addressLocation: "Härnösands Arena, Arenavägen 1, 871 40 Härnösand",
+    boardTitle: "Styrelsen",
+    boardDescription: "Kontakta styrelsen för ärenden som rör klubbens ledning och strategi.",
+    boardContact: "styrelsen@harnosandsff.se",
+    faqItems: [
+      {
+        question: "Hur blir jag medlem?",
+        answer: "Du kan bli medlem genom att fylla i vårt online-formulär under sektionen 'Bli medlem'.",
+      },
+      {
+        question: "Var hittar jag matchschemat?",
+        answer: "Matchschemat för alla lag finns tillgängligt på 'Matcher'-sidan.",
+      },
+      {
+        question: "Kan jag provträna med ett lag?",
+        answer: "Ja, kontakta respektive lags tränare för att arrangera en provträning.",
+      },
+    ],
+  },
+  partnersPage: {
+    title: "Våra Partners",
+    description:
+      "Härnösands FF är djupt tacksamma för det ovärderliga stöd vi får från våra partners. Deras engagemang är avgörande för vår förmåga att bedriva verksamheten, utveckla våra spelare och bidra positivt till lokalsamhället. Tillsammans skapar vi framgång på och utanför planen.",
+    callToActionTitle: "Bli en del av vårt vinnande lag – Bli Partner!",
+    callToActionDescription:
+      "Är ditt företag intresserat av att synas tillsammans med Härnösands FF och stödja en levande idrottsförening? Vi erbjuder skräddarsydda partnerskap som ger exponering och möjlighet att associeras med positiva värden som gemenskap, hälsa och framgång. Kontakta oss för att utforska hur vi kan samarbeta.",
+    callToActionLinkText: "Kontakta oss om partnerskap",
+    callToActionLink: "/kontakt",
+  },
+}
 
-// Helper function for deep merging objects (kept here for client-side localStorage merging)
-function deepMerge<T extends object>(target: T, source: Partial<T>): T {
+/* ------------------------------------------------------------------
+   Load content from backend and merge with defaults
+-------------------------------------------------------------------*/
+export async function loadContent(): Promise<PageContent> {
+  try {
+    const res = await fetch("https://api.nuredo.se/api/content", {
+      headers: { "Content-Type": "application/json" },
+      cache: "no-store",
+    })
+
+    if (res.ok) {
+      const json = (await res.json()) as Partial<PageContent>
+      return deepMerge(defaultContent, json)
+    }
+
+    console.warn(`[loadContent] Backend responded ${res.status}. Falling back to defaults.`)
+  } catch (err) {
+    console.error("[loadContent] Backend fetch failed:", err)
+  }
+
+  // Fallback to defaults if anything goes wrong
+  return defaultContent
+}
+
+// No local storage functions needed as per new requirements
+// export function saveContentToLocalStorage(content: PageContent) {
+//   if (typeof window !== "undefined") {
+//     localStorage.setItem("hhf_website_content", JSON.stringify(content));
+//   }
+// }
+
+// export function loadContentFromLocalStorage(): PageContent {
+//   if (typeof window !== "undefined") {
+//     const savedContent = localStorage.getItem("hhf_website_content");
+//     if (savedContent) {
+//       try {
+//         const parsedContent = JSON.parse(savedContent);
+//         // Merge with default to ensure all new fields are present
+//         return deepMerge(defaultContent, parsedContent);
+//       } catch (e) {
+//         console.error("Failed to parse content from local storage, using default.", e);
+//       }
+//     }
+//   }
+//   return defaultContent;
+// }
+
+// export function resetContent() {
+//   if (typeof window !== "undefined") {
+//     localStorage.removeItem("hhf_website_content");
+//   }
+// }
+
+// Helper function for deep merging objects (used internally by loadContentFromLocalStorage and server actions)
+// This is kept here because it's used by the defaultContent logic and might be useful if content structure changes.
+export function deepMerge<T extends object>(target: T, source: Partial<T>): T {
   const output = { ...target } as T
 
   if (target && typeof target === "object" && source && typeof source === "object") {
@@ -82,6 +216,7 @@ function deepMerge<T extends object>(target: T, source: Partial<T>): T {
         const sourceValue = source[key as keyof T]
 
         if (Array.isArray(targetValue) && Array.isArray(sourceValue)) {
+          // For arrays, replace completely rather than merging elements
           output[key as keyof T] = sourceValue as T[keyof T]
         } else if (
           typeof targetValue === "object" &&
@@ -89,7 +224,7 @@ function deepMerge<T extends object>(target: T, source: Partial<T>): T {
           typeof sourceValue === "object" &&
           sourceValue !== null &&
           !Array.isArray(targetValue) &&
-          !ArrayOfArrays(sourceValue)
+          !Array.isArray(sourceValue) // Ensure it's not an array before deep merging
         ) {
           output[key as keyof T] = deepMerge(targetValue as object, sourceValue as object) as T[keyof T]
         } else {
@@ -101,169 +236,13 @@ function deepMerge<T extends object>(target: T, source: Partial<T>): T {
   return output
 }
 
-// Helper to check if a value is an array of arrays (to prevent deep merging arrays)
-function ArrayOfArrays(value: any): boolean {
-  return Array.isArray(value) && value.some((item) => Array.isArray(item))
-}
+export function getBaseUrl(searchParams?: ReadonlyURLSearchParams) {
+  const url = process.env.NEXT_PUBLIC_VERCEL_URL
+    ? `https://${process.env.NEXT_PUBLIC_VERCEL_URL}`
+    : "http://localhost:3000"
 
-// Default content for the website (should match public/default-content.json)
-export const defaultContent: PageContent = {
-  hero: {
-    title: "LAGET FÖRE ALLT",
-    description: "Härnösands HF - En förening med stolthet, gemenskap och passion för sporten.",
-    imageUrl: "https://az316141.cdn.laget.se/2317159/11348130.jpg",
-    button1Text: "Våra 23 Lag",
-    button1Link: "/lag",
-    button2Text: "Senaste Nytt",
-    button2Link: "/nyheter",
-  },
-  stats: {
-    totalTeams: 23,
-    aTeams: 2,
-    youthTeams: 21,
-    historyYears: "50+",
-  },
-  aboutClub: {
-    title: "Härnösands HF",
-    paragraph1:
-      "Vi är en handbollsklubb som värnar om gemenskap, utveckling och sund konkurrens. Med våra 23 lag från ungdom till seniorer erbjuder vi handboll för alla åldrar och nivåer.",
-    paragraph2:
-      "Vår vision är att vara den ledande handbollsklubben i regionen genom att skapa en miljö där varje spelare kan utvecklas och trivas.",
-    passionText: "Vi brinner för handboll",
-    developmentText: "Alla kan bli bättre",
-    communityText: "Tillsammans är vi starka",
-    button1Text: "Visa Lag",
-    button1Link: "/lag",
-    button2Text: "Kontakta Oss",
-    button2Link: "/kontakt",
-    imageSrc: "https://i.ibb.co/Zt8gppK/491897759-17872413642339702-3719173158843008539-n.jpg",
-    imageAlt: "Härnösands HF Team",
-    totalTeamsCallout: 23,
-    totalTeamsCalloutText: "lag totalt",
-  },
-  partnersCarousel: {
-    title: "Våra Partners",
-    description:
-      "Vi är stolta över att samarbeta med lokala företag och organisationer som stödjer vår verksamhet och hjälper oss att utveckla handbollen i Härnösand.",
-    callToActionTitle: "Vill du stödja Härnösands HF?",
-    callToActionDescription:
-      "Vi välkomnar nya partners som vill stödja vår verksamhet och bidra till utvecklingen av handbollen i regionen.",
-    callToActionLinkText: "Kontakta oss",
-    callToActionLink: "/kontakt",
-  },
-  kontaktPage: {
-    emailTitle: "E-post",
-    emailDescription: "Skicka dina frågor till oss via e-post",
-    emailAddress: "info@harnosandshf.se",
-    addressTitle: "Besöksadress",
-    addressDescription: "Hitta oss på våra träningar",
-    addressLocation: "Öbacka Sporthall, Härnösand",
-    boardTitle: "Styrelse",
-    boardDescription: "Kontakta vår styrelse för föreningsfrågor",
-    boardContact: "Via e-post eller på träningarna",
-    faqTitle: "Vanliga frågor",
-    faqItems: [
-      {
-        question: "Hur blir jag en ny spelare?",
-        answer:
-          "Kontakta oss via e-post eller telefon för att få information om provträningar och hur du anmäler dig till ett av våra lag. Vi välkomnar spelare i alla åldrar och nivåer!",
-      },
-      {
-        question: "Hur kan mitt företag sponsra Härnösands HF?",
-        answer:
-          "Vi är alltid öppna för nya partnerskap. Vänligen e-posta oss på info@harnosandshf.se för att diskutera sponsringsmöjligheter och hur vi kan samarbeta.",
-      },
-      {
-        question: "Var finns era träningsanläggningar?",
-        answer:
-          "Våra huvudsakliga träningsanläggningar är Öbacka Sporthall och Landgrenshallen i Härnösand. Specifika tider och hallar för varje lag finns på respektive lagsida.",
-      },
-      {
-        question: "Var hittar jag matchschemat?",
-        answer:
-          'Matchscheman för alla våra lag finns på de lagspecifika sidorna under "Lag" i menyn. Du kan också hitta en översikt över kommande matcher på vår "Matcher"-sida.',
-      },
-    ],
-  },
-  partnersPage: {
-    title: "Våra Partners",
-    description:
-      "Vi är stolta över att samarbeta med lokala företag och organisationer som stödjer vår verksamhet och hjälper oss att utveckla handbollen och föreningen i Härnösand.",
-    callToActionTitle: "Vill du stödja Härnösands HF?",
-    callToActionDescription:
-      "Vi välkomnar nya partners som vill stödja vår verksamhet och bidra till utvecklingen av handbollen i regionen.",
-    callToActionLinkText: "Kontakta oss",
-    callToActionLink: "/kontakt",
-  },
-  sections: [],
-}
-
-// Loads content either from the backend (server-side) or from
-// localStorage (client-side) and always falls back to defaultContent.
-export async function loadContent(): Promise<PageContent> {
-  // Client side → reuse local-storage helper
-  if (typeof window !== "undefined") {
-    return loadContentFromLocalStorage()
+  if (searchParams) {
+    return `${url}?${searchParams.toString()}`
   }
-
-  // Server side → fetch from backend, merge with defaults
-  try {
-    const res = await fetch("https://api.nuredo.se/api/content", {
-      // GET endpoint on your backend does NOT require auth
-      headers: { "Content-Type": "application/json" },
-      // 10 s timeout to avoid hanging builds
-      cache: "no-store",
-    })
-
-    if (res.ok) {
-      const json = (await res.json()) as Partial<PageContent>
-      return deepMerge(defaultContent, json)
-    }
-
-    console.warn(`[loadContent] Backend responded ${res.status}. Falling back to defaultContent.`)
-  } catch (err) {
-    console.error("[loadContent] Backend fetch failed:", err)
-  }
-
-  // Fallback
-  return defaultContent
-}
-
-// Client-side functions for localStorage
-export async function loadContentFromLocalStorage(): Promise<PageContent> {
-  if (typeof window === "undefined") {
-    return defaultContent // Return default on server
-  }
-  try {
-    const storedContent = localStorage.getItem(LOCAL_STORAGE_KEY)
-    if (storedContent) {
-      // Use deepMerge to ensure all default fields are present even if stored content is partial
-      return deepMerge(defaultContent, JSON.parse(storedContent) as Partial<PageContent>)
-    }
-  } catch (error) {
-    console.warn("Failed to parse content from localStorage, returning default:", error)
-  }
-  return defaultContent
-}
-
-export function saveContentToLocalStorage(content: PageContent) {
-  if (typeof window === "undefined") {
-    return // Do nothing on server-side
-  }
-  try {
-    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(content))
-  } catch (error) {
-    console.error("Failed to save content to localStorage:", error)
-  }
-}
-
-export function resetContent() {
-  if (typeof window === "undefined") {
-    return // Do nothing on server-side
-  }
-  try {
-    localStorage.removeItem(LOCAL_STORAGE_KEY)
-  } catch (error) {
-    console.error("Failed to reset content in localStorage:", error)
-  }
+  return url
 }
