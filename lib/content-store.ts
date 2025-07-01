@@ -167,9 +167,10 @@ let currentContent: PageContent = { ...defaultContent }
 -------------------------------------------------------------------*/
 export async function loadContent(): Promise<PageContent> {
   try {
-    const res = await fetch("https://api.nuredo.se/api/content", {
+    // Use next.js API route instead of external API to avoid static rendering issues
+    const res = await fetch("/api/content", {
       headers: { "Content-Type": "application/json" },
-      cache: "no-store",
+      next: { revalidate: 3600 }, // Revalidate every hour
     })
 
     if (res.ok) {
@@ -188,7 +189,8 @@ export async function loadContent(): Promise<PageContent> {
 
 // Add getContent as an alias for loadContent to maintain compatibility
 export async function getContent(): Promise<PageContent> {
-  return loadContent()
+  // Return the default content directly to avoid fetch during static rendering
+  return { ...defaultContent }
 }
 
 // Add saveContent function to handle content updates
@@ -198,8 +200,8 @@ export async function saveContent(newContent: PageContent): Promise<{ success: b
     // For now, we'll just update our in-memory store
     currentContent = { ...newContent }
 
-    // Simulate an API call to save content
-    const res = await fetch("https://api.nuredo.se/api/content", {
+    // Use our local API route instead of external API
+    const res = await fetch("/api/editor-content", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(newContent),

@@ -5,6 +5,9 @@ import { PartnersCarouselSection } from "@/components/sections/partners-carousel
 import { UpcomingEventsSection } from "@/components/upcoming-events-section"
 import { getContent } from "@/lib/content-store"
 
+// Force dynamic rendering for this page
+export const dynamic = "force-dynamic"
+
 export default async function Home() {
   const content = await getContent()
 
@@ -13,7 +16,7 @@ export default async function Home() {
       <HeroSection content={content.hero} />
       <AboutClubSection content={content.aboutClub} />
       <StatsSection content={content.stats} />
-      <PartnersCarouselSection content={content.partners} />
+      <PartnersCarouselSection content={content.partnersCarousel} />
       <UpcomingEventsSection content={content.upcomingEvents} />
     </div>
   )

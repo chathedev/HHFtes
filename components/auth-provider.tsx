@@ -17,22 +17,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const checkAuth = async () => {
-      // In a real app, you'd fetch a session from an API or check a secure cookie.
-      // For this demo, we'll use a simple localStorage flag.
-      // NOTE: This is NOT secure for production. For production, use NextAuth.js or similar.
-      const storedAuth = localStorage.getItem("hhf_is_authenticated")
-      if (storedAuth === "true") {
-        setIsAuthenticated(true)
+      try {
+        // In a real app, you'd fetch a session from an API or check a secure cookie.
+        // For this demo, we'll use a simple localStorage flag.
+        // NOTE: This is NOT secure for production. For production, use NextAuth.js or similar.
+        if (typeof window !== "undefined") {
+          const storedAuth = localStorage.getItem("hhf_is_authenticated")
+          if (storedAuth === "true") {
+            setIsAuthenticated(true)
+          }
+        }
+      } catch (error) {
+        console.error("Auth check error:", error)
+      } finally {
+        setLoading(false)
       }
-      setLoading(false)
     }
+
     checkAuth()
   }, [])
 
   // Function to update localStorage when isAuthenticated changes
   useEffect(() => {
-    localStorage.setItem("hhf_is_authenticated", isAuthenticated.toString())
-  }, [isAuthenticated])
+    if (typeof window !== "undefined" && !loading) {
+      localStorage.setItem("hhf_is_authenticated", isAuthenticated.toString())
+    }
+  }, [isAuthenticated, loading])
 
   return (
     <AuthContext.Provider value={{ isAuthenticated, setIsAuthenticated, loading }}>{children}</AuthContext.Provider>

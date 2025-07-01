@@ -1,151 +1,227 @@
 "use client"
 
-import type React from "react"
-
 import Image from "next/image"
 import Link from "next/link"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
-import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { useState } from "react"
+import { Button } from "@/components/ui/button"
+import { Heart, Lightbulb, Users } from "lucide-react"
 
-interface AboutClubSectionProps {
+interface AboutClubProps {
   content: {
     title: string
-    description: string
-    linkText: string
-    linkUrl: string
-    totalTeamsCallout: number
+    paragraph1: string
+    paragraph2: string
+    passionText: string
+    developmentText: string
+    communityText: string
+    button1Text: string
+    button1Link: string
+    button2Text: string
+    button2Link: string
     imageSrc: string
+    imageAlt: string
+    totalTeamsCallout: number
+    totalTeamsCalloutText: string
   }
   isEditing?: boolean
-  setContent?: React.Dispatch<React.SetStateAction<any>>
+  onContentChange?: (field: string, value: string | number) => void
 }
 
-const availablePages = [
-  { name: "Hem", path: "/" },
-  { name: "Nyheter", path: "/nyheter" },
-  { name: "Kalender", path: "/kalender" },
-  { name: "Lag", path: "/lag" },
-  { name: "Matcher", path: "/matcher" },
-  { name: "Partners", path: "/partners" },
-  { name: "Kontakt", path: "/kontakt" },
-  { name: "Logga in", path: "/login" },
-]
-
-export function AboutClubSection({ content, isEditing = false, setContent }: AboutClubSectionProps) {
-  const [localContent, setLocalContent] = useState(content)
-
-  // Update local state when content prop changes (e.g., on save/reset from parent)
-  useState(() => {
-    setLocalContent(content)
-  }, [content])
-
-  const handleContentChange = (field: string, value: string | number) => {
-    const updatedContent = { ...localContent, [field]: value }
-    setLocalContent(updatedContent)
-    if (setContent) {
-      setContent((prev: any) => ({
-        ...prev,
-        aboutClub: updatedContent,
-      }))
+export function AboutClubSection({ content, isEditing = false, onContentChange }: AboutClubProps) {
+  const handleChange = (field: string, value: string | number) => {
+    if (isEditing && onContentChange) {
+      onContentChange(field, value)
     }
   }
 
   return (
-    <section className="w-full py-12 md:py-24 lg:py-32 bg-gray-50">
-      <div className="container px-4 md:px-6">
-        <div className="grid gap-8 lg:grid-cols-2 lg:gap-12 items-center">
-          <div className="space-y-6">
-            {isEditing ? (
-              <Textarea
-                className="text-3xl md:text-4xl font-bold bg-white border border-gray-300 focus:ring-2 focus:ring-orange-400 resize-none"
-                value={localContent.title}
-                onChange={(e) => handleContentChange("title", e.target.value)}
-                rows={1}
-              />
-            ) : (
-              <h2 className="text-3xl md:text-4xl font-bold">{localContent.title}</h2>
-            )}
-            {isEditing ? (
-              <Textarea
-                className="text-gray-600 md:text-lg bg-white border border-gray-300 focus:ring-2 focus:ring-orange-400 resize-none"
-                value={localContent.description}
-                onChange={(e) => handleContentChange("description", e.target.value)}
-                rows={5}
-              />
-            ) : (
-              <p className="text-gray-600 md:text-lg">{localContent.description}</p>
-            )}
-            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+    <section className="py-16 bg-white">
+      <div className="container mx-auto px-4">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+          {/* Image Column */}
+          <div className="relative h-[400px] md:h-[500px] rounded-lg overflow-hidden">
+            <Image
+              src={content.imageSrc || "/placeholder.svg?height=800&width=600&query=handball+team"}
+              alt={content.imageAlt}
+              fill
+              className="object-cover"
+            />
+
+            {/* Teams Callout */}
+            <div className="absolute bottom-6 left-6 bg-orange-600 text-white p-4 rounded-lg shadow-lg">
               {isEditing ? (
-                <div className="flex flex-col gap-2 w-full sm:w-auto">
-                  <Input
-                    className="bg-white border border-gray-300 focus:ring-2 focus:ring-orange-400"
-                    value={localContent.linkText}
-                    onChange={(e) => handleContentChange("linkText", e.target.value)}
-                    placeholder="Link Text"
-                  />
-                  <Select value={localContent.linkUrl} onValueChange={(value) => handleContentChange("linkUrl", value)}>
-                    <SelectTrigger className="w-full bg-white border border-gray-300 focus:ring-2 focus:ring-orange-400">
-                      <SelectValue placeholder="Välj sida" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-white text-gray-900">
-                      {availablePages.map((page) => (
-                        <SelectItem key={page.path} value={page.path}>
-                          {page.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+                <input
+                  type="number"
+                  value={content.totalTeamsCallout}
+                  onChange={(e) => handleChange("totalTeamsCallout", Number.parseInt(e.target.value))}
+                  className="w-20 bg-orange-700 text-white text-3xl font-bold text-center mb-1 rounded"
+                />
               ) : (
-                <Link
-                  className="inline-flex h-10 items-center justify-center rounded-md bg-orange-500 px-6 text-sm font-medium text-white shadow transition-colors hover:bg-orange-600 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-orange-700"
-                  href={localContent.linkUrl}
-                >
-                  {localContent.linkText}
-                </Link>
+                <div className="text-3xl font-bold text-center mb-1">{content.totalTeamsCallout}</div>
               )}
-              <div className="text-2xl font-bold text-orange-500">
-                {isEditing ? (
-                  <Input
-                    type="number"
-                    className="w-24 bg-white border border-gray-300 focus:ring-2 focus:ring-orange-400"
-                    value={localContent.totalTeamsCallout}
-                    onChange={(e) => handleContentChange("totalTeamsCallout", Number.parseInt(e.target.value) || 0)}
-                  />
-                ) : (
-                  localContent.totalTeamsCallout
-                )}{" "}
-                Lag
-              </div>
+
+              {isEditing ? (
+                <input
+                  type="text"
+                  value={content.totalTeamsCalloutText}
+                  onChange={(e) => handleChange("totalTeamsCalloutText", e.target.value)}
+                  className="w-full bg-orange-700 text-white text-center rounded"
+                />
+              ) : (
+                <div className="text-sm text-center">{content.totalTeamsCalloutText}</div>
+              )}
             </div>
           </div>
-          <div className="relative h-[300px] md:h-[400px] lg:h-[500px] rounded-lg overflow-hidden">
-            <Image
-              alt="About Club"
-              className="object-cover w-full h-full"
-              height={500}
-              src={localContent.imageSrc || "/placeholder.svg?height=500&width=800&query=about club image"}
-              style={{
-                aspectRatio: "800/500",
-                objectFit: "cover",
-              }}
-              width={800}
-            />
+
+          {/* Content Column */}
+          <div>
+            {isEditing ? (
+              <input
+                type="text"
+                value={content.title}
+                onChange={(e) => handleChange("title", e.target.value)}
+                className="text-3xl font-bold mb-6 w-full border-b border-gray-300 focus:outline-none focus:border-orange-500"
+              />
+            ) : (
+              <h2 className="text-3xl font-bold mb-6">{content.title}</h2>
+            )}
+
+            {isEditing ? (
+              <textarea
+                value={content.paragraph1}
+                onChange={(e) => handleChange("paragraph1", e.target.value)}
+                className="text-gray-600 mb-4 w-full h-32 border border-gray-300 rounded p-2 focus:outline-none focus:border-orange-500"
+              />
+            ) : (
+              <p className="text-gray-600 mb-4">{content.paragraph1}</p>
+            )}
+
+            {isEditing ? (
+              <textarea
+                value={content.paragraph2}
+                onChange={(e) => handleChange("paragraph2", e.target.value)}
+                className="text-gray-600 mb-8 w-full h-32 border border-gray-300 rounded p-2 focus:outline-none focus:border-orange-500"
+              />
+            ) : (
+              <p className="text-gray-600 mb-8">{content.paragraph2}</p>
+            )}
+
+            {/* Core Values */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+              <div className="flex flex-col items-center text-center">
+                <div className="p-3 bg-orange-100 rounded-full mb-3">
+                  <Heart className="h-6 w-6 text-orange-500" />
+                </div>
+                {isEditing ? (
+                  <input
+                    type="text"
+                    value={content.passionText}
+                    onChange={(e) => handleChange("passionText", e.target.value)}
+                    className="font-medium w-full text-center border-b border-gray-300 focus:outline-none focus:border-orange-500"
+                  />
+                ) : (
+                  <h3 className="font-medium">{content.passionText}</h3>
+                )}
+              </div>
+
+              <div className="flex flex-col items-center text-center">
+                <div className="p-3 bg-orange-100 rounded-full mb-3">
+                  <Lightbulb className="h-6 w-6 text-orange-500" />
+                </div>
+                {isEditing ? (
+                  <input
+                    type="text"
+                    value={content.developmentText}
+                    onChange={(e) => handleChange("developmentText", e.target.value)}
+                    className="font-medium w-full text-center border-b border-gray-300 focus:outline-none focus:border-orange-500"
+                  />
+                ) : (
+                  <h3 className="font-medium">{content.developmentText}</h3>
+                )}
+              </div>
+
+              <div className="flex flex-col items-center text-center">
+                <div className="p-3 bg-orange-100 rounded-full mb-3">
+                  <Users className="h-6 w-6 text-orange-500" />
+                </div>
+                {isEditing ? (
+                  <input
+                    type="text"
+                    value={content.communityText}
+                    onChange={(e) => handleChange("communityText", e.target.value)}
+                    className="font-medium w-full text-center border-b border-gray-300 focus:outline-none focus:border-orange-500"
+                  />
+                ) : (
+                  <h3 className="font-medium">{content.communityText}</h3>
+                )}
+              </div>
+            </div>
+
+            {/* Buttons */}
+            <div className="flex flex-col sm:flex-row gap-4">
+              {isEditing ? (
+                <div className="flex flex-col gap-2">
+                  <input
+                    type="text"
+                    value={content.button1Text}
+                    onChange={(e) => handleChange("button1Text", e.target.value)}
+                    className="px-4 py-2 border border-gray-300 rounded"
+                    placeholder="Button 1 Text"
+                  />
+                  <input
+                    type="text"
+                    value={content.button1Link}
+                    onChange={(e) => handleChange("button1Link", e.target.value)}
+                    className="px-4 py-2 border border-gray-300 rounded"
+                    placeholder="Button 1 Link"
+                  />
+                </div>
+              ) : (
+                <Button asChild>
+                  <Link href={content.button1Link}>{content.button1Text}</Link>
+                </Button>
+              )}
+
+              {isEditing ? (
+                <div className="flex flex-col gap-2">
+                  <input
+                    type="text"
+                    value={content.button2Text}
+                    onChange={(e) => handleChange("button2Text", e.target.value)}
+                    className="px-4 py-2 border border-gray-300 rounded"
+                    placeholder="Button 2 Text"
+                  />
+                  <input
+                    type="text"
+                    value={content.button2Link}
+                    onChange={(e) => handleChange("button2Link", e.target.value)}
+                    className="px-4 py-2 border border-gray-300 rounded"
+                    placeholder="Button 2 Link"
+                  />
+                </div>
+              ) : (
+                <Button asChild variant="outline">
+                  <Link href={content.button2Link}>{content.button2Text}</Link>
+                </Button>
+              )}
+            </div>
+
+            {/* Image URL input (only visible in edit mode) */}
             {isEditing && (
-              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 w-full max-w-md px-4">
-                <Label htmlFor="about-image-url" className="sr-only">
-                  About Image URL
-                </Label>
-                <Input
-                  id="about-image-url"
-                  className="w-full bg-white/90 text-gray-900 placeholder:text-gray-500 focus:ring-2 focus:ring-orange-400"
-                  value={localContent.imageSrc}
-                  onChange={(e) => handleContentChange("imageSrc", e.target.value)}
-                  placeholder="Enter image URL"
+              <div className="mt-6">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Image URL:</label>
+                <input
+                  type="text"
+                  value={content.imageSrc}
+                  onChange={(e) => handleChange("imageSrc", e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded"
+                  placeholder="Image URL"
+                />
+                <input
+                  type="text"
+                  value={content.imageAlt}
+                  onChange={(e) => handleChange("imageAlt", e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded mt-2"
+                  placeholder="Image Alt Text"
                 />
               </div>
             )}
@@ -155,3 +231,5 @@ export function AboutClubSection({ content, isEditing = false, setContent }: Abo
     </section>
   )
 }
+
+export default AboutClubSection
