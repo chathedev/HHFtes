@@ -13,8 +13,7 @@ import PartnersCarouselSection from "@/components/sections/partners-carousel-sec
 import UpcomingEventsSection from "@/components/upcoming-events-section"
 import { saveEditorContentServer } from "@/app/actions/editor-content"
 import { useToast } from "@/components/ui/use-toast"
-import { Loader2, Save, XCircle, GripVertical } from "lucide-react"
-import { DragDropContext, Droppable, Draggable, type DropResult } from "@hello-pangea/dnd"
+import { Loader2, Save, XCircle } from "lucide-react" // Removed GripVertical
 
 export default function EditorPage() {
   const [content, setContent] = useState<PageContent | null>(null)
@@ -105,23 +104,6 @@ export default function EditorPage() {
     })
   }
 
-  const onDragEnd = (result: DropResult) => {
-    if (!result.destination || !content) {
-      return
-    }
-    const newSections = Array.from(content.sections)
-    const [reorderedItem] = newSections.splice(result.source.index, 1)
-    newSections.splice(result.destination.index, 0, reorderedItem)
-
-    setContent((prevContent) => {
-      if (!prevContent) return null
-      return {
-        ...prevContent,
-        sections: newSections,
-      }
-    })
-  }
-
   if (isLoading || !content) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-100">
@@ -172,89 +154,62 @@ export default function EditorPage() {
       </div>
 
       {/* Render Sections based on content.sections order */}
-      <DragDropContext onDragEnd={onDragEnd}>
-        <Droppable droppableId="sections">
-          {(provided) => (
-            <main className="relative" {...provided.droppableProps} ref={provided.innerRef}>
-              {content.sections.map((sectionKey, index) => (
-                <Draggable key={sectionKey} draggableId={sectionKey} index={index}>
-                  {(providedDraggable) => (
-                    <div
-                      ref={providedDraggable.innerRef}
-                      {...providedDraggable.draggableProps}
-                      className="relative group" // Add group for hover effects
-                    >
-                      {/* Drag handle */}
-                      {isEditing && (
-                        <div
-                          {...providedDraggable.dragHandleProps}
-                          className="absolute top-4 left-1/2 -translate-x-1/2 z-20 p-2 bg-gray-800 text-white rounded-md cursor-grab opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-2"
-                        >
-                          <GripVertical className="h-4 w-4" />
-                          <span className="text-xs">Dra för att flytta</span>
-                        </div>
-                      )}
-                      {/* Render the actual section component */}
-                      {(() => {
-                        switch (sectionKey) {
-                          case "hero":
-                            return (
-                              <HeroSection
-                                content={content.hero}
-                                isEditing={isEditing}
-                                onContentChange={(field, value) => handleContentChange("hero", field, value)}
-                                availablePages={availablePages}
-                              />
-                            )
-                          case "stats":
-                            return (
-                              <StatsSection
-                                content={content.stats}
-                                isEditing={isEditing}
-                                onContentChange={(field, value) => handleContentChange("stats", field, value)}
-                              />
-                            )
-                          case "aboutClub":
-                            return (
-                              <AboutClubSection
-                                content={content.aboutClub}
-                                isEditing={isEditing}
-                                onContentChange={(field, value) => handleContentChange("aboutClub", field, value)}
-                                availablePages={availablePages}
-                              />
-                            )
-                          case "partnersCarousel":
-                            return (
-                              <PartnersCarouselSection
-                                content={content.partnersCarousel}
-                                isEditing={isEditing}
-                                onContentChange={(field, value) =>
-                                  handleContentChange("partnersCarousel", field, value)
-                                }
-                                availablePages={availablePages}
-                              />
-                            )
-                          case "upcomingEvents":
-                            return (
-                              <UpcomingEventsSection
-                                content={content.upcomingEvents}
-                                isEditing={isEditing}
-                                onContentChange={(field, value) => handleContentChange("upcomingEvents", field, value)}
-                              />
-                            )
-                          default:
-                            return null
-                        }
-                      })()}
-                    </div>
-                  )}
-                </Draggable>
-              ))}
-              {provided.placeholder}
-            </main>
-          )}
-        </Droppable>
-      </DragDropContext>
+      <main className="relative">
+        {content.sections.map((sectionKey) => {
+          switch (sectionKey) {
+            case "hero":
+              return (
+                <HeroSection
+                  key="hero"
+                  content={content.hero}
+                  isEditing={isEditing}
+                  onContentChange={(field, value) => handleContentChange("hero", field, value)}
+                  availablePages={availablePages}
+                />
+              )
+            case "stats":
+              return (
+                <StatsSection
+                  key="stats"
+                  content={content.stats}
+                  isEditing={isEditing}
+                  onContentChange={(field, value) => handleContentChange("stats", field, value)}
+                />
+              )
+            case "aboutClub":
+              return (
+                <AboutClubSection
+                  key="aboutClub"
+                  content={content.aboutClub}
+                  isEditing={isEditing}
+                  onContentChange={(field, value) => handleContentChange("aboutClub", field, value)}
+                  availablePages={availablePages}
+                />
+              )
+            case "partnersCarousel":
+              return (
+                <PartnersCarouselSection
+                  key="partnersCarousel"
+                  content={content.partnersCarousel}
+                  isEditing={isEditing}
+                  onContentChange={(field, value) => handleContentChange("partnersCarousel", field, value)}
+                  availablePages={availablePages}
+                />
+              )
+            case "upcomingEvents":
+              return (
+                <UpcomingEventsSection
+                  key="upcomingEvents"
+                  content={content.upcomingEvents}
+                  isEditing={isEditing}
+                  onContentChange={(field, value) => handleContentChange("upcomingEvents", field, value)}
+                />
+              )
+            default:
+              return null
+          }
+        })}
+      </main>
     </div>
   )
 }

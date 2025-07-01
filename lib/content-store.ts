@@ -15,6 +15,7 @@ export interface PageContent {
     button1Link: string
     button2Text: string
     button2Link: string
+    overlayColorClass: string // New field for hero overlay color
   }
   stats: {
     totalTeams: number
@@ -79,6 +80,7 @@ export const defaultContent: PageContent = {
     button1Link: "/lag",
     button2Text: "Kalender",
     button2Link: "/kalender",
+    overlayColorClass: "from-black/70", // Default overlay color
   },
   stats: {
     totalTeams: 15,
