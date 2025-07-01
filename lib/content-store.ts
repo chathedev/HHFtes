@@ -13,8 +13,12 @@ export interface PageContent {
     imageUrl: string
     button1Text: string
     button1Link: string
+    button1BgClass: string // New field for button 1 background color
+    button1TextClass: string // New field for button 1 text color
     button2Text: string
     button2Link: string
+    button2BgClass: string // New field for button 2 background color
+    button2TextClass: string // New field for button 2 text color
     overlayColorClass: string // New field for hero overlay color
   }
   stats: {
@@ -78,8 +82,12 @@ export const defaultContent: PageContent = {
     imageUrl: "https://az316141.cdn.laget.se/2317159/11348130.jpg",
     button1Text: "Våra lag",
     button1Link: "/lag",
+    button1BgClass: "bg-green-600", // Default button 1 background
+    button1TextClass: "text-white", // Default button 1 text
     button2Text: "Kalender",
     button2Link: "/kalender",
+    button2BgClass: "bg-white", // Default button 2 background
+    button2TextClass: "text-gray-800", // Default button 2 text
     overlayColorClass: "from-black/70", // Default overlay color
   },
   stats: {
