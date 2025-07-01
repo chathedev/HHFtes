@@ -1,7 +1,5 @@
 "use client"
 
-import type React from "react"
-
 import Image from "next/image"
 import Link from "next/link"
 import { allPartners, type Partner } from "@/lib/partners-data"
@@ -10,17 +8,35 @@ import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { useState } from "react"
 import type { PageContent } from "@/lib/content-store"
+import { cn } from "@/lib/utils"
+
+interface SelectedElementData {
+  sectionKey: keyof PageContent
+  elementId: string // Unique ID for the element within the section (e.g., "heroTitle", "aboutClubImage")
+  type: "text" | "number" | "link" | "image" | "button" | "color" | "font-size" // Type of element being edited
+  label: string // Label for the input field in the sidebar
+  currentValue: string | number // The current value of the primary field (e.g., text content, URL)
+  contentPath?: string // e.g., "hero.title", "aboutClub.imageSrc"
+  additionalFields?: {
+    field: string
+    label: string
+    type: "text" | "select" | "color" | "font-size"
+    currentValue: string | number
+    options?: { name: string; value: string; bgClass?: string; textClass?: string }[]
+  }[]
+}
 
 interface PartnersCarouselSectionProps {
   content: PageContent["partnersCarousel"]
   isEditing?: boolean
-  onContentChange?: (field: keyof PageContent["partnersCarousel"], value: string | number) => void
+  onElementSelect: (data: SelectedElementData) => void
+  availablePages: { name: string; path: string }[] // Added for consistency, though not directly used here for links
 }
 
 export default function PartnersCarouselSection({
   content,
   isEditing = false,
-  onContentChange,
+  onElementSelect,
 }: PartnersCarouselSectionProps) {
   const [openTier, setOpenTier] = useState<string | null>("Diamantpartner") // Default to Diamantpartner open
   const [hoveredCardId, setHoveredCardId] = useState<string | null>(null) // State to manage hovered card
@@ -29,15 +45,30 @@ export default function PartnersCarouselSection({
     setOpenTier((prevOpenTier) => (prevOpenTier === tierName ? null : tierName))
   }
 
-  const handleTextChange = (field: keyof PageContent["partnersCarousel"], e: React.ChangeEvent<HTMLDivElement>) => {
-    if (onContentChange) {
-      onContentChange(field, e.currentTarget.innerText)
+  const handleTextClick = (field: keyof PageContent["partnersCarousel"], label: string) => {
+    if (isEditing) {
+      onElementSelect({
+        sectionKey: "partnersCarousel",
+        elementId: field,
+        type: "text",
+        label: label,
+        currentValue: content[field],
+      })
     }
   }
 
-  const handleLinkChange = (field: keyof PageContent["partnersCarousel"], e: React.ChangeEvent<HTMLInputElement>) => {
-    if (onContentChange) {
-      onContentChange(field, e.target.value)
+  const handleLinkClick = (field: keyof PageContent["partnersCarousel"], label: string) => {
+    if (isEditing) {
+      onElementSelect({
+        sectionKey: "partnersCarousel",
+        elementId: field,
+        type: "link",
+        label: label,
+        currentValue: content[field],
+        additionalFields: [
+          { field: field, label: label, type: "text", currentValue: content[field] }, // Link URL is just text here
+        ],
+      })
     }
   }
 
@@ -61,27 +92,30 @@ export default function PartnersCarouselSection({
       <div className="container mx-auto px-4">
         <h2 className="text-4xl font-bold text-center mb-2">
           <span
-            contentEditable={isEditing}
-            suppressContentEditableWarning={true}
-            onBlur={(e) => handleTextChange("title", e)}
+            className={cn(
+              isEditing && "cursor-pointer group hover:outline hover:outline-2 hover:outline-gray-400 rounded px-1",
+            )}
+            onClick={() => handleTextClick("title", "Titel")}
           >
             {content.title.split(" ")[0]}{" "}
           </span>
           <span className="text-orange-500">
             <span
-              contentEditable={isEditing}
-              suppressContentEditableWarning={true}
-              onBlur={(e) => handleTextChange("title", e)}
+              className={cn(
+                isEditing && "cursor-pointer group hover:outline hover:outline-2 hover:outline-orange-400 rounded px-1",
+              )}
+              onClick={() => handleTextClick("title", "Titel")} // Still editing the same title field
             >
               {content.title.split(" ").slice(1).join(" ")}
             </span>
           </span>
         </h2>
         <p
-          className="text-center text-gray-600 mb-12 max-w-2xl mx-auto"
-          contentEditable={isEditing}
-          suppressContentEditableWarning={true}
-          onBlur={(e) => handleTextChange("description", e)}
+          className={cn(
+            "text-center text-gray-600 mb-12 max-w-2xl mx-auto",
+            isEditing && "cursor-pointer group hover:outline hover:outline-2 hover:outline-gray-400 rounded px-1",
+          )}
+          onClick={() => handleTextClick("description", "Beskrivning")}
         >
           {content.description}
         </p>
@@ -161,43 +195,50 @@ export default function PartnersCarouselSection({
 
         <section className="bg-green-700 text-white p-8 rounded-lg shadow-lg text-center mt-12">
           <h2
-            className="text-3xl font-bold mb-4"
-            contentEditable={isEditing}
-            suppressContentEditableWarning={true}
-            onBlur={(e) => handleTextChange("callToActionTitle", e)}
+            className={cn(
+              "text-3xl font-bold mb-4",
+              isEditing && "cursor-pointer group hover:outline hover:outline-2 hover:outline-white rounded px-1",
+            )}
+            onClick={() => handleTextClick("callToActionTitle", "Call to Action Titel")}
           >
             {content.callToActionTitle}
           </h2>
           <p
-            className="text-lg mb-8"
-            contentEditable={isEditing}
-            suppressContentEditableWarning={true}
-            onBlur={(e) => handleTextChange("callToActionDescription", e)}
+            className={cn(
+              "text-lg mb-8",
+              isEditing && "cursor-pointer group hover:outline hover:outline-2 hover:outline-white rounded px-1",
+            )}
+            onClick={() => handleTextClick("callToActionDescription", "Call to Action Beskrivning")}
           >
             {content.callToActionDescription}
           </p>
           <div className="flex flex-col sm:flex-row justify-center gap-4">
             <Link
               href={content.callToActionLink}
-              className="bg-orange-500 hover:bg-orange-600 text-white px-8 py-3 rounded-md"
+              className={cn(
+                "bg-orange-500 hover:bg-orange-600 text-white px-8 py-3 rounded-md",
+                isEditing && "cursor-pointer group hover:outline hover:outline-2 hover:outline-white rounded px-1",
+              )}
+              onClick={(e) => {
+                if (isEditing) {
+                  e.preventDefault() // Prevent navigation in editing mode
+                  handleLinkClick("callToActionLink", "Call to Action Länk")
+                }
+              }}
             >
               <span
-                contentEditable={isEditing}
-                suppressContentEditableWarning={true}
-                onBlur={(e) => handleTextChange("callToActionLinkText", e)}
+                className={cn(
+                  isEditing && "cursor-pointer group hover:outline hover:outline-2 hover:outline-white rounded px-1",
+                )}
+                onClick={(e) => {
+                  if (isEditing) {
+                    e.stopPropagation() // Prevent parent link click
+                    handleTextClick("callToActionLinkText", "Call to Action Länk Text")
+                  }
+                }}
               >
                 {content.callToActionLinkText}
               </span>
-              {isEditing && (
-                <input
-                  type="text"
-                  value={content.callToActionLink}
-                  onChange={(e) => handleLinkChange("callToActionLink", e)}
-                  className="ml-2 p-1 text-xs text-gray-800 bg-white rounded"
-                  placeholder="Länk"
-                  onClick={(e) => e.stopPropagation()} // Prevent link click
-                />
-              )}
             </Link>
           </div>
         </section>
@@ -205,3 +246,5 @@ export default function PartnersCarouselSection({
     </section>
   )
 }
+
+export { default as PartnersCarouselSection } from "./partners-carousel-section"

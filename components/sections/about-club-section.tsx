@@ -1,50 +1,97 @@
 "use client"
 
-import type React from "react"
-
 import Image from "next/image"
 import Link from "next/link"
 import { Heart, TrendingUp, Users } from "lucide-react"
 import type { PageContent } from "@/lib/content-store"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { cn } from "@/lib/utils"
+
+interface SelectedElementData {
+  sectionKey: keyof PageContent
+  elementId: string // Unique ID for the element within the section (e.g., "heroTitle", "aboutClubImage")
+  type: "text" | "number" | "link" | "image" | "button" | "color" | "font-size" // Type of element being edited
+  label: string // Label for the input field in the sidebar
+  currentValue: string | number // The current value of the primary field (e.g., text content, URL)
+  contentPath?: string // e.g., "hero.title", "aboutClub.imageSrc"
+  additionalFields?: {
+    field: string
+    label: string
+    type: "text" | "select" | "color" | "font-size"
+    currentValue: string | number
+    options?: { name: string; value: string; bgClass?: string; textClass?: string }[]
+  }[]
+}
 
 interface AboutClubSectionProps {
   content: PageContent["aboutClub"]
   isEditing?: boolean
-  onContentChange?: (field: keyof PageContent["aboutClub"], value: string | number) => void
+  onElementSelect: (data: SelectedElementData) => void
   availablePages: { name: string; path: string }[]
 }
 
 export default function AboutClubSection({
   content,
   isEditing = false,
-  onContentChange,
+  onElementSelect,
   availablePages,
 }: AboutClubSectionProps) {
-  const handleTextChange = (field: keyof PageContent["aboutClub"], e: React.ChangeEvent<HTMLDivElement>) => {
-    if (onContentChange) {
-      onContentChange(field, e.currentTarget.innerText)
+  const handleTextClick = (field: keyof PageContent["aboutClub"], label: string) => {
+    if (isEditing) {
+      onElementSelect({
+        sectionKey: "aboutClub",
+        elementId: field,
+        type: "text",
+        label: label,
+        currentValue: content[field],
+      })
     }
   }
 
-  const handleNumberChange = (field: keyof PageContent["aboutClub"], e: React.ChangeEvent<HTMLDivElement>) => {
-    if (onContentChange) {
-      const value = Number.parseInt(e.currentTarget.innerText, 10)
-      if (!isNaN(value)) {
-        onContentChange(field, value)
-      }
+  const handleNumberClick = (field: keyof PageContent["aboutClub"], label: string) => {
+    if (isEditing) {
+      onElementSelect({
+        sectionKey: "aboutClub",
+        elementId: field,
+        type: "number",
+        label: label,
+        currentValue: content[field],
+      })
     }
   }
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (onContentChange) {
-      onContentChange("imageSrc", e.target.value)
+  const handleImageClick = () => {
+    if (isEditing) {
+      onElementSelect({
+        sectionKey: "aboutClub",
+        elementId: "imageSrc",
+        type: "image",
+        label: "Bild URL",
+        currentValue: content.imageSrc,
+        additionalFields: [{ field: "imageAlt", label: "Bild Alt Text", type: "text", currentValue: content.imageAlt }],
+      })
     }
   }
 
-  const handleLinkChange = (field: keyof PageContent["aboutClub"], value: string) => {
-    if (onContentChange) {
-      onContentChange(field, value)
+  const handleButtonClick = (buttonNumber: 1 | 2) => {
+    if (isEditing) {
+      const textKey = `button${buttonNumber}Text` as keyof PageContent["aboutClub"]
+      const linkKey = `button${buttonNumber}Link` as keyof PageContent["aboutClub"]
+      onElementSelect({
+        sectionKey: "aboutClub",
+        elementId: textKey,
+        type: "button",
+        label: `Knapp ${buttonNumber} Text`,
+        currentValue: content[textKey],
+        additionalFields: [
+          {
+            field: linkKey,
+            label: `Knapp ${buttonNumber} Länk`,
+            type: "select",
+            currentValue: content[linkKey],
+            options: availablePages,
+          },
+        ],
+      })
     }
   }
 
@@ -54,143 +101,118 @@ export default function AboutClubSection({
         <div className="grid md:grid-cols-2 gap-12 items-center">
           <div>
             <h2
-              className="text-4xl font-bold text-green-600 mb-2 outline-none focus:ring-2 focus:ring-green-300 rounded px-1"
-              contentEditable={isEditing}
-              suppressContentEditableWarning={true}
-              onBlur={(e) => handleTextChange("title", e)}
+              className={cn(
+                "text-4xl font-bold text-green-600 mb-2",
+                isEditing && "cursor-pointer group hover:outline hover:outline-2 hover:outline-green-400 rounded px-1",
+              )}
+              onClick={() => handleTextClick("title", "Titel")}
             >
               {content.title}
             </h2>
 
             <p
-              className="text-gray-700 mb-6 outline-none focus:ring-2 focus:ring-gray-300 rounded px-1"
-              contentEditable={isEditing}
-              suppressContentEditableWarning={true}
-              onBlur={(e) => handleTextChange("paragraph1", e)}
+              className={cn(
+                "text-gray-700 mb-6",
+                isEditing && "cursor-pointer group hover:outline hover:outline-2 hover:outline-gray-400 rounded px-1",
+              )}
+              onClick={() => handleTextClick("paragraph1", "Paragraf 1")}
             >
               {content.paragraph1}
             </p>
 
             <p
-              className="text-gray-700 mb-8 outline-none focus:ring-2 focus:ring-gray-300 rounded px-1"
-              contentEditable={isEditing}
-              suppressContentEditableWarning={true}
-              onBlur={(e) => handleTextChange("paragraph2", e)}
+              className={cn(
+                "text-gray-700 mb-8",
+                isEditing && "cursor-pointer group hover:outline hover:outline-2 hover:outline-gray-400 rounded px-1",
+              )}
+              onClick={() => handleTextClick("paragraph2", "Paragraf 2")}
             >
               {content.paragraph2}
             </p>
 
             <div className="grid grid-cols-3 gap-4 mb-8">
-              <div className="border border-gray-200 rounded-lg p-4 text-center">
+              <div
+                className={cn(
+                  "border border-gray-200 rounded-lg p-4 text-center",
+                  isEditing && "cursor-pointer group hover:outline hover:outline-2 hover:outline-gray-300",
+                )}
+                onClick={() => handleTextClick("passionText", "Passion Text")}
+              >
                 <Heart className="w-8 h-8 text-green-600 mx-auto mb-2" />
                 <h4 className="font-medium mb-1">Passion</h4>
-                <p
-                  className="text-xs text-gray-600 outline-none focus:ring-2 focus:ring-gray-300 rounded px-1"
-                  contentEditable={isEditing}
-                  suppressContentEditableWarning={true}
-                  onBlur={(e) => handleTextChange("passionText", e)}
-                >
-                  {content.passionText}
-                </p>
+                <p className="text-xs text-gray-600">{content.passionText}</p>
               </div>
 
-              <div className="border border-gray-200 rounded-lg p-4 text-center">
+              <div
+                className={cn(
+                  "border border-gray-200 rounded-lg p-4 text-center",
+                  isEditing && "cursor-pointer group hover:outline hover:outline-2 hover:outline-gray-300",
+                )}
+                onClick={() => handleTextClick("developmentText", "Utveckling Text")}
+              >
                 <TrendingUp className="w-8 h-8 text-orange-500 mx-auto mb-2" />
                 <h4 className="font-medium mb-1">Utveckling</h4>
-                <p
-                  className="text-xs text-gray-600 outline-none focus:ring-2 focus:ring-gray-300 rounded px-1"
-                  contentEditable={isEditing}
-                  suppressContentEditableWarning={true}
-                  onBlur={(e) => handleTextChange("developmentText", e)}
-                >
-                  {content.developmentText}
-                </p>
+                <p className="text-xs text-gray-600">{content.developmentText}</p>
               </div>
 
-              <div className="border border-gray-200 rounded-lg p-4 text-center">
+              <div
+                className={cn(
+                  "border border-gray-200 rounded-lg p-4 text-center",
+                  isEditing && "cursor-pointer group hover:outline hover:outline-2 hover:outline-gray-300",
+                )}
+                onClick={() => handleTextClick("communityText", "Gemenskap Text")}
+              >
                 <Users className="w-8 h-8 text-green-600 mx-auto mb-2" />
                 <h4 className="font-medium mb-1">Gemenskap</h4>
-                <p
-                  className="text-xs text-gray-600 outline-none focus:ring-2 focus:ring-gray-300 rounded px-1"
-                  contentEditable={isEditing}
-                  suppressContentEditableWarning={true}
-                  onBlur={(e) => handleTextChange("communityText", e)}
-                >
-                  {content.communityText}
-                </p>
+                <p className="text-xs text-gray-600">{content.communityText}</p>
               </div>
             </div>
 
             <div className="flex flex-wrap gap-4">
-              {isEditing ? (
-                <div className="bg-orange-500 text-white px-6 py-2 rounded-md font-medium flex items-center gap-2">
-                  <span
-                    contentEditable={isEditing}
-                    suppressContentEditableWarning={true}
-                    onBlur={(e) => handleTextChange("button1Text", e)}
-                    className="outline-none focus:ring-2 focus:ring-white rounded px-1"
-                  >
-                    {content.button1Text}
-                  </span>
-                  <Select value={content.button1Link} onValueChange={(value) => handleLinkChange("button1Link", value)}>
-                    <SelectTrigger className="w-[120px] h-auto p-1 text-xs bg-white text-gray-800 outline-none focus:ring-2 focus:ring-orange-300">
-                      <SelectValue placeholder="Välj sida" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {availablePages.map((page) => (
-                        <SelectItem key={page.path} value={page.path}>
-                          {page.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              ) : (
-                <Link
-                  href={content.button1Link}
-                  className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-2 rounded-md font-medium transition-colors"
-                >
-                  {content.button1Text}
-                </Link>
-              )}
-              {isEditing ? (
-                <div className="bg-white border border-gray-300 text-gray-800 px-6 py-2 rounded-md font-medium flex items-center gap-2">
-                  <span
-                    contentEditable={isEditing}
-                    suppressContentEditableWarning={true}
-                    onBlur={(e) => handleTextChange("button2Text", e)}
-                    className="outline-none focus:ring-2 focus:ring-white rounded px-1"
-                  >
-                    {content.button2Text}
-                  </span>
-                  <Select value={content.button2Link} onValueChange={(value) => handleLinkChange("button2Link", value)}>
-                    <SelectTrigger className="w-[120px] h-auto p-1 text-xs bg-white text-gray-800 outline-none focus:ring-2 focus:ring-gray-300">
-                      <SelectValue placeholder="Välj sida" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {availablePages.map((page) => (
-                        <SelectItem key={page.path} value={page.path}>
-                          {page.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              ) : (
-                <Link
-                  href={content.button2Link}
-                  className="bg-white border border-gray-300 hover:bg-gray-100 text-gray-800 px-6 py-2 rounded-md font-medium transition-colors"
-                >
-                  {content.button2Text}
-                </Link>
-              )}
+              <Link
+                href={content.button1Link}
+                className={cn(
+                  "bg-orange-500 hover:bg-orange-600 text-white px-6 py-2 rounded-md font-medium transition-colors",
+                  isEditing &&
+                    "cursor-pointer group hover:outline hover:outline-2 hover:outline-orange-400 rounded px-1",
+                )}
+                onClick={(e) => {
+                  if (isEditing) {
+                    e.preventDefault()
+                    handleButtonClick(1)
+                  }
+                }}
+              >
+                {content.button1Text}
+              </Link>
+              <Link
+                href={content.button2Link}
+                className={cn(
+                  "bg-white border border-gray-300 hover:bg-gray-100 text-gray-800 px-6 py-2 rounded-md font-medium transition-colors",
+                  isEditing && "cursor-pointer group hover:outline hover:outline-2 hover:outline-gray-400 rounded px-1",
+                )}
+                onClick={(e) => {
+                  if (isEditing) {
+                    e.preventDefault()
+                    handleButtonClick(2)
+                  }
+                }}
+              >
+                {content.button2Text}
+              </Link>
             </div>
           </div>
 
           <div className="relative">
-            <div className="relative h-[400px] rounded-lg overflow-hidden shadow-xl">
+            <div
+              className={cn(
+                "relative h-[400px] rounded-lg overflow-hidden shadow-xl",
+                isEditing && "cursor-pointer group hover:outline hover:outline-2 hover:outline-blue-500",
+              )}
+              onClick={handleImageClick}
+            >
               <Image
-                src={content.imageSrc || "/placeholder.svg"} // No placeholder fallback here
+                src={content.imageSrc || "/placeholder.svg"}
                 alt={content.imageAlt}
                 fill
                 className="object-cover"
@@ -198,26 +220,31 @@ export default function AboutClubSection({
                 onDragStart={(e) => e.preventDefault()}
               />
               {isEditing && (
-                <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                <div className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                   <span className="text-white text-lg font-bold">Redigera bild</span>
                 </div>
               )}
             </div>
 
-            <div className="absolute -top-4 -right-4 bg-orange-500 text-white rounded-lg p-4 shadow-lg">
+            <div
+              className={cn(
+                "absolute -top-4 -right-4 bg-orange-500 text-white rounded-lg p-4 shadow-lg",
+                isEditing && "cursor-pointer group hover:outline hover:outline-2 hover:outline-white rounded px-1",
+              )}
+              onClick={() => handleNumberClick("totalTeamsCallout", "Aktiva lag Antal")}
+            >
+              <div className="text-3xl font-bold">{content.totalTeamsCallout}</div>
               <div
-                className="text-3xl font-bold outline-none focus:ring-2 focus:ring-white rounded px-1"
-                contentEditable={isEditing}
-                suppressContentEditableWarning={true}
-                onBlur={(e) => handleNumberChange("totalTeamsCallout", e)}
-              >
-                {content.totalTeamsCallout}
-              </div>
-              <div
-                className="text-sm outline-none focus:ring-2 focus:ring-white rounded px-1"
-                contentEditable={isEditing}
-                suppressContentEditableWarning={true}
-                onBlur={(e) => handleTextChange("totalTeamsCalloutText", e)}
+                className={cn(
+                  "text-sm",
+                  isEditing && "cursor-pointer group hover:outline hover:outline-2 hover:outline-white rounded px-1",
+                )}
+                onClick={(e) => {
+                  if (isEditing) {
+                    e.stopPropagation() // Prevent parent click
+                    handleTextClick("totalTeamsCalloutText", "Aktiva lag Text")
+                  }
+                }}
               >
                 {content.totalTeamsCalloutText}
               </div>
@@ -225,21 +252,8 @@ export default function AboutClubSection({
           </div>
         </div>
       </div>
-      {isEditing && (
-        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-30 bg-white p-4 rounded-lg shadow-lg flex gap-2 items-center">
-          <label htmlFor="about-image-url" className="sr-only">
-            Bild URL
-          </label>
-          <input
-            id="about-image-url"
-            type="text"
-            value={content.imageSrc}
-            onChange={handleImageChange}
-            placeholder="Bild URL"
-            className="border p-2 rounded w-80 text-gray-800 outline-none focus:ring-2 focus:ring-blue-500"
-          />
-        </div>
-      )}
     </section>
   )
 }
+
+export { default as AboutClubSection } from "./about-club-section"

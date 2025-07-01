@@ -98,3 +98,6 @@ export async function resetEditorContentServer(): Promise<PageContent> {
   await new Promise((resolve) => setTimeout(resolve, 200)) // Simulate network delay
   return defaultContent
 }
+
+// 🔄 Named aliases so other modules can import them
+export { loadEditorContentServer as loadContent, saveEditorContentServer as saveContent }

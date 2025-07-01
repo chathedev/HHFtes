@@ -2,318 +2,476 @@
 
 import { useState, useEffect, useCallback } from "react"
 import { Button } from "@/components/ui/button"
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet"
+import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Switch } from "@/components/ui/switch"
-import { Badge } from "@/components/ui/badge"
-import { type PageContent, loadContent, defaultContent } from "@/lib/content-store"
-import HeroSection from "@/components/sections/hero-section"
-import StatsSection from "@/components/sections/stats-section"
-import AboutClubSection from "@/components/sections/about-club-section"
-import PartnersCarouselSection from "@/components/sections/partners-carousel-section"
-import UpcomingEventsSection from "@/components/upcoming-events-section"
-import { saveEditorContentServer } from "@/app/actions/editor-content"
-import { useToast } from "@/components/ui/use-toast"
-import { Loader2, Save, XCircle } from "lucide-react"
-import { Sheet, SheetContent } from "@/components/ui/sheet"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
-import { cn } from "@/lib/utils"
+import { useToast } from "@/hooks/use-toast"
+import { saveContent, loadContent } from "@/app/actions/editor-content"
+import { HeroSection } from "@/components/sections/hero-section"
+import { StatsSection } from "@/components/sections/stats-section"
+import { AboutClubSection } from "@/components/sections/about-club-section"
+import { PartnersCarouselSection } from "@/components/sections/partners-carousel-section"
+import { UpcomingEventsSection } from "@/components/upcoming-events-section"
+import { useIsMobile } from "@/hooks/use-mobile" // Import the hook
+
+type ElementType = "text" | "button" | "image" | "link" | "number"
+
+interface SelectedElementData {
+  id: string
+  type: ElementType
+  value: string | number
+  section: string
+  property: string
+  link?: string
+  alt?: string
+  color?: string
+  fontSize?: string
+}
+
+const FONT_SIZES = [
+  "text-xs",
+  "text-sm",
+  "text-base",
+  "text-lg",
+  "text-xl",
+  "text-2xl",
+  "text-3xl",
+  "text-4xl",
+  "text-5xl",
+  "text-6xl",
+]
+const COLORS = [
+  { name: "Black", value: "text-black" },
+  { name: "White", value: "text-white" },
+  { name: "Gray 500", value: "text-gray-500" },
+  { name: "Red 500", value: "text-red-500" },
+  { name: "Orange 500", value: "text-orange-500" },
+  { name: "Yellow 500", value: "text-yellow-500" },
+  { name: "Green 500", value: "text-green-500" },
+  { name: "Blue 500", value: "text-blue-500" },
+  { name: "Indigo 500", value: "text-indigo-500" },
+  { name: "Purple 500", value: "text-purple-500" },
+  { name: "Pink 500", value: "text-pink-500" },
+]
 
 export default function EditorPage() {
-  const [content, setContent] = useState<PageContent | null>(null)
-  const [isEditing, setIsEditing] = useState(true)
-  const [isLoading, setIsLoading] = useState(true)
-  const [isSaving, setIsSaving] = useState(false)
-  const [isColorSheetOpen, setIsColorSheetOpen] = useState(false)
-  const [currentColorTarget, setCurrentColorTarget] = useState<{
-    section: keyof PageContent
-    fieldBg: string // Field for background class
-    fieldTxt: string // Field for text class
-    currentBgValue: string
-    currentTxtValue: string
-  } | null>(null)
+  const [isEditing, setIsEditing] = useState(false)
+  const [content, setContent] = useState<any>(null)
+  const [isRightSidebarOpen, setIsRightSidebarOpen] = useState(false)
+  const [selectedElementData, setSelectedElementData] = useState<SelectedElementData | null>(null)
   const { toast } = useToast()
-
-  const fetchContent = useCallback(async () => {
-    setIsLoading(true)
-    try {
-      const loadedContent = await loadContent()
-      // Explicitly set the image URLs to ensure they are not placeholders
-      loadedContent.hero.imageUrl = "https://az316141.cdn.laget.se/2317159/11348130.jpg"
-      loadedContent.aboutClub.imageSrc =
-        "https://i.ibb.co/Zt8gppK/491897759-17872413642339702-3719173158843008539-n.jpg"
-      setContent(loadedContent)
-    } catch (error) {
-      console.error("Failed to load content:", error)
-      toast({
-        title: "Fel vid laddning",
-        description: "Kunde inte ladda innehåll. Laddar standardinnehåll.",
-        variant: "destructive",
-      })
-      setContent(defaultContent) // Fallback to default if loading fails
-    } finally {
-      setIsLoading(false)
-    }
-  }, [toast])
+  const isMobile = useIsMobile() // Use the hook
 
   useEffect(() => {
-    fetchContent()
-  }, [fetchContent])
-
-  const handleContentChange = useCallback(
-    (section: keyof PageContent, field: string, value: string | number) => {
-      if (!content) return
-      setContent((prevContent) => {
-        if (!prevContent) return null
-        const updatedSection = {
-          ...prevContent[section],
-          [field]: value,
-        } as PageContent[keyof PageContent]
-        return {
-          ...prevContent,
-          [section]: updatedSection,
-        }
-      })
-    },
-    [content],
-  )
-
-  const handleSave = async () => {
-    if (!content) return
-
-    setIsSaving(true)
-    try {
-      const result = await saveEditorContentServer(content)
-      if (result.success) {
+    const fetchContent = async () => {
+      try {
+        const loadedContent = await loadContent()
+        setContent(loadedContent)
+      } catch (error) {
+        console.error("Failed to load content:", error)
         toast({
-          title: "Innehåll sparat!",
-          description: "Dina ändringar har sparats framgångsrikt.",
-        })
-      } else {
-        toast({
-          title: "Fel vid sparning",
-          description: result.message || "Kunde inte spara ändringar.",
+          title: "Error",
+          description: "Failed to load content. Please try again.",
           variant: "destructive",
         })
       }
+    }
+    fetchContent()
+  }, [toast])
+
+  const handleSave = useCallback(async () => {
+    if (!content) return
+
+    try {
+      await saveContent(content)
+      toast({
+        title: "Success",
+        description: "Content saved successfully!",
+      })
     } catch (error) {
       console.error("Failed to save content:", error)
       toast({
-        title: "Fel vid sparning",
-        description: "Ett oväntat fel uppstod vid sparning.",
+        title: "Error",
+        description: "Failed to save content. Please try again.",
         variant: "destructive",
       })
-    } finally {
-      setIsSaving(false)
     }
-  }
+  }, [content, toast])
 
-  const handleReset = () => {
-    setContent(defaultContent)
-    toast({
-      title: "Innehåll återställt",
-      description: "Innehållet har återställts till standardvärden.",
-    })
-  }
+  const handleReset = useCallback(async () => {
+    try {
+      const defaultContent = await loadContent(true) // Load default content
+      setContent(defaultContent)
+      toast({
+        title: "Success",
+        description: "Content reset to default.",
+      })
+    } catch (error) {
+      console.error("Failed to reset content:", error)
+      toast({
+        title: "Error",
+        description: "Failed to reset content. Please try again.",
+        variant: "destructive",
+      })
+    }
+  }, [toast])
 
-  const openColorPicker = useCallback(
-    (
-      section: keyof PageContent,
-      fieldBg: string,
-      fieldTxt: string,
-      currentBgValue: string,
-      currentTxtValue: string,
-    ) => {
-      setCurrentColorTarget({ section, fieldBg, fieldTxt, currentBgValue, currentTxtValue })
-      setIsColorSheetOpen(true)
+  const onElementSelect = useCallback((data: SelectedElementData) => {
+    setSelectedElementData(data)
+    setIsRightSidebarOpen(true)
+  }, [])
+
+  const handlePropertyChange = useCallback(
+    (newValue: string | number) => {
+      if (!selectedElementData || !content) return
+
+      const { section, property, type } = selectedElementData
+
+      setContent((prevContent: any) => {
+        const updatedContent = { ...prevContent }
+        if (updatedContent[section]) {
+          if (type === "number") {
+            updatedContent[section][property] = Number(newValue)
+          } else {
+            updatedContent[section][property] = newValue
+          }
+        }
+        return updatedContent
+      })
+
+      setSelectedElementData((prev) => (prev ? { ...prev, value: newValue } : null))
     },
-    [],
+    [selectedElementData, content],
+  )
+
+  const handleLinkChange = useCallback(
+    (newLink: string) => {
+      if (!selectedElementData || !content) return
+
+      const { section, property } = selectedElementData
+      setContent((prevContent: any) => {
+        const updatedContent = { ...prevContent }
+        if (updatedContent[section]) {
+          // Assuming link is a property of the element itself, e.g., button.link or image.src
+          updatedContent[section][property] = {
+            ...updatedContent[section][property],
+            link: newLink,
+          }
+        }
+        return updatedContent
+      })
+      setSelectedElementData((prev) => (prev ? { ...prev, link: newLink } : null))
+    },
+    [selectedElementData, content],
+  )
+
+  const handleAltChange = useCallback(
+    (newAlt: string) => {
+      if (!selectedElementData || !content) return
+
+      const { section, property } = selectedElementData
+      setContent((prevContent: any) => {
+        const updatedContent = { ...prevContent }
+        if (updatedContent[section]) {
+          updatedContent[section][property] = {
+            ...updatedContent[section][property],
+            alt: newAlt,
+          }
+        }
+        return updatedContent
+      })
+      setSelectedElementData((prev) => (prev ? { ...prev, alt: newAlt } : null))
+    },
+    [selectedElementData, content],
   )
 
   const handleColorChange = useCallback(
-    (selectedBgClass: string) => {
-      if (currentColorTarget) {
-        const selectedOption = colorOptions.find((option) => option.bgClass === selectedBgClass)
-        if (selectedOption) {
-          handleContentChange(currentColorTarget.section, currentColorTarget.fieldBg, selectedOption.bgClass)
-          handleContentChange(currentColorTarget.section, currentColorTarget.fieldTxt, selectedOption.textClass)
-          setCurrentColorTarget((prev) =>
-            prev
-              ? {
-                  ...prev,
-                  currentBgValue: selectedOption.bgClass,
-                  currentTxtValue: selectedOption.textClass,
-                }
-              : null,
-          )
+    (newColor: string) => {
+      if (!selectedElementData || !content) return
+
+      const { section, property } = selectedElementData
+      setContent((prevContent: any) => {
+        const updatedContent = { ...prevContent }
+        if (updatedContent[section]) {
+          updatedContent[section][property] = {
+            ...updatedContent[section][property],
+            color: newColor,
+          }
         }
-      }
+        return updatedContent
+      })
+      setSelectedElementData((prev) => (prev ? { ...prev, color: newColor } : null))
     },
-    [currentColorTarget, handleContentChange],
+    [selectedElementData, content],
   )
 
-  const colorOptions = [
-    { name: "Grön Primär", bgClass: "bg-green-600", textClass: "text-white" },
-    { name: "Vit Bakgrund", bgClass: "bg-white", textClass: "text-gray-800" },
-    { name: "Svart Bakgrund", bgClass: "bg-black", textClass: "text-white" },
-    { name: "Grå Bakgrund", bgClass: "bg-gray-200", textClass: "text-gray-800" },
-    { name: "Blå Primär", bgClass: "bg-blue-600", textClass: "text-white" },
-    { name: "Röd Primär", bgClass: "bg-red-600", textClass: "text-white" },
-  ]
+  const handleFontSizeChange = useCallback(
+    (newSize: string) => {
+      if (!selectedElementData || !content) return
 
-  if (isLoading || !content) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-100">
-        <Loader2 className="h-8 w-8 animate-spin text-green-600" />
-        <span className="ml-2 text-gray-700">Laddar redigerare...</span>
-      </div>
-    )
+      const { section, property } = selectedElementData
+      setContent((prevContent: any) => {
+        const updatedContent = { ...prevContent }
+        if (updatedContent[section]) {
+          updatedContent[section][property] = {
+            ...updatedContent[section][property],
+            fontSize: newSize,
+          }
+        }
+        return updatedContent
+      })
+      setSelectedElementData((prev) => (prev ? { ...prev, fontSize: newSize } : null))
+    },
+    [selectedElementData, content],
+  )
+
+  if (!content) {
+    return <div className="flex items-center justify-center min-h-screen">Loading editor...</div>
   }
 
-  const availablePages = [
-    { name: "Hem", path: "/" },
-    { name: "Kalender", path: "/kalender" },
-    { name: "Lag", path: "/lag" },
-    { name: "Matcher", path: "/matcher" },
-    { name: "Nyheter", path: "/nyheter" },
-    { name: "Partners", path: "/partners" },
-    { name: "Kontakt", path: "/kontakt" },
-  ]
-
   return (
-    <div className="min-h-screen bg-gray-50 flex">
-      {/* Editor Control Bar (Left Sidebar) */}
-      <div className="sticky top-0 z-50 bg-white shadow-md p-4 flex flex-col items-start justify-between border-r border-gray-200 w-64 shrink-0">
-        <div className="flex flex-col gap-4 w-full">
-          <h1 className="text-2xl font-bold text-gray-800">Redigeringsläge</h1>
-          {isEditing && (
-            <Badge variant="secondary" className="bg-green-100 text-green-700 px-3 py-1 text-sm">
-              Redigeringsläge Aktivt
-            </Badge>
-          )}
-          <div className="flex items-center space-x-2 mt-4">
-            <Switch id="edit-mode" checked={isEditing} onCheckedChange={setIsEditing} />
-            <Label htmlFor="edit-mode" className="text-gray-700">
-              Aktivera redigering
-            </Label>
-          </div>
+    <div className="flex flex-col min-h-screen">
+      {isMobile ? (
+        <div className="flex flex-col items-center justify-center min-h-screen text-center p-4 bg-gray-100 text-gray-800">
+          <h1 className="text-2xl font-bold mb-4">Editor Not Available on Mobile</h1>
+          <p className="text-lg">Please access the editor from a desktop computer for the best experience.</p>
         </div>
-        <div className="flex flex-col gap-2 w-full mt-auto">
-          <Button onClick={handleReset} variant="outline" disabled={isSaving} className="w-full bg-transparent">
-            <XCircle className="mr-2 h-4 w-4" />
-            Återställ
-          </Button>
-          <Button onClick={handleSave} disabled={isSaving} className="w-full">
-            {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
-            {isSaving ? "Sparar..." : "Spara ändringar"}
-          </Button>
-        </div>
-      </div>
-
-      {/* Main Content Area */}
-      <main
-        className={cn(
-          "relative flex-1 transition-all duration-300",
-          isColorSheetOpen ? "mr-[300px]" : "mr-0", // Adjust margin to "push" content
-        )}
-      >
-        {content.sections.map((sectionKey) => {
-          switch (sectionKey) {
-            case "hero":
-              return (
-                <HeroSection
-                  key="hero"
-                  content={content.hero}
-                  isEditing={isEditing}
-                  onContentChange={(field, value) => handleContentChange("hero", field, value)}
-                  availablePages={availablePages}
-                  openColorPicker={openColorPicker}
-                />
-              )
-            case "stats":
-              return (
-                <StatsSection
-                  key="stats"
-                  content={content.stats}
-                  isEditing={isEditing}
-                  onContentChange={(field, value) => handleContentChange("stats", field, value)}
-                />
-              )
-            case "aboutClub":
-              return (
-                <AboutClubSection
-                  key="aboutClub"
-                  content={content.aboutClub}
-                  isEditing={isEditing}
-                  onContentChange={(field, value) => handleContentChange("aboutClub", field, value)}
-                  availablePages={availablePages}
-                />
-              )
-            case "partnersCarousel":
-              return (
-                <PartnersCarouselSection
-                  key="partnersCarousel"
-                  content={content.partnersCarousel}
-                  isEditing={isEditing}
-                  onContentChange={(field, value) => handleContentChange("partnersCarousel", field, value)}
-                  availablePages={availablePages}
-                />
-              )
-            case "upcomingEvents":
-              return (
-                <UpcomingEventsSection
-                  key="upcomingEvents"
-                  content={content.upcomingEvents}
-                  isEditing={isEditing}
-                  onContentChange={(field, value) => handleContentChange("upcomingEvents", field, value)}
-                />
-              )
-            default:
-              return null
-          }
-        })}
-      </main>
-
-      {/* Right-Side Color Customization Sheet */}
-      <Sheet open={isColorSheetOpen} onOpenChange={setIsColorSheetOpen}>
-        <SheetContent
-          side="right"
-          className="w-[300px] sm:w-[300px] flex flex-col p-4 bg-white shadow-lg border-l border-gray-200"
-        >
-          <h2 className="text-xl font-bold mb-4">Välj Färg</h2>
-          {currentColorTarget && (
-            <div className="mb-4">
-              <p className="text-sm text-gray-600 mb-2">
-                Redigerar: <span className="font-semibold">{currentColorTarget.fieldBg.replace("BgClass", "")}</span>{" "}
-                (Bakgrund & Text)
-              </p>
-              <RadioGroup
-                value={currentColorTarget.currentBgValue}
-                onValueChange={handleColorChange}
-                className="flex flex-col space-y-2"
-              >
-                {colorOptions.map((option) => (
-                  <div key={option.bgClass} className="flex items-center space-x-2">
-                    <RadioGroupItem value={option.bgClass} id={option.bgClass} />
-                    <Label htmlFor={option.bgClass} className="flex items-center gap-2 cursor-pointer">
-                      <span
-                        className={cn(
-                          "w-6 h-6 rounded-full border",
-                          option.bgClass,
-                          option.textClass === "text-white" ? "border-gray-300" : "border-transparent",
-                        )}
-                      />
-                      {option.name}
-                    </Label>
-                  </div>
-                ))}
-              </RadioGroup>
+      ) : (
+        <>
+          {/* Top Bar for Editor Controls */}
+          <div className="fixed top-0 left-0 w-full bg-gray-800 text-white p-4 z-50 flex justify-between items-center shadow-lg">
+            <h1 className="text-xl font-bold">Website Editor</h1>
+            <div className="flex gap-4">
+              <Button onClick={() => setIsEditing(!isEditing)} variant={isEditing ? "destructive" : "default"}>
+                {isEditing ? "Exit Editing" : "Enter Editing"}
+              </Button>
+              {isEditing && (
+                <>
+                  <Button onClick={handleSave} variant="secondary">
+                    Save Changes
+                  </Button>
+                  <Button onClick={handleReset} variant="outline">
+                    Reset to Default
+                  </Button>
+                </>
+              )}
             </div>
-          )}
-          <Button onClick={() => setIsColorSheetOpen(false)} className="mt-auto">
-            Stäng
-          </Button>
-        </SheetContent>
-      </Sheet>
+          </div>
+
+          {/* Main Content Area */}
+          <div className="flex-1 pt-20">
+            {" "}
+            {/* Add padding-top to account for fixed header */}
+            <HeroSection isEditing={isEditing} onElementSelect={onElementSelect} content={content.heroSection} />
+            <StatsSection isEditing={isEditing} onElementSelect={onElementSelect} content={content.statsSection} />
+            <AboutClubSection
+              isEditing={isEditing}
+              onElementSelect={onElementSelect}
+              content={content.aboutClubSection}
+            />
+            <PartnersCarouselSection
+              isEditing={isEditing}
+              onElementSelect={onElementSelect}
+              content={content.partnersCarouselSection}
+            />
+            <UpcomingEventsSection
+              isEditing={isEditing}
+              onElementSelect={onElementSelect}
+              content={content.upcomingEventsSection}
+            />
+          </div>
+
+          {/* Right Sidebar for Element Properties */}
+          <Sheet open={isRightSidebarOpen} onOpenChange={setIsRightSidebarOpen}>
+            <SheetContent className="w-full sm:max-w-md">
+              <SheetHeader>
+                <SheetTitle>Edit Element</SheetTitle>
+                <SheetDescription>Adjust the properties of the selected {selectedElementData?.type}.</SheetDescription>
+              </SheetHeader>
+              <div className="grid gap-4 py-4">
+                {selectedElementData?.type === "text" && (
+                  <>
+                    <div className="grid grid-cols-4 items-center gap-4">
+                      <Label htmlFor="text-value" className="text-right">
+                        Text
+                      </Label>
+                      <Input
+                        id="text-value"
+                        value={selectedElementData.value as string}
+                        onChange={(e) => handlePropertyChange(e.target.value)}
+                        className="col-span-3"
+                      />
+                    </div>
+                    <div className="grid grid-cols-4 items-center gap-4">
+                      <Label htmlFor="font-size" className="text-right">
+                        Font Size
+                      </Label>
+                      <RadioGroup
+                        id="font-size"
+                        value={selectedElementData.fontSize || "text-base"}
+                        onValueChange={handleFontSizeChange}
+                        className="col-span-3 flex flex-wrap gap-2"
+                      >
+                        {FONT_SIZES.map((size) => (
+                          <div key={size} className="flex items-center space-x-2">
+                            <RadioGroupItem value={size} id={size} />
+                            <Label htmlFor={size}>{size.replace("text-", "")}</Label>
+                          </div>
+                        ))}
+                      </RadioGroup>
+                    </div>
+                    <div className="grid grid-cols-4 items-center gap-4">
+                      <Label htmlFor="color" className="text-right">
+                        Color
+                      </Label>
+                      <RadioGroup
+                        id="color"
+                        value={selectedElementData.color || "text-black"}
+                        onValueChange={handleColorChange}
+                        className="col-span-3 flex flex-wrap gap-2"
+                      >
+                        {COLORS.map((color) => (
+                          <div key={color.value} className="flex items-center space-x-2">
+                            <RadioGroupItem value={color.value} id={color.value} />
+                            <Label htmlFor={color.value} className={`flex items-center gap-1 ${color.value}`}>
+                              <span
+                                className={`w-4 h-4 rounded-full border ${color.value.replace("text-", "bg-")}`}
+                              ></span>
+                              {color.name}
+                            </Label>
+                          </div>
+                        ))}
+                      </RadioGroup>
+                    </div>
+                  </>
+                )}
+
+                {selectedElementData?.type === "number" && (
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="number-value" className="text-right">
+                      Number
+                    </Label>
+                    <Input
+                      id="number-value"
+                      type="number"
+                      value={selectedElementData.value as number}
+                      onChange={(e) => handlePropertyChange(e.target.value)}
+                      className="col-span-3"
+                    />
+                  </div>
+                )}
+
+                {selectedElementData?.type === "button" && (
+                  <>
+                    <div className="grid grid-cols-4 items-center gap-4">
+                      <Label htmlFor="button-text" className="text-right">
+                        Button Text
+                      </Label>
+                      <Input
+                        id="button-text"
+                        value={selectedElementData.value as string}
+                        onChange={(e) => handlePropertyChange(e.target.value)}
+                        className="col-span-3"
+                      />
+                    </div>
+                    <div className="grid grid-cols-4 items-center gap-4">
+                      <Label htmlFor="button-link" className="text-right">
+                        Link URL
+                      </Label>
+                      <Input
+                        id="button-link"
+                        value={selectedElementData.link || ""}
+                        onChange={(e) => handleLinkChange(e.target.value)}
+                        className="col-span-3"
+                      />
+                    </div>
+                    <div className="grid grid-cols-4 items-center gap-4">
+                      <Label htmlFor="font-size" className="text-right">
+                        Font Size
+                      </Label>
+                      <RadioGroup
+                        id="font-size"
+                        value={selectedElementData.fontSize || "text-base"}
+                        onValueChange={handleFontSizeChange}
+                        className="col-span-3 flex flex-wrap gap-2"
+                      >
+                        {FONT_SIZES.map((size) => (
+                          <div key={size} className="flex items-center space-x-2">
+                            <RadioGroupItem value={size} id={size} />
+                            <Label htmlFor={size}>{size.replace("text-", "")}</Label>
+                          </div>
+                        ))}
+                      </RadioGroup>
+                    </div>
+                    <div className="grid grid-cols-4 items-center gap-4">
+                      <Label htmlFor="color" className="text-right">
+                        Color
+                      </Label>
+                      <RadioGroup
+                        id="color"
+                        value={selectedElementData.color || "text-black"}
+                        onValueChange={handleColorChange}
+                        className="col-span-3 flex flex-wrap gap-2"
+                      >
+                        {COLORS.map((color) => (
+                          <div key={color.value} className="flex items-center space-x-2">
+                            <RadioGroupItem value={color.value} id={color.value} />
+                            <Label htmlFor={color.value} className={`flex items-center gap-1 ${color.value}`}>
+                              <span
+                                className={`w-4 h-4 rounded-full border ${color.value.replace("text-", "bg-")}`}
+                              ></span>
+                              {color.name}
+                            </Label>
+                          </div>
+                        ))}
+                      </RadioGroup>
+                    </div>
+                  </>
+                )}
+
+                {selectedElementData?.type === "image" && (
+                  <>
+                    <div className="grid grid-cols-4 items-center gap-4">
+                      <Label htmlFor="image-src" className="text-right">
+                        Image URL
+                      </Label>
+                      <Input
+                        id="image-src"
+                        value={selectedElementData.value as string}
+                        onChange={(e) => handlePropertyChange(e.target.value)}
+                        className="col-span-3"
+                      />
+                    </div>
+                    <div className="grid grid-cols-4 items-center gap-4">
+                      <Label htmlFor="image-alt" className="text-right">
+                        Alt Text
+                      </Label>
+                      <Input
+                        id="image-alt"
+                        value={selectedElementData.alt || ""}
+                        onChange={(e) => handleAltChange(e.target.value)}
+                        className="col-span-3"
+                      />
+                    </div>
+                    <div className="grid grid-cols-4 items-center gap-4">
+                      <Label htmlFor="image-link" className="text-right">
+                        Link URL (Optional)
+                      </Label>
+                      <Input
+                        id="image-link"
+                        value={selectedElementData.link || ""}
+                        onChange={(e) => handleLinkChange(e.target.value)}
+                        className="col-span-3"
+                      />
+                    </div>
+                  </>
+                )}
+              </div>
+            </SheetContent>
+          </Sheet>
+        </>
+      )}
     </div>
   )
 }

@@ -1,7 +1,5 @@
 "use client"
 
-import type React from "react"
-
 import type { ReactElement } from "react"
 import { useState } from "react"
 import Image from "next/image"
@@ -9,7 +7,7 @@ import Link from "next/link"
 import type { PageContent } from "@/lib/content-store"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Button } from "@/components/ui/button"
-import { Settings, Palette } from "lucide-react"
+import { Settings } from "lucide-react"
 import {
   Dialog,
   DialogContent,
@@ -23,26 +21,34 @@ import { Input } from "@/components/ui/input"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { cn } from "@/lib/utils"
 
+interface SelectedElementData {
+  sectionKey: keyof PageContent
+  elementId: string // Unique ID for the element within the section (e.g., "heroTitle", "aboutClubImage")
+  type: "text" | "number" | "link" | "image" | "button" | "color" | "font-size" // Type of element being edited
+  label: string // Label for the input field in the sidebar
+  currentValue: string | number // The current value of the primary field (e.g., text content, URL)
+  contentPath?: string // e.g., "hero.title", "aboutClub.imageSrc"
+  additionalFields?: {
+    field: string
+    label: string
+    type: "text" | "select" | "color" | "font-size"
+    currentValue: string | number
+    options?: { name: string; value: string; bgClass?: string; textClass?: string }[]
+  }[]
+}
+
 interface HeroSectionProps {
   content: PageContent["hero"]
   isEditing?: boolean
-  onContentChange?: (field: keyof PageContent["hero"], value: string | number) => void
+  onElementSelect: (data: SelectedElementData) => void
   availablePages: { name: string; path: string }[]
-  openColorPicker: (
-    section: keyof PageContent,
-    fieldBg: string,
-    fieldTxt: string,
-    currentBgValue: string,
-    currentTxtValue: string,
-  ) => void
 }
 
 export default function HeroSection({
   content,
   isEditing = false,
-  onContentChange,
+  onElementSelect,
   availablePages,
-  openColorPicker,
 }: HeroSectionProps): ReactElement {
   const [isSettingsDialogOpen, setIsSettingsDialogOpen] = useState(false)
   const [tempContent, setTempContent] = useState(content)
@@ -52,12 +58,6 @@ export default function HeroSection({
     setTempContent(content)
   }, [content])
 
-  const handleTextChange = (field: keyof PageContent["hero"], e: React.ChangeEvent<HTMLDivElement>) => {
-    if (onContentChange) {
-      onContentChange(field, e.currentTarget.innerText)
-    }
-  }
-
   const handleTempContentChange = (field: keyof PageContent["hero"], value: string | number) => {
     setTempContent((prev) => ({
       ...prev,
@@ -66,11 +66,23 @@ export default function HeroSection({
   }
 
   const handleSaveSettingsDialog = () => {
-    if (onContentChange) {
-      Object.keys(tempContent).forEach((key) => {
-        onContentChange(key as keyof PageContent["hero"], tempContent[key as keyof PageContent["hero"]])
-      })
-    }
+    // This dialog is for bulk editing, so we'll directly call onElementSelect for each field
+    // This is a simplified approach for the dialog, assuming it's for direct content updates
+    // For more granular control, each field in the dialog would trigger onElementSelect
+    // For now, we'll just update the main content object via a dummy call to trigger the save
+    onElementSelect({
+      sectionKey: "hero",
+      elementId: "heroSectionSettings",
+      type: "text", // Dummy type
+      label: "Hero Sektion Inställningar",
+      currentValue: "",
+      additionalFields: Object.keys(tempContent).map((key) => ({
+        field: key as keyof PageContent["hero"],
+        label: key, // Simplified label
+        type: typeof tempContent[key as keyof PageContent["hero"]] === "string" ? "text" : "number", // Simplified type
+        currentValue: tempContent[key as keyof PageContent["hero"]],
+      })),
+    })
     setIsSettingsDialogOpen(false)
   }
 
@@ -102,46 +114,233 @@ export default function HeroSection({
     { name: "Stor (text-2xl)", value: "text-2xl" },
   ]
 
+  const handleImageClick = () => {
+    if (isEditing) {
+      onElementSelect({
+        sectionKey: "hero",
+        elementId: "imageUrl",
+        type: "image",
+        label: "Hero Bild URL",
+        currentValue: content.imageUrl,
+      })
+    }
+  }
+
+  const handleTitleClick = () => {
+    if (isEditing) {
+      onElementSelect({
+        sectionKey: "hero",
+        elementId: "title",
+        type: "text",
+        label: "Rubrik",
+        currentValue: content.title,
+        additionalFields: [
+          {
+            field: "titleTextColorClass",
+            label: "Rubrik Färg",
+            type: "color",
+            currentValue: content.titleTextColorClass,
+            options: textColorOptions,
+          },
+          {
+            field: "titleFontSizeClass",
+            label: "Rubrik Storlek",
+            type: "font-size",
+            currentValue: content.titleFontSizeClass,
+            options: fontSizeOptions,
+          },
+        ],
+      })
+    }
+  }
+
+  const handleDescriptionClick = () => {
+    if (isEditing) {
+      onElementSelect({
+        sectionKey: "hero",
+        elementId: "description",
+        type: "text",
+        label: "Beskrivning",
+        currentValue: content.description,
+        additionalFields: [
+          {
+            field: "descriptionTextColorClass",
+            label: "Beskrivning Färg",
+            type: "color",
+            currentValue: content.descriptionTextColorClass,
+            options: textColorOptions,
+          },
+          {
+            field: "descriptionFontSizeClass",
+            label: "Beskrivning Storlek",
+            type: "font-size",
+            currentValue: content.descriptionFontSizeClass,
+            options: descriptionFontSizeOptions,
+          },
+        ],
+      })
+    }
+  }
+
+  const handleButton1Click = () => {
+    if (isEditing) {
+      onElementSelect({
+        sectionKey: "hero",
+        elementId: "button1Text",
+        type: "button",
+        label: "Knapp 1 Text",
+        currentValue: content.button1Text,
+        additionalFields: [
+          {
+            field: "button1Link",
+            label: "Knapp 1 Länk",
+            type: "select",
+            currentValue: content.button1Link,
+            options: availablePages,
+          },
+          {
+            field: "button1BgClass",
+            label: "Knapp 1 Bakgrund",
+            type: "color",
+            currentValue: content.button1BgClass,
+            options: [
+              { name: "Grön Primär", value: "bg-green-600", bgClass: "bg-green-600", textClass: "text-white" },
+              { name: "Vit Bakgrund", value: "bg-white", bgClass: "bg-white", textClass: "text-gray-800" },
+              { name: "Svart Bakgrund", value: "bg-black", bgClass: "bg-black", textClass: "text-white" },
+              { name: "Grå Bakgrund", value: "bg-gray-200", bgClass: "bg-gray-200", textClass: "text-gray-800" },
+              { name: "Blå Primär", value: "bg-blue-600", bgClass: "bg-blue-600", textClass: "text-white" },
+              { name: "Röd Primär", value: "bg-red-600", bgClass: "bg-red-600", textClass: "text-white" },
+              { name: "Orange Primär", value: "bg-orange-500", bgClass: "bg-orange-500", textClass: "text-white" },
+            ],
+          },
+          {
+            field: "button1TextClass",
+            label: "Knapp 1 Text Färg",
+            type: "color",
+            currentValue: content.button1TextClass,
+            options: textColorOptions,
+          },
+        ],
+      })
+    }
+  }
+
+  const handleButton2Click = () => {
+    if (isEditing) {
+      onElementSelect({
+        sectionKey: "hero",
+        elementId: "button2Text",
+        type: "button",
+        label: "Knapp 2 Text",
+        currentValue: content.button2Text,
+        additionalFields: [
+          {
+            field: "button2Link",
+            label: "Knapp 2 Länk",
+            type: "select",
+            currentValue: content.button2Link,
+            options: availablePages,
+          },
+          {
+            field: "button2BgClass",
+            label: "Knapp 2 Bakgrund",
+            type: "color",
+            currentValue: content.button2BgClass,
+            options: [
+              { name: "Grön Primär", value: "bg-green-600", bgClass: "bg-green-600", textClass: "text-white" },
+              { name: "Vit Bakgrund", value: "bg-white", bgClass: "bg-white", textClass: "text-gray-800" },
+              { name: "Svart Bakgrund", value: "bg-black", bgClass: "bg-black", textClass: "text-white" },
+              { name: "Grå Bakgrund", value: "bg-gray-200", bgClass: "bg-gray-200", textClass: "text-gray-800" },
+              { name: "Blå Primär", value: "bg-blue-600", bgClass: "bg-blue-600", textClass: "text-white" },
+              { name: "Röd Primär", value: "bg-red-600", bgClass: "bg-red-600", textClass: "text-white" },
+              { name: "Orange Primär", value: "bg-orange-500", bgClass: "bg-orange-500", textClass: "text-white" },
+            ],
+          },
+          {
+            field: "button2TextClass",
+            label: "Knapp 2 Text Färg",
+            type: "color",
+            currentValue: content.button2TextClass,
+            options: textColorOptions,
+          },
+        ],
+      })
+    }
+  }
+
+  const handleOverlayClick = () => {
+    if (isEditing) {
+      onElementSelect({
+        sectionKey: "hero",
+        elementId: "overlayColorClass",
+        type: "color",
+        label: "Överlagringsfärg",
+        currentValue: content.overlayColorClass,
+        additionalFields: [
+          {
+            field: "overlayColorClass",
+            label: "Överlagringsfärg",
+            type: "color",
+            currentValue: content.overlayColorClass,
+            options: overlayColorOptions,
+          },
+        ],
+      })
+    }
+  }
+
   return (
     <section className="relative h-[800px] w-full overflow-hidden">
-      <Image
-        src={content.imageUrl || "/placeholder.svg"}
-        alt="Härnösands FF fotbollsplan"
-        fill
-        className="object-cover object-center"
-        priority
-        onContextMenu={(e) => e.preventDefault()}
-        onDragStart={(e) => e.preventDefault()}
-      />
-      {isEditing && (
-        <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-          <span className="text-white text-lg font-bold">Redigera bild</span>
-        </div>
-      )}
-      <div className={`absolute inset-0 bg-gradient-to-t ${content.overlayColorClass} to-transparent`} />
+      <div className={cn("relative h-full w-full", isEditing && "cursor-pointer group")} onClick={handleImageClick}>
+        <Image
+          src={content.imageUrl || "/placeholder.svg"}
+          alt="Härnösands FF fotbollsplan"
+          fill
+          className="object-cover object-center"
+          priority
+          onContextMenu={(e) => e.preventDefault()}
+          onDragStart={(e) => e.preventDefault()}
+        />
+        {isEditing && (
+          <div className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+            <span className="text-white text-lg font-bold">Redigera bild</span>
+          </div>
+        )}
+      </div>
+      <div
+        className={cn(
+          `absolute inset-0 bg-gradient-to-t ${content.overlayColorClass} to-transparent`,
+          isEditing && "cursor-pointer group",
+        )}
+        onClick={handleOverlayClick}
+      >
+        {isEditing && (
+          <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+            <span className="text-white text-lg font-bold">Redigera överlagring</span>
+          </div>
+        )}
+      </div>
       <div className="relative z-10 flex h-full items-center justify-center p-8 md:p-12 text-center">
         <div className="max-w-3xl text-white">
           <h1
             className={cn(
-              "font-bold leading-tight outline-none focus:ring-2 focus:ring-white rounded px-1",
+              "font-bold leading-tight",
               content.titleFontSizeClass,
               content.titleTextColorClass,
+              isEditing && "cursor-pointer group hover:outline hover:outline-2 hover:outline-white rounded px-1",
             )}
-            contentEditable={isEditing}
-            suppressContentEditableWarning={true}
-            onBlur={(e) => handleTextChange("title", e)}
+            onClick={handleTitleClick}
           >
             {content.title}
           </h1>
           <p
             className={cn(
-              "mt-4 outline-none focus:ring-2 focus:ring-white rounded px-1",
+              "mt-4",
               content.descriptionFontSizeClass,
               content.descriptionTextColorClass,
+              isEditing && "cursor-pointer group hover:outline hover:outline-2 hover:outline-white rounded px-1",
             )}
-            contentEditable={isEditing}
-            suppressContentEditableWarning={true}
-            onBlur={(e) => handleTextChange("description", e)}
+            onClick={handleDescriptionClick}
           >
             {content.description}
           </p>
@@ -155,36 +354,16 @@ export default function HeroSection({
                 content.button1BgClass.includes("bg-white")
                   ? "border border-gray-300 hover:bg-gray-100"
                   : "hover:opacity-90",
+                isEditing && "cursor-pointer group hover:outline hover:outline-2 hover:outline-white rounded px-1",
               )}
+              onClick={(e) => {
+                if (isEditing) {
+                  e.preventDefault() // Prevent navigation in editing mode
+                  handleButton1Click()
+                }
+              }}
             >
-              <span
-                contentEditable={isEditing}
-                suppressContentEditableWarning={true}
-                onBlur={(e) => handleTextChange("button1Text", e)}
-                className="outline-none focus:ring-2 focus:ring-white rounded px-1"
-              >
-                {content.button1Text}
-              </span>
-              {isEditing && (
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="ml-2 h-6 w-6 text-current hover:bg-white/20"
-                  onClick={(e) => {
-                    e.preventDefault()
-                    openColorPicker(
-                      "hero",
-                      "button1BgClass",
-                      "button1TextClass",
-                      content.button1BgClass,
-                      content.button1TextClass,
-                    )
-                  }}
-                >
-                  <Palette className="h-4 w-4" />
-                  <span className="sr-only">Ändra färg</span>
-                </Button>
-              )}
+              {content.button1Text}
             </Link>
             <Link
               href={content.button2Link}
@@ -195,36 +374,16 @@ export default function HeroSection({
                 content.button2BgClass.includes("bg-white")
                   ? "border border-gray-300 hover:bg-gray-100"
                   : "hover:opacity-90",
+                isEditing && "cursor-pointer group hover:outline hover:outline-2 hover:outline-white rounded px-1",
               )}
+              onClick={(e) => {
+                if (isEditing) {
+                  e.preventDefault() // Prevent navigation in editing mode
+                  handleButton2Click()
+                }
+              }}
             >
-              <span
-                contentEditable={isEditing}
-                suppressContentEditableWarning={true}
-                onBlur={(e) => handleTextChange("button2Text", e)}
-                className="outline-none focus:ring-2 focus:ring-white rounded px-1"
-              >
-                {content.button2Text}
-              </span>
-              {isEditing && (
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="ml-2 h-6 w-6 text-current hover:bg-white/20"
-                  onClick={(e) => {
-                    e.preventDefault()
-                    openColorPicker(
-                      "hero",
-                      "button2BgClass",
-                      "button2TextClass",
-                      content.button2BgClass,
-                      content.button2TextClass,
-                    )
-                  }}
-                >
-                  <Palette className="h-4 w-4" />
-                  <span className="sr-only">Ändra färg</span>
-                </Button>
-              )}
+              {content.button2Text}
             </Link>
           </div>
         </div>
@@ -445,3 +604,6 @@ export default function HeroSection({
     </section>
   )
 }
+
+// Provide the required named export while preserving default export
+export { default as HeroSection } from "./hero-section" /* path resolves to this same file */
