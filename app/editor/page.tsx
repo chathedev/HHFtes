@@ -11,7 +11,7 @@ import StatsSection from "@/components/sections/stats-section"
 import AboutClubSection from "@/components/sections/about-club-section"
 import PartnersCarouselSection from "@/components/sections/partners-carousel-section"
 import UpcomingEventsSection from "@/components/upcoming-events-section"
-import { saveContent } from "@/app/actions/editor-content"
+import { saveEditorContentServer } from "@/app/actions/editor-content"
 import { useToast } from "@/components/ui/use-toast"
 import { Loader2, Save, XCircle } from "lucide-react"
 
@@ -71,7 +71,7 @@ export default function EditorPage() {
 
     setIsSaving(true)
     try {
-      const result = await saveContent(content)
+      const result = await saveEditorContentServer(content)
       if (result.success) {
         toast({
           title: "Innehåll sparat!",
