@@ -5,6 +5,13 @@ export interface FAQItem {
   answer: string
 }
 
+export interface EventItem {
+  date: string
+  time: string
+  title: string
+  location: string
+}
+
 export interface PageContent {
   sections: string[]
   hero: {
@@ -75,6 +82,7 @@ export interface PageContent {
     callToActionLinkText: string
     callToActionLink: string
   }
+  upcomingEvents: EventItem[] // Added upcomingEvents to PageContent
 }
 
 export const defaultContent: PageContent = {
@@ -167,6 +175,26 @@ export const defaultContent: PageContent = {
     callToActionLinkText: "Kontakta oss om partnerskap",
     callToActionLink: "/kontakt",
   },
+  upcomingEvents: [
+    {
+      date: "2024-10-26",
+      time: "14:00",
+      title: "Herrar Div 1: Härnösands HF vs. IFK Skövde HK",
+      location: "Härnösands Arena",
+    },
+    {
+      date: "2024-11-02",
+      time: "16:00",
+      title: "Damer Div 2: Härnösands HF vs. Strands IF",
+      location: "Härnösands Arena",
+    },
+    {
+      date: "2024-11-09",
+      time: "10:00",
+      title: "Ungdomscup: Härnösand Cup",
+      location: "Härnösands Arena",
+    },
+  ],
 }
 
 /* ------------------------------------------------------------------

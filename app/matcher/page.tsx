@@ -15,6 +15,7 @@ interface Match {
   awayScore: number | null
   status: string // "finished" or "upcoming"
   location: string
+  title?: string // Added for scraped events
 }
 
 interface GroupedMatches {
@@ -22,17 +23,69 @@ interface GroupedMatches {
 }
 
 export default function MatchesPage() {
-  const [allMatches, setAllMatches] = useState<Match[]>([])
+  const [fetchedMatches, setFetchedMatches] = useState<Match[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+
+  const staticMatches: Match[] = [
+    {
+      id: "static-1",
+      date: "2024-03-10",
+      time: "14:00",
+      homeTeam: "Härnösands HF",
+      awayTeam: "Sundsvall HK",
+      homeScore: 28,
+      awayScore: 25,
+      status: "finished",
+      location: "Härnösands Sporthall",
+      title: "Härnösands HF vs. Sundsvall HK",
+    },
+    {
+      id: "static-2",
+      date: "2024-03-15",
+      time: "18:30",
+      homeTeam: "Östersunds HK",
+      awayTeam: "Härnösands HF",
+      homeScore: null,
+      awayScore: null,
+      status: "upcoming",
+      location: "Östersund Arena",
+      title: "Östersunds HK vs. Härnösands HF",
+    },
+    {
+      id: "static-3",
+      date: "2024-03-22",
+      time: "19:00",
+      homeTeam: "Härnösands HF",
+      awayTeam: "Umeå IK",
+      homeScore: null,
+      awayScore: null,
+      status: "upcoming",
+      location: "Härnösands Sporthall",
+      title: "Härnösands HF vs. Umeå IK",
+    },
+    {
+      id: "static-4",
+      date: "2024-03-03",
+      time: "16:00",
+      homeTeam: "Luleå HF",
+      awayTeam: "Härnösands HF",
+      homeScore: 30,
+      awayScore: 29,
+      status: "finished",
+      location: "Luleå Energi Arena",
+      title: "Luleå HF vs. Härnösands HF",
+    },
+  ]
 
   useEffect(() => {
     const fetchMatches = async () => {
       try {
         setLoading(true)
         const startDate = new Date()
-        const fetchedMatches: Match[] = []
+        const tempFetchedMatches: Match[] = []
 
+        // Fetch for current month + next 3 months
         for (let i = 0; i < 4; i++) {
           let year = startDate.getFullYear()
           let month = startDate.getMonth() + i
@@ -61,9 +114,8 @@ export default function MatchesPage() {
             const fullDate = `${year}-${paddedMonth}-${dateAttribute.padStart(2, "0")}`
 
             dayElement.querySelectorAll(".fullCalendar__list li").forEach((liElement) => {
-              // Skip if it's a training
               const textContent = liElement.textContent?.toLowerCase() || ""
-              if (textContent.includes("träning")) return
+              if (textContent.includes("träning")) return // Skip training events
 
               let time = "Okänd tid"
               let title = ""
@@ -107,16 +159,17 @@ export default function MatchesPage() {
                 .trim()
 
               if (title) {
-                fetchedMatches.push({
-                  id: "",
+                tempFetchedMatches.push({
+                  id: `scraped-${fullDate}-${time}-${title.replace(/\s/g, "-")}`, // Unique ID
                   date: fullDate,
                   time,
-                  homeTeam: "",
-                  awayTeam: "",
+                  homeTeam: "", // Scraped data doesn't easily provide this
+                  awayTeam: "", // Scraped data doesn't easily provide this
                   homeScore: null,
                   awayScore: null,
-                  status: "",
-                  location: "",
+                  status: "upcoming", // Assume scraped are upcoming unless parsed otherwise
+                  location: "Okänd plats", // Scraped data doesn't easily provide this
+                  title: title, // Store the full title
                 })
               }
             })
@@ -124,7 +177,7 @@ export default function MatchesPage() {
         }
 
         const now = new Date()
-        const filteredAndSortedMatches = fetchedMatches
+        const filteredAndSortedMatches = tempFetchedMatches
           .filter((match) => {
             if (match.time === "Heldag") {
               const dateOnly = new Date(match.date)
@@ -143,7 +196,7 @@ export default function MatchesPage() {
             return dateA.getTime() - dateB.getTime()
           })
 
-        setAllMatches(filteredAndSortedMatches)
+        setFetchedMatches(filteredAndSortedMatches)
       } catch (e: any) {
         setError(e.message || "Failed to fetch matches.")
         console.error(e)
@@ -155,8 +208,25 @@ export default function MatchesPage() {
     fetchMatches()
   }, [])
 
+  const allMatchesCombined = useMemo(() => {
+    // Combine fetched and static matches, ensuring uniqueness by ID
+    const combined = [...fetchedMatches, ...staticMatches]
+    const uniqueMatches = Array.from(new Map(combined.map((match) => [match.id, match])).values())
+
+    // Sort all matches by date and time
+    return uniqueMatches.sort((a, b) => {
+      const dateA = new Date(
+        `${a.date}T${a.time.split(" ")[0].replace("Okänd tid", "00:00").replace("Heldag", "00:00")}`,
+      )
+      const dateB = new Date(
+        `${b.date}T${b.time.split(" ")[0].replace("Okänd tid", "00:00").replace("Heldag", "00:00")}`,
+      )
+      return dateA.getTime() - dateB.getTime()
+    })
+  }, [fetchedMatches, staticMatches])
+
   const groupedMatches = useMemo(() => {
-    const grouped: GroupedMatches = allMatches.reduce((acc, match) => {
+    const grouped: GroupedMatches = allMatchesCombined.reduce((acc, match) => {
       const matchDate = new Date(match.date)
       const monthYearKey = matchDate.toLocaleDateString("sv-SE", { year: "numeric", month: "long" })
       if (!acc[monthYearKey]) acc[monthYearKey] = []
@@ -177,59 +247,7 @@ export default function MatchesPage() {
         sorted[key] = grouped[key]
         return sorted
       }, {} as GroupedMatches)
-  }, [allMatches])
-
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString)
-    return date.toLocaleDateString("sv-SE", { day: "numeric", month: "short" })
-  }
-
-  const staticMatches = [
-    {
-      id: "1",
-      date: "2024-03-10",
-      time: "14:00",
-      homeTeam: "Härnösands HF",
-      awayTeam: "Sundsvall HK",
-      homeScore: 28,
-      awayScore: 25,
-      status: "finished",
-      location: "Härnösands Sporthall",
-    },
-    {
-      id: "2",
-      date: "2024-03-15",
-      time: "18:30",
-      homeTeam: "Östersunds HK",
-      awayTeam: "Härnösands HF",
-      homeScore: null,
-      awayScore: null,
-      status: "upcoming",
-      location: "Östersund Arena",
-    },
-    {
-      id: "3",
-      date: "2024-03-22",
-      time: "19:00",
-      homeTeam: "Härnösands HF",
-      awayTeam: "Umeå IK",
-      homeScore: null,
-      awayScore: null,
-      status: "upcoming",
-      location: "Härnösands Sporthall",
-    },
-    {
-      id: "4",
-      date: "2024-03-03",
-      time: "16:00",
-      homeTeam: "Luleå HF",
-      awayTeam: "Härnösands HF",
-      homeScore: 30,
-      awayScore: 29,
-      status: "finished",
-      location: "Luleå Energi Arena",
-    },
-  ]
+  }, [allMatchesCombined])
 
   return (
     <div className="flex flex-col min-h-screen bg-white">
@@ -248,23 +266,20 @@ export default function MatchesPage() {
         {error && (
           <p className="text-center text-red-500">
             Fel: {error}. Detta kan bero på CORS-begränsningar från källwebbplatsen när du försöker hämta data direkt
-            från webbläsaren.
+            från webbläsaren. Visar statiska matcher istället.
           </p>
         )}
 
-        {!loading && !error && Object.keys(groupedMatches).length === 0 && (
-          <p className="text-center text-gray-600">Inga matcher planerade.</p>
+        {!loading && allMatchesCombined.length === 0 && (
+          <p className="text-center text-gray-600">Inga matcher planerade för tillfället.</p>
         )}
 
-        {!loading && !error && (
+        {!loading && allMatchesCombined.length > 0 && (
           <div className="space-y-12">
-            <h1 className="text-4xl font-bold text-center mb-12 text-gray-800">Kommande & Spelade Matcher</h1>
+            <h2 className="text-4xl font-bold text-center mb-12 text-gray-800">Alla Matcher</h2>
 
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-              {allMatches.map((match) => (
-                <MatchCard key={match.id} match={match} />
-              ))}
-              {staticMatches.map((match) => (
+              {allMatchesCombined.map((match) => (
                 <MatchCard key={match.id} match={match} />
               ))}
             </div>

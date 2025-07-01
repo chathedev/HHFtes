@@ -1,477 +1,325 @@
 "use client"
 
+import { cn } from "@/lib/utils"
+
 import { useState, useEffect, useCallback } from "react"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet"
-import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Input } from "@/components/ui/input"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Switch } from "@/components/ui/switch"
+import { Save, RotateCcw, X } from "lucide-react"
+import { loadContent, defaultContent, type PageContent } from "@/lib/content-store"
+import { saveContent } from "@/app/actions/editor-content"
+import HeroSection from "@/components/sections/hero-section"
+import StatsSection from "@/components/sections/stats-section"
+import AboutClubSection from "@/components/sections/about-club-section"
+import PartnersCarouselSection from "@/components/sections/partners-carousel-section"
+import UpcomingEventsSection from "@/components/upcoming-events-section"
+import { useMobile } from "@/hooks/use-mobile"
 import { useToast } from "@/hooks/use-toast"
-import { saveContent, loadContent } from "@/app/actions/editor-content"
-import { HeroSection } from "@/components/sections/hero-section"
-import { StatsSection } from "@/components/sections/stats-section"
-import { AboutClubSection } from "@/components/sections/about-club-section"
-import { PartnersCarouselSection } from "@/components/sections/partners-carousel-section"
-import { UpcomingEventsSection } from "@/components/upcoming-events-section"
-import { useIsMobile } from "@/hooks/use-mobile" // Import the hook
 
-type ElementType = "text" | "button" | "image" | "link" | "number"
-
+// Define SelectedElementData interface here or in a shared types file
 interface SelectedElementData {
-  id: string
-  type: ElementType
-  value: string | number
-  section: string
-  property: string
-  link?: string
-  alt?: string
-  color?: string
-  fontSize?: string
+  sectionKey: keyof PageContent
+  elementId: string // Unique ID for the element within the section (e.g., "heroTitle", "aboutClubImage")
+  type: "text" | "number" | "link" | "image" | "button" | "color" | "font-size" | "select" // Type of element being edited
+  label: string // Label for the input field in the sidebar
+  currentValue: string | number // The current value of the primary field (e.g., text content, URL)
+  contentPath?: string // e.g., "hero.title", "aboutClub.imageSrc"
+  additionalFields?: {
+    field: string
+    label: string
+    type: "text" | "select" | "color" | "font-size" | "number"
+    currentValue: string | number
+    options?: { name: string; value: string; bgClass?: string; textClass?: string }[]
+  }[]
 }
-
-const FONT_SIZES = [
-  "text-xs",
-  "text-sm",
-  "text-base",
-  "text-lg",
-  "text-xl",
-  "text-2xl",
-  "text-3xl",
-  "text-4xl",
-  "text-5xl",
-  "text-6xl",
-]
-const COLORS = [
-  { name: "Black", value: "text-black" },
-  { name: "White", value: "text-white" },
-  { name: "Gray 500", value: "text-gray-500" },
-  { name: "Red 500", value: "text-red-500" },
-  { name: "Orange 500", value: "text-orange-500" },
-  { name: "Yellow 500", value: "text-yellow-500" },
-  { name: "Green 500", value: "text-green-500" },
-  { name: "Blue 500", value: "text-blue-500" },
-  { name: "Indigo 500", value: "text-indigo-500" },
-  { name: "Purple 500", value: "text-purple-500" },
-  { name: "Pink 500", value: "text-pink-500" },
-]
 
 export default function EditorPage() {
   const [isEditing, setIsEditing] = useState(false)
-  const [content, setContent] = useState<any>(null)
+  const [pageContent, setPageContent] = useState<PageContent>(defaultContent) // Initialize with defaultContent
+  const [originalContent, setOriginalContent] = useState<PageContent>(defaultContent) // Initialize with defaultContent
   const [isRightSidebarOpen, setIsRightSidebarOpen] = useState(false)
   const [selectedElementData, setSelectedElementData] = useState<SelectedElementData | null>(null)
   const { toast } = useToast()
-  const isMobile = useIsMobile() // Use the hook
+  const isMobile = useMobile()
+
+  const availablePages = [
+    { name: "Hem", path: "/" },
+    { name: "Kontakt", path: "/kontakt" },
+    { name: "Partners", path: "/partners" },
+    { name: "Lag", path: "/lag" },
+    { name: "Matcher", path: "/matcher" },
+    { name: "Kalender", path: "/kalender" },
+    { name: "Nyheter", path: "/nyheter" },
+  ]
 
   useEffect(() => {
     const fetchContent = async () => {
       try {
-        const loadedContent = await loadContent()
-        setContent(loadedContent)
+        const fetchedContent = await loadContent()
+        setPageContent(fetchedContent)
+        setOriginalContent(fetchedContent)
       } catch (error) {
         console.error("Failed to load content:", error)
         toast({
-          title: "Error",
-          description: "Failed to load content. Please try again.",
+          title: "Fel vid laddning",
+          description: "Kunde inte ladda innehåll från servern. Visar standardinnehåll.",
           variant: "destructive",
         })
+        setPageContent(defaultContent)
+        setOriginalContent(defaultContent)
       }
     }
     fetchContent()
   }, [toast])
 
-  const handleSave = useCallback(async () => {
-    if (!content) return
-
-    try {
-      await saveContent(content)
-      toast({
-        title: "Success",
-        description: "Content saved successfully!",
-      })
-    } catch (error) {
-      console.error("Failed to save content:", error)
-      toast({
-        title: "Error",
-        description: "Failed to save content. Please try again.",
-        variant: "destructive",
-      })
-    }
-  }, [content, toast])
-
-  const handleReset = useCallback(async () => {
-    try {
-      const defaultContent = await loadContent(true) // Load default content
-      setContent(defaultContent)
-      toast({
-        title: "Success",
-        description: "Content reset to default.",
-      })
-    } catch (error) {
-      console.error("Failed to reset content:", error)
-      toast({
-        title: "Error",
-        description: "Failed to reset content. Please try again.",
-        variant: "destructive",
-      })
-    }
-  }, [toast])
-
-  const onElementSelect = useCallback((data: SelectedElementData) => {
+  const handleElementSelect = useCallback((data: SelectedElementData) => {
     setSelectedElementData(data)
     setIsRightSidebarOpen(true)
   }, [])
 
-  const handlePropertyChange = useCallback(
-    (newValue: string | number) => {
-      if (!selectedElementData || !content) return
+  const handleElementUpdate = useCallback(
+    (field: string, value: string | number) => {
+      if (!selectedElementData) return
 
-      const { section, property, type } = selectedElementData
+      setPageContent((prevContent) => {
+        const newContent = { ...prevContent }
+        const section = newContent[selectedElementData.sectionKey] as any
 
-      setContent((prevContent: any) => {
-        const updatedContent = { ...prevContent }
-        if (updatedContent[section]) {
-          if (type === "number") {
-            updatedContent[section][property] = Number(newValue)
+        if (section) {
+          // Update the primary field
+          if (selectedElementData.elementId === field) {
+            section[field] = value
           } else {
-            updatedContent[section][property] = newValue
+            // Update additional fields
+            section[field] = value
           }
         }
-        return updatedContent
+        return newContent
       })
-
-      setSelectedElementData((prev) => (prev ? { ...prev, value: newValue } : null))
     },
-    [selectedElementData, content],
+    [selectedElementData],
   )
 
-  const handleLinkChange = useCallback(
-    (newLink: string) => {
-      if (!selectedElementData || !content) return
-
-      const { section, property } = selectedElementData
-      setContent((prevContent: any) => {
-        const updatedContent = { ...prevContent }
-        if (updatedContent[section]) {
-          // Assuming link is a property of the element itself, e.g., button.link or image.src
-          updatedContent[section][property] = {
-            ...updatedContent[section][property],
-            link: newLink,
-          }
-        }
-        return updatedContent
+  const handleSave = async () => {
+    try {
+      await saveContent(pageContent)
+      setOriginalContent(pageContent) // Update original content after successful save
+      toast({
+        title: "Innehåll sparat!",
+        description: "Dina ändringar har sparats framgångsrikt.",
       })
-      setSelectedElementData((prev) => (prev ? { ...prev, link: newLink } : null))
-    },
-    [selectedElementData, content],
-  )
-
-  const handleAltChange = useCallback(
-    (newAlt: string) => {
-      if (!selectedElementData || !content) return
-
-      const { section, property } = selectedElementData
-      setContent((prevContent: any) => {
-        const updatedContent = { ...prevContent }
-        if (updatedContent[section]) {
-          updatedContent[section][property] = {
-            ...updatedContent[section][property],
-            alt: newAlt,
-          }
-        }
-        return updatedContent
+    } catch (error) {
+      console.error("Failed to save content:", error)
+      toast({
+        title: "Fel vid sparning",
+        description: "Kunde inte spara innehållet. Försök igen.",
+        variant: "destructive",
       })
-      setSelectedElementData((prev) => (prev ? { ...prev, alt: newAlt } : null))
-    },
-    [selectedElementData, content],
-  )
+    }
+  }
 
-  const handleColorChange = useCallback(
-    (newColor: string) => {
-      if (!selectedElementData || !content) return
+  const handleReset = () => {
+    setPageContent(originalContent)
+    toast({
+      title: "Ändringar återställda",
+      description: "Innehållet har återställts till den senast sparade versionen.",
+    })
+  }
 
-      const { section, property } = selectedElementData
-      setContent((prevContent: any) => {
-        const updatedContent = { ...prevContent }
-        if (updatedContent[section]) {
-          updatedContent[section][property] = {
-            ...updatedContent[section][property],
-            color: newColor,
-          }
-        }
-        return updatedContent
-      })
-      setSelectedElementData((prev) => (prev ? { ...prev, color: newColor } : null))
-    },
-    [selectedElementData, content],
-  )
-
-  const handleFontSizeChange = useCallback(
-    (newSize: string) => {
-      if (!selectedElementData || !content) return
-
-      const { section, property } = selectedElementData
-      setContent((prevContent: any) => {
-        const updatedContent = { ...prevContent }
-        if (updatedContent[section]) {
-          updatedContent[section][property] = {
-            ...updatedContent[section][property],
-            fontSize: newSize,
-          }
-        }
-        return updatedContent
-      })
-      setSelectedElementData((prev) => (prev ? { ...prev, fontSize: newSize } : null))
-    },
-    [selectedElementData, content],
-  )
-
-  if (!content) {
-    return <div className="flex items-center justify-center min-h-screen">Loading editor...</div>
+  if (isMobile) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 p-4 text-center">
+        <h1 className="text-2xl font-bold mb-4">Redigeringsläge</h1>
+        <p className="text-gray-700">För att redigera webbplatsen, vänligen använd en dator eller en större skärm.</p>
+        <p className="text-gray-500 mt-2">Mobilredigering stöds inte för närvarande.</p>
+      </div>
+    )
   }
 
   return (
     <div className="flex flex-col min-h-screen">
-      {isMobile ? (
-        <div className="flex flex-col items-center justify-center min-h-screen text-center p-4 bg-gray-100 text-gray-800">
-          <h1 className="text-2xl font-bold mb-4">Editor Not Available on Mobile</h1>
-          <p className="text-lg">Please access the editor from a desktop computer for the best experience.</p>
+      {/* Top Bar for Editor Controls */}
+      <div className="sticky top-0 z-50 bg-white border-b border-gray-200 p-4 flex items-center justify-between shadow-sm">
+        <div className="flex items-center gap-4">
+          <h1 className="text-xl font-bold text-green-700">Härnösands FF Editor</h1>
+          <div className="flex items-center gap-2">
+            <Label htmlFor="editing-mode">Redigeringsläge</Label>
+            <Switch id="editing-mode" checked={isEditing} onCheckedChange={setIsEditing} />
+          </div>
         </div>
-      ) : (
-        <>
-          {/* Top Bar for Editor Controls */}
-          <div className="fixed top-0 left-0 w-full bg-gray-800 text-white p-4 z-50 flex justify-between items-center shadow-lg">
-            <h1 className="text-xl font-bold">Website Editor</h1>
-            <div className="flex gap-4">
-              <Button onClick={() => setIsEditing(!isEditing)} variant={isEditing ? "destructive" : "default"}>
-                {isEditing ? "Exit Editing" : "Enter Editing"}
-              </Button>
-              {isEditing && (
-                <>
-                  <Button onClick={handleSave} variant="secondary">
-                    Save Changes
-                  </Button>
-                  <Button onClick={handleReset} variant="outline">
-                    Reset to Default
-                  </Button>
-                </>
-              )}
-            </div>
-          </div>
+        <div className="flex gap-2">
+          <Button onClick={handleSave} disabled={!isEditing}>
+            <Save className="mr-2 h-4 w-4" /> Spara
+          </Button>
+          <Button variant="outline" onClick={handleReset} disabled={!isEditing}>
+            <RotateCcw className="mr-2 h-4 w-4" /> Återställ
+          </Button>
+        </div>
+      </div>
 
-          {/* Main Content Area */}
-          <div className="flex-1 pt-20">
-            {" "}
-            {/* Add padding-top to account for fixed header */}
-            <HeroSection isEditing={isEditing} onElementSelect={onElementSelect} content={content.heroSection} />
-            <StatsSection isEditing={isEditing} onElementSelect={onElementSelect} content={content.statsSection} />
-            <AboutClubSection
-              isEditing={isEditing}
-              onElementSelect={onElementSelect}
-              content={content.aboutClubSection}
-            />
-            <PartnersCarouselSection
-              isEditing={isEditing}
-              onElementSelect={onElementSelect}
-              content={content.partnersCarouselSection}
-            />
-            <UpcomingEventsSection
-              isEditing={isEditing}
-              onElementSelect={onElementSelect}
-              content={content.upcomingEventsSection}
-            />
-          </div>
+      {/* Main Content Area */}
+      <main className="flex-1 relative">
+        <HeroSection
+          content={pageContent.hero}
+          isEditing={isEditing}
+          onElementSelect={handleElementSelect}
+          availablePages={availablePages}
+        />
+        <StatsSection content={pageContent.stats} isEditing={isEditing} onElementSelect={handleElementSelect} />
+        <UpcomingEventsSection
+          content={pageContent.upcomingEvents} // Assuming upcomingEvents is part of PageContent now
+          isEditing={isEditing}
+          onElementSelect={handleElementSelect}
+        />
+        <AboutClubSection content={pageContent.aboutClub} isEditing={isEditing} onElementSelect={handleElementSelect} />
+        <PartnersCarouselSection
+          content={pageContent.partnersCarousel}
+          isEditing={isEditing}
+          onElementSelect={handleElementSelect}
+        />
+      </main>
 
-          {/* Right Sidebar for Element Properties */}
-          <Sheet open={isRightSidebarOpen} onOpenChange={setIsRightSidebarOpen}>
-            <SheetContent className="w-full sm:max-w-md">
-              <SheetHeader>
-                <SheetTitle>Edit Element</SheetTitle>
-                <SheetDescription>Adjust the properties of the selected {selectedElementData?.type}.</SheetDescription>
-              </SheetHeader>
-              <div className="grid gap-4 py-4">
-                {selectedElementData?.type === "text" && (
-                  <>
-                    <div className="grid grid-cols-4 items-center gap-4">
-                      <Label htmlFor="text-value" className="text-right">
-                        Text
-                      </Label>
-                      <Input
-                        id="text-value"
-                        value={selectedElementData.value as string}
-                        onChange={(e) => handlePropertyChange(e.target.value)}
-                        className="col-span-3"
-                      />
-                    </div>
-                    <div className="grid grid-cols-4 items-center gap-4">
-                      <Label htmlFor="font-size" className="text-right">
-                        Font Size
-                      </Label>
-                      <RadioGroup
-                        id="font-size"
-                        value={selectedElementData.fontSize || "text-base"}
-                        onValueChange={handleFontSizeChange}
-                        className="col-span-3 flex flex-wrap gap-2"
-                      >
-                        {FONT_SIZES.map((size) => (
-                          <div key={size} className="flex items-center space-x-2">
-                            <RadioGroupItem value={size} id={size} />
-                            <Label htmlFor={size}>{size.replace("text-", "")}</Label>
-                          </div>
-                        ))}
-                      </RadioGroup>
-                    </div>
-                    <div className="grid grid-cols-4 items-center gap-4">
-                      <Label htmlFor="color" className="text-right">
-                        Color
-                      </Label>
-                      <RadioGroup
-                        id="color"
-                        value={selectedElementData.color || "text-black"}
-                        onValueChange={handleColorChange}
-                        className="col-span-3 flex flex-wrap gap-2"
-                      >
-                        {COLORS.map((color) => (
-                          <div key={color.value} className="flex items-center space-x-2">
-                            <RadioGroupItem value={color.value} id={color.value} />
-                            <Label htmlFor={color.value} className={`flex items-center gap-1 ${color.value}`}>
-                              <span
-                                className={`w-4 h-4 rounded-full border ${color.value.replace("text-", "bg-")}`}
-                              ></span>
-                              {color.name}
-                            </Label>
-                          </div>
-                        ))}
-                      </RadioGroup>
-                    </div>
-                  </>
-                )}
-
-                {selectedElementData?.type === "number" && (
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="number-value" className="text-right">
-                      Number
-                    </Label>
+      {/* Right Sidebar for Element Editing */}
+      <Sheet open={isRightSidebarOpen && isEditing} onOpenChange={setIsRightSidebarOpen}>
+        <SheetContent className="w-full sm:max-w-md overflow-y-auto">
+          <SheetHeader>
+            <SheetTitle>Redigera {selectedElementData?.label}</SheetTitle>
+            <SheetDescription>Justera innehållet och stilen för det valda elementet.</SheetDescription>
+          </SheetHeader>
+          <div className="grid gap-4 py-4">
+            {selectedElementData && (
+              <>
+                {/* Primary field input */}
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="main-input" className="text-right">
+                    {selectedElementData.label}
+                  </Label>
+                  {selectedElementData.type === "text" ||
+                  selectedElementData.type === "image" ||
+                  selectedElementData.type === "link" ||
+                  selectedElementData.type === "button" ? (
                     <Input
-                      id="number-value"
-                      type="number"
-                      value={selectedElementData.value as number}
-                      onChange={(e) => handlePropertyChange(e.target.value)}
+                      id="main-input"
+                      value={selectedElementData.currentValue as string}
+                      onChange={(e) => handleElementUpdate(selectedElementData.elementId, e.target.value)}
                       className="col-span-3"
                     />
-                  </div>
-                )}
-
-                {selectedElementData?.type === "button" && (
-                  <>
-                    <div className="grid grid-cols-4 items-center gap-4">
-                      <Label htmlFor="button-text" className="text-right">
-                        Button Text
-                      </Label>
-                      <Input
-                        id="button-text"
-                        value={selectedElementData.value as string}
-                        onChange={(e) => handlePropertyChange(e.target.value)}
-                        className="col-span-3"
-                      />
-                    </div>
-                    <div className="grid grid-cols-4 items-center gap-4">
-                      <Label htmlFor="button-link" className="text-right">
-                        Link URL
-                      </Label>
-                      <Input
-                        id="button-link"
-                        value={selectedElementData.link || ""}
-                        onChange={(e) => handleLinkChange(e.target.value)}
-                        className="col-span-3"
-                      />
-                    </div>
-                    <div className="grid grid-cols-4 items-center gap-4">
-                      <Label htmlFor="font-size" className="text-right">
-                        Font Size
-                      </Label>
-                      <RadioGroup
-                        id="font-size"
-                        value={selectedElementData.fontSize || "text-base"}
-                        onValueChange={handleFontSizeChange}
-                        className="col-span-3 flex flex-wrap gap-2"
-                      >
-                        {FONT_SIZES.map((size) => (
-                          <div key={size} className="flex items-center space-x-2">
-                            <RadioGroupItem value={size} id={size} />
-                            <Label htmlFor={size}>{size.replace("text-", "")}</Label>
-                          </div>
+                  ) : selectedElementData.type === "number" ? (
+                    <Input
+                      id="main-input"
+                      type="number"
+                      value={selectedElementData.currentValue as number}
+                      onChange={(e) => handleElementUpdate(selectedElementData.elementId, Number(e.target.value))}
+                      className="col-span-3"
+                    />
+                  ) : selectedElementData.type === "select" && selectedElementData.additionalFields?.[0]?.options ? (
+                    <Select
+                      value={selectedElementData.currentValue as string}
+                      onValueChange={(value) => handleElementUpdate(selectedElementData.elementId, value)}
+                    >
+                      <SelectTrigger className="col-span-3">
+                        <SelectValue placeholder={`Välj ${selectedElementData.label.toLowerCase()}`} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {selectedElementData.additionalFields[0].options.map((option) => (
+                          <SelectItem key={option.value} value={option.value}>
+                            {option.name}
+                          </SelectItem>
                         ))}
-                      </RadioGroup>
-                    </div>
-                    <div className="grid grid-cols-4 items-center gap-4">
-                      <Label htmlFor="color" className="text-right">
-                        Color
-                      </Label>
+                      </SelectContent>
+                    </Select>
+                  ) : null}
+                </div>
+
+                {/* Additional fields */}
+                {selectedElementData.additionalFields?.map((fieldData) => (
+                  <div key={fieldData.field} className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor={fieldData.field} className="text-right">
+                      {fieldData.label}
+                    </Label>
+                    {fieldData.type === "text" ? (
+                      <Input
+                        id={fieldData.field}
+                        value={fieldData.currentValue as string}
+                        onChange={(e) => handleElementUpdate(fieldData.field, e.target.value)}
+                        className="col-span-3"
+                      />
+                    ) : fieldData.type === "number" ? (
+                      <Input
+                        id={fieldData.field}
+                        type="number"
+                        value={fieldData.currentValue as number}
+                        onChange={(e) => handleElementUpdate(fieldData.field, Number(e.target.value))}
+                        className="col-span-3"
+                      />
+                    ) : fieldData.type === "color" && fieldData.options ? (
                       <RadioGroup
-                        id="color"
-                        value={selectedElementData.color || "text-black"}
-                        onValueChange={handleColorChange}
-                        className="col-span-3 flex flex-wrap gap-2"
+                        value={fieldData.currentValue as string}
+                        onValueChange={(value) => handleElementUpdate(fieldData.field, value)}
+                        className="flex flex-col space-y-1 col-span-3"
                       >
-                        {COLORS.map((color) => (
-                          <div key={color.value} className="flex items-center space-x-2">
-                            <RadioGroupItem value={color.value} id={color.value} />
-                            <Label htmlFor={color.value} className={`flex items-center gap-1 ${color.value}`}>
-                              <span
-                                className={`w-4 h-4 rounded-full border ${color.value.replace("text-", "bg-")}`}
-                              ></span>
-                              {color.name}
+                        {fieldData.options.map((option) => (
+                          <div key={option.value} className="flex items-center space-x-2">
+                            <RadioGroupItem value={option.value} id={`${fieldData.field}-${option.value}`} />
+                            <Label htmlFor={`${fieldData.field}-${option.value}`} className={option.textClass}>
+                              {option.name}
+                              {option.bgClass && (
+                                <span className={cn("ml-2 w-4 h-4 inline-block rounded-full", option.bgClass)} />
+                              )}
                             </Label>
                           </div>
                         ))}
                       </RadioGroup>
-                    </div>
-                  </>
-                )}
-
-                {selectedElementData?.type === "image" && (
-                  <>
-                    <div className="grid grid-cols-4 items-center gap-4">
-                      <Label htmlFor="image-src" className="text-right">
-                        Image URL
-                      </Label>
-                      <Input
-                        id="image-src"
-                        value={selectedElementData.value as string}
-                        onChange={(e) => handlePropertyChange(e.target.value)}
-                        className="col-span-3"
-                      />
-                    </div>
-                    <div className="grid grid-cols-4 items-center gap-4">
-                      <Label htmlFor="image-alt" className="text-right">
-                        Alt Text
-                      </Label>
-                      <Input
-                        id="image-alt"
-                        value={selectedElementData.alt || ""}
-                        onChange={(e) => handleAltChange(e.target.value)}
-                        className="col-span-3"
-                      />
-                    </div>
-                    <div className="grid grid-cols-4 items-center gap-4">
-                      <Label htmlFor="image-link" className="text-right">
-                        Link URL (Optional)
-                      </Label>
-                      <Input
-                        id="image-link"
-                        value={selectedElementData.link || ""}
-                        onChange={(e) => handleLinkChange(e.target.value)}
-                        className="col-span-3"
-                      />
-                    </div>
-                  </>
-                )}
-              </div>
-            </SheetContent>
-          </Sheet>
-        </>
-      )}
+                    ) : fieldData.type === "font-size" && fieldData.options ? (
+                      <Select
+                        value={fieldData.currentValue as string}
+                        onValueChange={(value) => handleElementUpdate(fieldData.field, value)}
+                      >
+                        <SelectTrigger className="col-span-3">
+                          <SelectValue placeholder={`Välj ${fieldData.label.toLowerCase()}`} />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {fieldData.options.map((option) => (
+                            <SelectItem key={option.value} value={option.value}>
+                              {option.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    ) : fieldData.type === "select" && fieldData.options ? (
+                      <Select
+                        value={fieldData.currentValue as string}
+                        onValueChange={(value) => handleElementUpdate(fieldData.field, value)}
+                      >
+                        <SelectTrigger className="col-span-3">
+                          <SelectValue placeholder={`Välj ${fieldData.label.toLowerCase()}`} />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {fieldData.options.map((option) => (
+                            <SelectItem key={option.value} value={option.value}>
+                              {option.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    ) : null}
+                  </div>
+                ))}
+              </>
+            )}
+          </div>
+          <div className="flex justify-end gap-2 mt-4">
+            <Button variant="outline" onClick={() => setIsRightSidebarOpen(false)}>
+              <X className="mr-2 h-4 w-4" /> Stäng
+            </Button>
+          </div>
+        </SheetContent>
+      </Sheet>
     </div>
   )
 }

@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { type PageContent, loadContent } from "@/lib/content-store"
+import { type PageContent, loadContent, defaultContent } from "@/lib/content-store"
 
 // Import the section components
 import HeroSection from "@/components/sections/hero-section"
@@ -11,7 +11,7 @@ import PartnersCarouselSection from "@/components/sections/partners-carousel-sec
 import UpcomingEventsSection from "@/components/upcoming-events-section" // This one is not editable via content.json
 
 export default function Home() {
-  const [content, setContent] = useState<PageContent | null>(null)
+  const [content, setContent] = useState<PageContent>(defaultContent) // Initialize with defaultContent
 
   useEffect(() => {
     const fetchContent = async () => {
@@ -21,15 +21,14 @@ export default function Home() {
     fetchContent()
   }, [])
 
-  if (!content) {
-    return <div className="flex justify-center items-center min-h-screen">Laddar innehåll...</div>
-  }
+  // No longer need a loading check here as content is initialized with defaultContent
+  // The sections will render with default content first, then update when fetched content arrives.
 
   return (
     <>
       <HeroSection content={content.hero} />
       <StatsSection content={content.stats} />
-      <UpcomingEventsSection /> {/* This section remains dynamic */}
+      <UpcomingEventsSection content={content.upcomingEvents} /> {/* Pass content for upcoming events */}
       <AboutClubSection content={content.aboutClub} />
       <PartnersCarouselSection content={content.partnersCarousel} />
     </>

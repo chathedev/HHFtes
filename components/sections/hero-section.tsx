@@ -24,14 +24,14 @@ import { cn } from "@/lib/utils"
 interface SelectedElementData {
   sectionKey: keyof PageContent
   elementId: string // Unique ID for the element within the section (e.g., "heroTitle", "aboutClubImage")
-  type: "text" | "number" | "link" | "image" | "button" | "color" | "font-size" // Type of element being edited
+  type: "text" | "number" | "link" | "image" | "button" | "color" | "font-size" | "select" // Type of element being edited
   label: string // Label for the input field in the sidebar
   currentValue: string | number // The current value of the primary field (e.g., text content, URL)
   contentPath?: string // e.g., "hero.title", "aboutClub.imageSrc"
   additionalFields?: {
     field: string
     label: string
-    type: "text" | "select" | "color" | "font-size"
+    type: "text" | "select" | "color" | "font-size" | "number"
     currentValue: string | number
     options?: { name: string; value: string; bgClass?: string; textClass?: string }[]
   }[]

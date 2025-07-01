@@ -217,3 +217,31 @@ export const allPartners: Partner[] = [
     linkUrl: undefined, // Link: No
   },
 ]
+
+/**
+ * Central list of club partners/sponsors used by the carousel
+ * and elsewhere.
+ * Extend freely by adding objects with `name`, `logo`, and optional `url`.
+ */
+export const partners = [
+  ...allPartners,
+  {
+    name: "Intersport Härnösand",
+    logo: "/placeholder-logo.png",
+    url: "https://www.intersport.se/",
+  },
+  {
+    name: "Svenska Spel",
+    logo: "/placeholder-logo.png",
+    url: "https://svenskaspel.se/",
+  },
+  {
+    name: "Kommun Härnösand",
+    logo: "/placeholder-logo.png",
+    url: "https://harnosand.se/",
+  },
+] as const
+
+export type PartnerType = (typeof partners)[number]
+
+export default partners

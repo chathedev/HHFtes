@@ -1,24 +1,24 @@
 "use client"
 
-import * as React from "react"
+import { useEffect, useState } from "react"
 
-const MOBILE_BREAKPOINT = 768
+/**
+ * Simple hook that returns `true` if the viewport width is below the given breakpoint
+ * (default = 768 px, i.e. “md” in Tailwind).
+ * It re-evaluates on resize and is SSR-safe (returns `false` on the server).
+ */
+export function useMobile(breakpoint = 768): boolean {
+  // During SSR we don’t have `window`, so start with `false`
+  const [isMobile, setIsMobile] = useState(false)
 
-export function useIsMobile() {
-  const [isMobile, setIsMobile] = React.useState(false)
-
-  React.useEffect(() => {
-    const checkIsMobile = () => {
-      setIsMobile(window.innerWidth < MOBILE_BREAKPOINT) // Tailwind's 'md' breakpoint is 768px
-    }
-
-    checkIsMobile() // Check on mount
-    window.addEventListener("resize", checkIsMobile) // Add event listener for resize
-
-    return () => {
-      window.removeEventListener("resize", checkIsMobile) // Clean up
-    }
-  }, [])
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < breakpoint)
+    check() // run once on mount
+    window.addEventListener("resize", check)
+    return () => window.removeEventListener("resize", check)
+  }, [breakpoint])
 
   return isMobile
 }
+
+export default useMobile
