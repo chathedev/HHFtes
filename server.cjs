@@ -1,53 +1,106 @@
-const express = require('express');
-const cors = require('cors');
-const bodyParser = require('body-parser');
-const fs = require('fs');
-const path = require('path');
+import express from 'express';
+import cors from 'cors';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+
+// Polyfill for __dirname in ESM
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+// Initiera Octokit via dynamisk import då det är ett ESM-paket
+let octokit;
+(async () => {
+  const { Octokit } = await import('@octokit/rest');
+  octokit = new Octokit({ auth: process.env.GITHUB_TOKEN });
+})();
+
+const GITHUB_OWNER = process.env.GITHUB_OWNER;
+const GITHUB_REPO  = process.env.GITHUB_REPO;
+const CONTENT_PATH = 'content.json'; // Use root path to your content.json in the repo
 
 const app = express();
-const PORT = process.env.PORT || 3001; // Använd PORT från env eller 3001
+const PORT = process.env.PORT || 3001; // Default to 3001 if PORT is not set
 
-// Middleware
-app.use(cors()); // Tillåt alla CORS-förfrågningar för enkelhetens skull i demo
-app.use(bodyParser.json()); // För att parsa JSON-body i förfrågningar
+// ---- Middleware ----
+app.use(cors({ origin: ['https://hhf.wby.se', 'http://localhost:3000', process.env.FRONTEND_URL].filter(Boolean) }));
+app.use(express.json());
 
-// Enkel autentiserings-middleware (JWT, API-nyckel etc)
+// Enkel autentiserings-middleware
 function authenticate(req, res, next) {
-  // TODO: Byt ut mot riktig JWT-/API-nyckel-verifiering
-  const token = req.headers['authorization'];
-  if (!token || token !== `Bearer ${process.env.API_SECRET}`) {
-    console.warn('Unauthorized access attempt:', req.ip, token);
+  const auth  = req.headers['authorization'] || '';
+  const token = auth.startsWith('Bearer ') ? auth.slice(7) : null;
+
+  if (!token || token !== process.env.API_SECRET) {
+    console.warn('Unauthorized access attempt to API');
     return res.status(401).json({ message: 'Unauthorized' });
   }
   next();
 }
 
-// ---- Filbaserat innehåll (demo) ----
+// Läs in eller initiera content.json lokalt
 const contentFilePath = path.join(__dirname, 'content.json');
 let currentContent = {};
 
-// Läs in befintligt innehåll eller initiera med tomt objekt
 try {
-  const raw = fs.readFileSync(contentFilePath, 'utf8');
-  currentContent = JSON.parse(raw);
-  console.log('content.json loaded successfully.');
-} catch (err) {
-  console.warn('No content.json found or error reading it, initializing with default structure.', err.message);
-  // Initialisera med en tom struktur som matchar PageContent för att undvika undefined
+  currentContent = JSON.parse(fs.readFileSync(contentFilePath, 'utf8'));
+  console.log('✅ Backend: content.json loaded locally.');
+} catch (e) {
+  console.warn('⚠️ Backend: content.json not found or invalid, initializing with default structure.');
   currentContent = {
+    sections: [],
     hero: {},
     stats: {},
     aboutClub: {},
     partnersCarousel: {},
     kontaktPage: {},
-    partnersPage: {},
-    sections: [],
+    partnersPage: {}
   };
+  fs.writeFileSync(contentFilePath, JSON.stringify(currentContent, null, 2));
+  console.log('✅ Backend: content.json initialized locally.');
+}
+
+// Hjälpfunktion: committa ändringar till GitHub
+async function commitToGitHub(message, buffer) {
+  let sha;
+  // Försök hämta befintlig SHA, annars skapa ny fil
   try {
-    fs.writeFileSync(contentFilePath, JSON.stringify(currentContent, null, 2));
-    console.log('New content.json created.');
-  } catch (writeErr) {
-    console.error('Error writing initial content.json:', writeErr);
+    const { data: fileData } = await octokit.repos.getContent({
+      owner: GITHUB_OWNER,
+      repo: GITHUB_REPO,
+      path: CONTENT_PATH,
+      ref: 'main'
+    });
+    sha = fileData.sha;
+    console.log(`ℹ️ commitToGitHub: befintlig fil hittad, sha=${sha}`);
+  } catch (err) {
+    if (err.status === 404) {
+      sha = undefined; // fil saknas
+      console.log('ℹ️ commitToGitHub: ingen befintlig fil, skapar ny');
+    } else {
+      console.error('❌ commitToGitHub getContent-fel:', err);
+      throw err;
+    }
+  }
+
+  // Skapa eller uppdatera fil
+  try {
+    const action = sha ? 'uppdatera' : 'skapa';
+    console.log(`ℹ️ commitToGitHub: försöker ${action} ${CONTENT_PATH} i repo ${GITHUB_OWNER}/${GITHUB_REPO}`);
+    await octokit.repos.createOrUpdateFileContents({
+      owner: GITHUB_OWNER,
+      repo: GITHUB_REPO,
+      path: CONTENT_PATH,
+      message,
+      content: buffer.toString('base64'),
+      sha,
+      branch: 'main'
+    });
+    console.log('✅ commitToGitHub: commit lyckades');
+  } catch (err) {
+    console.error('❌ commitToGitHub commit-fel:', err);
+    throw err;
   }
 }
 
@@ -55,89 +108,115 @@ try {
 
 // GET: Hämta allt innehåll
 app.get('/api/content', (req, res) => {
-  console.log('GET /api/content requested.');
   res.json(currentContent);
 });
 
-// POST: Uppdatera allt innehåll (kräver autentisering)
-app.post('/api/content', authenticate, (req, res) => {
-  console.log('POST /api/content requested.');
+// POST: Skriv över allt innehåll
+app.post('/api/content', authenticate, async (req, res) => {
   const newContent = req.body;
-  if (typeof newContent !== 'object' || Array.isArray(newContent) || newContent === null) {
-    console.warn('Invalid content received for POST /api/content:', newContent);
-    return res.status(400).json({ message: 'Invalid content format' });
+  if (typeof newContent !== 'object' || Array.isArray(newContent)) {
+    return res.status(400).json({ message: 'Ogiltigt innehåll' });
   }
 
-  // Validera strukturen här om du vill
-  // För demo, ersätter vi bara hela innehållet
   currentContent = newContent;
 
   try {
+    // Spara lokalt
     fs.writeFileSync(contentFilePath, JSON.stringify(currentContent, null, 2), 'utf8');
-    console.log('Content updated and saved to content.json.');
-    return res.status(200).json({ message: 'Content updated', content: currentContent });
+    console.log('✅ Backend: content.json saved locally.');
+
+    // Commit till GitHub
+    const buf = Buffer.from(JSON.stringify(currentContent, null, 2));
+    await commitToGitHub('Uppdatera content.json via API', buf);
+
+    // Triggera Next.js ISR-revalidation
+    if (process.env.FRONTEND_URL && process.env.REVALIDATE_SECRET) {
+      try {
+        const revalidateRes = await fetch(`${process.env.FRONTEND_URL}/api/revalidate?secret=${process.env.REVALIDATE_SECRET}`);
+        if (revalidateRes.ok) {
+          console.log('✅ Backend: ISR revalidated successfully.');
+        } else {
+          console.error('❌ Backend: ISR revalidation failed:', revalidateRes.status, await revalidateRes.text());
+        }
+      } catch (e) {
+        console.error('❌ Backend: Revalidate error:', e);
+      }
+    } else {
+      console.warn('⚠️ Backend: Skipping ISR revalidation. FRONTEND_URL or REVALIDATE_SECRET not set.');
+    }
+
+    res.status(200).json({ message: 'Innehåll uppdaterat och committed', content: currentContent });
   } catch (err) {
-    console.error('Error writing content.json:', err);
-    return res.status(500).json({ message: 'Server error during save' });
+    console.error('❌ Backend: Fel vid sparning eller commit:', err);
+    res.status(500).json({ message: 'Serverfel vid sparande eller commit' });
   }
 });
 
-// Optional: PATCH för enstaka sektioner
-app.patch('/api/content/:section', authenticate, (req, res) => {
-  console.log(`PATCH /api/content/${req.params.section} requested.`);
+// PATCH: Uppdatera en enskild sektion
+app.patch('/api/content/:section', authenticate, async (req, res) => {
   const section = req.params.section;
-  const update = req.body;
+  const update  = req.body;
 
-  if (!currentContent[section] || typeof update !== 'object' || update === null || Array.isArray(update)) {
-    console.warn(`Invalid section or data for PATCH /api/content/${section}:`, update);
-    return res.status(400).json({ message: 'Invalid section or data' });
+  if (!currentContent[section] || typeof update !== 'object') {
+    return res.status(400).json({ message: 'Ogiltig sektion eller data' });
   }
 
   currentContent[section] = { ...currentContent[section], ...update };
+  fs.writeFileSync(contentFilePath, JSON.stringify(currentContent, null, 2), 'utf8');
+  console.log(`✅ Backend: Section ${section} saved locally.`);
 
   try {
-    fs.writeFileSync(contentFilePath, JSON.stringify(currentContent, null, 2), 'utf8');
-    console.log(`Section ${section} updated and saved.`);
-    res.json({ message: `Section ${section} updated`, content: currentContent[section] });
+    const buf = Buffer.from(JSON.stringify(currentContent, null, 2));
+    await commitToGitHub(`Uppdatera sektion ${section} via API`, buf);
+
+    // Triggera Next.js ISR-revalidation
+    if (process.env.FRONTEND_URL && process.env.REVALIDATE_SECRET) {
+      try {
+        const revalidateRes = await fetch(`${process.env.FRONTEND_URL}/api/revalidate?secret=${process.env.REVALIDATE_SECRET}`);
+        if (revalidateRes.ok) {
+          console.log('✅ Backend: ISR revalidated successfully.');
+        } else {
+          console.error('❌ Backend: ISR revalidation failed:', revalidateRes.status, await revalidateRes.text());
+        }
+      } catch (e) {
+        console.error('❌ Backend: Revalidate error:', e);
+      }
+    } else {
+      console.warn('⚠️ Backend: Skipping ISR revalidation. FRONTEND_URL or REVALIDATE_SECRET not set.');
+    }
+
+    res.json({ message: `Sektion ${section} uppdaterad och committed`, content: currentContent[section] });
   } catch (err) {
-    console.error('Error writing content.json during PATCH:', err);
-    return res.status(500).json({ message: 'Server error during save' });
+    console.error('❌ Backend: Commit-fel:', err);
+    res.status(500).json({ message: 'Serverfel vid commit' });
   }
 });
 
-// --- Drag & Drop Section Ordering ---
-
-// GET: Hämta lista över sektioner (med typ & ordning)
+// DnD-ordering: GET och POST för sections
 app.get('/api/sections', (req, res) => {
-  console.log('GET /api/sections requested.');
-  const sections = currentContent.sections || [];
-  res.json(sections);
+  res.json(currentContent.sections || []);
 });
 
-// POST: Uppdatera sektioners ordning (kräver auth)
-app.post('/api/sections', authenticate, (req, res) => {
-  console.log('POST /api/sections requested.');
-  const { order } = req.body; // förväntas vara en array av sektionstyper i ny ordning
-
+app.post('/api/sections', authenticate, async (req, res) => {
+  const { order } = req.body;
   if (!Array.isArray(order)) {
-    console.warn('Invalid order format for POST /api/sections:', order);
-    return res.status(400).json({ message: 'Invalid order format' });
+    return res.status(400).json({ message: 'Ogiltig order-format' });
   }
 
   currentContent.sections = order;
+  fs.writeFileSync(contentFilePath, JSON.stringify(currentContent, null, 2), 'utf8');
+  console.log('✅ Backend: Sections order saved locally.');
 
   try {
-    fs.writeFileSync(contentFilePath, JSON.stringify(currentContent, null, 2), 'utf8');
-    console.log('Section order updated and saved.');
-    res.json({ message: 'Section order updated', sections: order });
+    const buf = Buffer.from(JSON.stringify(currentContent, null, 2));
+    await commitToGitHub('Uppdatera sektioners ordning via API', buf);
+    res.json({ message: 'Sektioners ordning uppdaterad och committed', sections: order });
   } catch (err) {
-    console.error('Error writing content.json during section order update:', err);
-    return res.status(500).json({ message: 'Server error during save' });
+    console.error('❌ Backend: Commit-fel:', err);
+    res.status(500).json({ message: 'Serverfel vid commit av sections' });
   }
 });
 
-// Starta servern
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-  console.log(`API_SECRET: ${process.env.API_SECRET ? 'SET' : 'NOT SET'}`);
+  console.log(`🚀 Backend server running on http://localhost:${PORT}`);
 });

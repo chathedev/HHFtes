@@ -203,7 +203,9 @@ export async function loadContent(): Promise<PageContent> {
 
   // Server side → fetch from backend, merge with defaults
   try {
-    const res = await fetch("https://api.nuredo.se/api/content", {
+    // Use an environment variable for the backend API URL
+    const backendApiUrl = process.env.BACKEND_API_URL || "http://localhost:3001/api/content"
+    const res = await fetch(backendApiUrl, {
       // GET endpoint on your backend does NOT require auth
       headers: { "Content-Type": "application/json" },
       // 10 s timeout to avoid hanging builds

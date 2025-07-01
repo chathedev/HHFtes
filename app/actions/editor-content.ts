@@ -2,7 +2,8 @@
 
 import { type PageContent, defaultContent } from "@/lib/content-store"
 
-const BACKEND_API_URL = "https://api.nuredo.se/api/content"
+// Use an environment variable for the backend API URL
+const BACKEND_API_URL = process.env.BACKEND_API_URL || "http://localhost:3001/api/content"
 
 // Helper function for deep merging objects (copied from lib/content-store.ts for server-side use)
 function deepMerge<T extends object>(target: T, source: Partial<T>): T {
