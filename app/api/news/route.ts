@@ -151,7 +151,7 @@ export async function GET() {
       link: "https://www.laget.se/HarnosandsHF/News/7025096/Arsmote-skjuts-upp-till-2022-08-22",
       pubDate: "Thu, 30 Jun 2022 20:22:43 GMT",
       description: stripHtml(
-        "Årsmöte 2022-06-30 skjuts upp till 2022-08-22 kl 18.30.<br>Detta med anledning av endast styrelsens medlemmar närvarande.<br>Enligt våra stadgar kan inte årsmötet genomföras utan medlemmars närvaro.<br>Välkommen till nytt Årsmöte 2022-08-22 kl 18.30 på HHK Kansli.<br>----------------------------------------------------------------------------------------<br>Härmed kallas alla medlemmar i Härnösands handbollsklubb till ÅRSMÖTE.<br><br>Torsdag den 30e juni klockan 18.30<br>HHK kansli, SkepparKarlsgränd 11<br><br>Eventuella förslag eller motioner till årsmötet skall vara styrelsen tillhanda senast 2022-06-23, kan lämnas på kansliet.<br><br>Program: Sedvanliga årsmötesförhandlingar med information om bokslut, budget och verksamhetsplan för kommande säsong, val av ny styrelse. <br><br>Ett årsmöte är en förenings viktigaste möte där den enskilde medlemmen kan påverka hur föreningen skall arbeta under kommande säsong. Ofta är det våra spelare som är medlemmar men där är det föräldrarna som representerar på årsmötet.<br>Årsmöteshandlingar kommer att skickas ut senast en vecka innan årsmötet.<br><br/><br/><i>Publicerad: 2022-06-30 22:22</i>",
+        "Årsmöte 2022-06-30 skjuts upp till 2022-08-22 kl 18.30.<br>Detta med anledning av endast styrelsens medlemmar närvarande.<br>Enligt våra stadgar kan inte årsmötet genomföras utan medlemmars närvaro.<br>Välkommen till nytt Årsmöte 2022-08-22 kl 18.30 på HHK Kansli.<br>----------------------------------------------------------------------------------------<br>Härmed kallas alla medlemmar i Härnösands handbollsklubb till ÅRSMÖTE.<br><br>Måndag den 22a augusti klockan 18.30<br>HHK kansli, SkepparKarlsgränd 11<br><br>Eventuella förslag eller motioner till årsmötet skall vara styrelsen tillhanda senast 2022-06-23, kan lämnas på kansliet.<br><br>Program: Sedvanliga årsmötesförhandlingar med information om bokslut, budget och verksamhetsplan för kommande säsong, val av ny styrelse. <br><br>Ett årsmöte är en förenings viktigaste möte där den enskilde medlemmen kan påverka hur föreningen skall arbeta under kommande säsong. Ofta är det våra spelare som är medlemmar men där är det föräldrarna som representerar på årsmötet.<br/><br/><i>Publicerad: 2022-06-30 22:22</i>",
       ),
       imageUrl: undefined,
     },
@@ -190,34 +190,6 @@ export async function GET() {
         "OBS uppdaterad starttid 17:30!<br>Tisdag 5:e April är det säsongsavslutning för samtliga HHK lag.<br>Vi håller till på Öbacka hallen.<br>Det blir div. aktiviteter och medaljutdelning till alla spelare.<br>Varmt välkomna.<br/><br/><i>Publicerad: 2022-04-04 17:49</i>",
       ),
       imageUrl: "https://laget001.blob.core.windows.net/9867129_medium.jpg",
-    },
-    {
-      id: "1",
-      title: "Storseger för Härnösands HF i säsongspremiären!",
-      date: "2024-02-29",
-      summary: "Härnösands HF inledde säsongen starkt med en övertygande seger på hemmaplan.",
-      imageUrl: "/placeholder.svg?height=400&width=600",
-    },
-    {
-      id: "2",
-      title: "Nyförvärv förstärker truppen inför vårsäsongen",
-      date: "2024-02-25",
-      summary: "Klubben presenterar stolt två nya spelare som ansluter till laget.",
-      imageUrl: "/placeholder.svg?height=400&width=600",
-    },
-    {
-      id: "3",
-      title: "Framgångsrik ungdomsturnering i Härnösand",
-      date: "2024-02-20",
-      summary: "Helgens ungdomsturnering lockade lag från hela regionen och blev en stor succé.",
-      imageUrl: "/placeholder.svg?height=400&width=600",
-    },
-    {
-      id: "4",
-      title: "Träningsläger i Spanien gav mersmak",
-      date: "2024-02-15",
-      summary: "A-laget har återvänt från ett intensivt och givande träningsläger i södra Spanien.",
-      imageUrl: "/placeholder.svg?height=400&width=600",
     },
   ]
 

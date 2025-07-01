@@ -1,43 +1,30 @@
-# Härnösands HF Website
+# HHF
 
-This is the official website for Härnösands HF, a handball club.
+*Automatically synced with your [v0.dev](https://v0.dev) deployments*
 
-## Project Structure
+[![Deployed on Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-black?style=for-the-badge&logo=vercel)](https://vercel.com/challe-ws-projects/v0-hhf)
+[![Built with v0](https://img.shields.io/badge/Built%20with-v0.dev-black?style=for-the-badge)](https://v0.dev/chat/projects/boGcJCfXMAI)
 
-- `app/`: Next.js App Router pages and API routes.
-- `components/`: Reusable React components, including UI components from shadcn/ui.
-- `lib/`: Utility functions and content management logic.
-- `public/`: Static assets like images and fonts.
-- `styles/`: Global CSS styles.
+## Overview
 
-## Getting Started
+This repository will stay in sync with your deployed chats on [v0.dev](https://v0.dev).
+Any changes you make to your deployed app will be automatically pushed to this repository from [v0.dev](https://v0.dev).
 
-1.  **Install dependencies**:
-    \`\`\`bash
-    npm install
-    # or
-    yarn install
-    \`\`\`
-2.  **Run the development server**:
-    \`\`\`bash
-    npm run dev
-    # or
-    yarn dev
-    \`\`\`
-    Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Deployment
 
-## Editor Mode
+Your project is live at:
 
-This application includes an editor mode for managing page content.
+**[https://vercel.com/challe-ws-projects/v0-hhf](https://vercel.com/challe-ws-projects/v0-hhf)**
 
--   **Access Editor**: Navigate to `/editor`
--   **Login**: Use the password defined in your `API_SECRET` environment variable.
+## Build your app
 
-## Technologies Used
+Continue building your app on:
 
--   Next.js 14 (App Router)
--   React
--   TypeScript
--   Tailwind CSS
--   shadcn/ui
--   Lucide React Icons
+**[https://v0.dev/chat/projects/boGcJCfXMAI](https://v0.dev/chat/projects/boGcJCfXMAI)**
+
+## How It Works
+
+1. Create and modify your project using [v0.dev](https://v0.dev)
+2. Deploy your chats from the v0 interface
+3. Changes are automatically pushed to this repository
+4. Vercel deploys the latest version from this repository

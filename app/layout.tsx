@@ -4,8 +4,6 @@ import { Inter } from "next/font/google"
 import "./globals.css"
 import Header from "@/components/header"
 import Footer from "@/components/footer"
-import { AuthProvider } from "@/components/auth-provider" // Import AuthProvider
-import { Toaster } from "@/components/ui/toaster" // Import Toaster
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -13,7 +11,7 @@ export const metadata: Metadata = {
   title: "Härnösands HF - Handbollsklubb",
   description: "En handbollsklubb med stolthet, gemenskap och passion för sporten",
   icons: [{ rel: "icon", url: "/favicon.png", sizes: "any" }],
-  generator: "v0.dev",
+    generator: 'v0.dev'
 }
 
 export default function RootLayout({
@@ -24,14 +22,9 @@ export default function RootLayout({
   return (
     <html lang="sv">
       <body className={`${inter.className} bg-white`}>
-        <AuthProvider>
-          {" "}
-          {/* Wrap with AuthProvider */}
-          <Header />
-          <main>{children}</main>
-          <Footer />
-          <Toaster /> {/* Add Toaster for toasts */}
-        </AuthProvider>
+        <Header />
+        <main>{children}</main>
+        <Footer />
       </body>
     </html>
   )

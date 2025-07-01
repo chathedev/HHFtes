@@ -1,90 +1,65 @@
-"use client"
-
-import { useEffect, useState } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
-import { Mail, MapPin, Users } from "lucide-react"
-import { loadContent, type PageContent } from "@/lib/content-store"
+import Link from "next/link"
+import { ChevronLeft, Mail, MapPin, Users } from "lucide-react"
+import { Card } from "@/components/ui/card"
 
 export default function KontaktPage() {
-  const [content, setContent] = useState<PageContent | null>(null)
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    const fetchContent = async () => {
-      setLoading(true)
-      const fetchedContent = await loadContent()
-      setContent(fetchedContent)
-      setLoading(false)
-    }
-    fetchContent()
-  }, [])
-
-  if (loading) {
-    return <div className="flex justify-center items-center min-h-screen">Laddar innehåll...</div>
-  }
-
-  if (!content) {
-    return (
-      <div className="flex justify-center items-center min-h-screen text-red-500">
-        Kunde inte ladda innehåll för kontaktsidan.
-      </div>
-    )
-  }
-
-  const { kontaktPage } = content
-
   return (
-    <div className="container mx-auto px-4 py-8 pt-24">
-      <h1 className="text-4xl font-bold text-green-700 mb-8 text-center">Kontakta Oss</h1>
-      <p className="text-center text-gray-700 mb-12 max-w-2xl mx-auto">
-        Har du frågor eller funderingar? Tveka inte att höra av dig till oss!
-      </p>
+    <div className="flex flex-col min-h-screen bg-white">
+      <main className="flex-1 py-8 px-4 md:px-6 lg:px-8 max-w-7xl mx-auto w-full">
+        <Link href="/" className="inline-flex items-center text-green-700 hover:underline mb-8">
+          <ChevronLeft className="w-4 h-4 mr-2" />
+          Tillbaka till startsidan
+        </Link>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
-        <Card className="text-center">
-          <CardHeader>
-            <Mail className="mx-auto h-12 w-12 text-orange-500" />
-            <CardTitle className="mt-4">{kontaktPage.emailTitle}</CardTitle>
-            <CardDescription>{kontaktPage.emailDescription}</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <p className="text-lg font-semibold text-gray-800">{kontaktPage.emailAddress}</p>
-          </CardContent>
-        </Card>
+        <h1 className="text-5xl font-bold text-green-700 mb-12 text-center">Kontakt</h1>
 
-        <Card className="text-center">
-          <CardHeader>
-            <MapPin className="mx-auto h-12 w-12 text-orange-500" />
-            <CardTitle className="mt-4">{kontaktPage.addressTitle}</CardTitle>
-            <CardDescription>{kontaktPage.addressDescription}</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <p className="text-lg font-semibold text-gray-800">{kontaktPage.addressLocation}</p>
-          </CardContent>
-        </Card>
+        <section className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
+          <Card className="p-6 bg-white/80 shadow-lg rounded-lg flex items-start gap-4">
+            <Mail className="w-6 h-6 text-green-700 flex-shrink-0" />
+            <div>
+              <h2 className="text-2xl font-semibold text-gray-800 mb-2">E-post</h2>
+              <p className="text-lg text-gray-700 mb-2">Skicka dina frågor till oss via e-post</p>
+              <a href="mailto:info@harnosandshf.se" className="text-orange-500 hover:underline text-lg font-medium">
+                info@harnosandshf.se
+              </a>
+            </div>
+          </Card>
+          <Card className="p-6 bg-white/80 shadow-lg rounded-lg flex items-start gap-4">
+            <MapPin className="w-6 h-6 text-green-700 flex-shrink-0" />
+            <div>
+              <h2 className="text-2xl font-semibold text-gray-800 mb-2">Besöksadress</h2>
+              <p className="text-lg text-gray-700 mb-2">Hitta oss på våra träningar</p>
+              <p className="text-lg text-gray-700">Öbacka Sporthall, Härnösand</p>
+            </div>
+          </Card>
+          <Card className="p-6 bg-white/80 shadow-lg rounded-lg flex items-start gap-4 md:col-span-2">
+            <Users className="w-6 h-6 text-green-700 flex-shrink-0" />
+            <div>
+              <h2 className="text-2xl font-semibold text-gray-800 mb-2">Styrelse</h2>
+              <p className="text-lg text-gray-700 mb-2">Kontakta vår styrelse för föreningsfrågor</p>
+              <p className="text-lg text-gray-700">Via e-post eller på träningarna</p>
+            </div>
+          </Card>
+        </section>
 
-        <Card className="text-center">
-          <CardHeader>
-            <Users className="mx-auto h-12 w-12 text-orange-500" />
-            <CardTitle className="mt-4">{kontaktPage.boardTitle}</CardTitle>
-            <CardDescription>{kontaktPage.boardDescription}</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <p className="text-lg font-semibold text-gray-800">{kontaktPage.boardContact}</p>
-          </CardContent>
-        </Card>
-      </div>
-
-      <h2 className="text-3xl font-bold text-green-700 mb-6 text-center">{kontaktPage.faqTitle}</h2>
-      <Accordion type="single" collapsible className="w-full max-w-3xl mx-auto">
-        {kontaktPage.faqItems.map((item, index) => (
-          <AccordionItem key={index} value={`item-${index}`}>
-            <AccordionTrigger className="text-left text-lg font-medium">{item.question}</AccordionTrigger>
-            <AccordionContent className="text-gray-700">{item.answer}</AccordionContent>
-          </AccordionItem>
-        ))}
-      </Accordion>
+        <section className="mb-12">
+          <h2 className="text-3xl font-bold text-orange-500 mb-6">Vanliga frågor</h2>
+          <ul className="space-y-4 text-lg text-gray-700">
+            <li>
+              <span className="font-semibold text-gray-800">• Nya spelare:</span> Kontakta oss för provträningar
+            </li>
+            <li>
+              <span className="font-semibold text-gray-800">• Sponsring:</span> E-posta för partnerskapsmöjligheter
+            </li>
+            <li>
+              <span className="font-semibold text-gray-800">• Hallar:</span> Information om våra träningsanläggningar
+            </li>
+            <li>
+              <span className="font-semibold text-gray-800">• Matcher:</span> Schema finns på lagspecifika sidor
+            </li>
+          </ul>
+        </section>
+      </main>
     </div>
   )
 }

@@ -1,34 +1,19 @@
-"use client"
+import * as React from "react"
 
-import { useEffect, useState } from "react"
+const MOBILE_BREAKPOINT = 768
 
-/**
- * Returns true when the viewport width is below the given breakpoint
- * (default = 768 px – Tailwind’s “md”).
- */
-export function useMobile(breakpoint = 768): boolean {
-  const [isMobile, setIsMobile] = useState(false)
+export function useIsMobile() {
+  const [isMobile, setIsMobile] = React.useState<boolean | undefined>(undefined)
 
-  useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < breakpoint) // Tailwind's 'md' breakpoint
+  React.useEffect(() => {
+    const mql = window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT - 1}px)`)
+    const onChange = () => {
+      setIsMobile(window.innerWidth < MOBILE_BREAKPOINT)
     }
+    mql.addEventListener("change", onChange)
+    setIsMobile(window.innerWidth < MOBILE_BREAKPOINT)
+    return () => mql.removeEventListener("change", onChange)
+  }, [])
 
-    checkMobile() // Check on initial render
-    window.addEventListener("resize", checkMobile) // Add event listener for resize
-
-    return () => {
-      window.removeEventListener("resize", checkMobile) // Clean up on unmount
-    }
-  }, [breakpoint])
-
-  return isMobile
+  return !!isMobile
 }
-
-/*  ──────────────────────────────────────────────────────────────────────────
-    Some parts of the codebase import { useIsMobile } while others import
-    { useMobile }.  Export both names to stay backward-compatible.
-    ──────────────────────────────────────────────────────────────────────── */
-export const useIsMobile = useMobile
-
-export default useMobile

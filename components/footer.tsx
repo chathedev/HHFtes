@@ -31,14 +31,7 @@ function Footer() {
                 <MapPin className="w-5 h-5 text-orange-500 mt-0.5" />
                 <div>
                   <div className="font-medium">Öbacka Sporthall</div>
-                  <Link
-                    href="https://maps.app.goo.gl/HCVw4y1Yi9pB75M59"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-sm text-gray-400 hover:underline"
-                  >
-                    Visa på karta
-                  </Link>
+                  <div className="text-sm text-gray-400">Visa på karta</div>
                 </div>
               </div>
               <div className="flex items-center gap-3">
