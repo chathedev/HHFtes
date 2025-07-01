@@ -1,46 +1,89 @@
-import { Users, Trophy, CalendarDays } from "lucide-react"
+"use client"
 
-interface StatsProps {
-  content: {
-    totalTeams: number
-    aTeams: number
-    youthTeams: number
-    historyYears: string
-  }
+import type React from "react"
+
+import { Users, Trophy, Award, History } from "lucide-react"
+import type { PageContent } from "@/lib/content-store"
+
+interface StatsSectionProps {
+  content: PageContent["stats"]
+  isEditing?: boolean
+  onContentChange?: (field: keyof PageContent["stats"], value: string | number) => void
 }
 
-export function StatsSection({ content }: StatsProps) {
+export default function StatsSection({ content, isEditing = false, onContentChange }: StatsSectionProps) {
+  const handleNumberChange = (field: keyof PageContent["stats"], e: React.ChangeEvent<HTMLDivElement>) => {
+    if (onContentChange) {
+      const value = Number.parseInt(e.currentTarget.innerText, 10)
+      if (!isNaN(value)) {
+        onContentChange(field, value)
+      }
+    }
+  }
+
+  const handleTextChange = (field: keyof PageContent["stats"], e: React.ChangeEvent<HTMLDivElement>) => {
+    if (onContentChange) {
+      onContentChange(field, e.currentTarget.innerText)
+    }
+  }
+
   return (
-    <section className="py-12 bg-gray-100">
+    <section className="bg-green-600 text-white py-12">
       <div className="container mx-auto px-4">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          <div className="flex flex-col items-center text-center p-6 bg-white rounded-lg shadow-md">
-            <div className="p-3 bg-orange-100 rounded-full mb-4">
-              <Users className="h-8 w-8 text-orange-500" />
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+          <div className="flex flex-col items-center">
+            <Users className="w-12 h-12 mb-2" />
+            <div
+              className="text-4xl font-bold"
+              contentEditable={isEditing}
+              suppressContentEditableWarning={true}
+              onBlur={(e) => handleNumberChange("totalTeams", e)}
+            >
+              {content.totalTeams}
             </div>
-            <h3 className="text-4xl font-bold mb-2">{content.totalTeams}</h3>
-            <p className="text-gray-600">Aktiva lag</p>
+            <div className="text-sm">Totalt Lag</div>
           </div>
 
-          <div className="flex flex-col items-center text-center p-6 bg-white rounded-lg shadow-md">
-            <div className="p-3 bg-orange-100 rounded-full mb-4">
-              <Trophy className="h-8 w-8 text-orange-500" />
+          <div className="flex flex-col items-center">
+            <Trophy className="w-12 h-12 mb-2" />
+            <div
+              className="text-4xl font-bold"
+              contentEditable={isEditing}
+              suppressContentEditableWarning={true}
+              onBlur={(e) => handleNumberChange("aTeams", e)}
+            >
+              {content.aTeams}
             </div>
-            <h3 className="text-4xl font-bold mb-2">{content.aTeams}</h3>
-            <p className="text-gray-600">A-lag</p>
+            <div className="text-sm">A-lag</div>
           </div>
 
-          <div className="flex flex-col items-center text-center p-6 bg-white rounded-lg shadow-md">
-            <div className="p-3 bg-orange-100 rounded-full mb-4">
-              <CalendarDays className="h-8 w-8 text-orange-500" />
+          <div className="flex flex-col items-center">
+            <Award className="w-12 h-12 mb-2" />
+            <div
+              className="text-4xl font-bold"
+              contentEditable={isEditing}
+              suppressContentEditableWarning={true}
+              onBlur={(e) => handleNumberChange("youthTeams", e)}
+            >
+              {content.youthTeams}
             </div>
-            <h3 className="text-4xl font-bold mb-2">{content.youthTeams}</h3>
-            <p className="text-gray-600">Ungdomslag</p>
+            <div className="text-sm">Ungdomslag</div>
+          </div>
+
+          <div className="flex flex-col items-center">
+            <History className="w-12 h-12 mb-2" />
+            <div
+              className="text-4xl font-bold"
+              contentEditable={isEditing}
+              suppressContentEditableWarning={true}
+              onBlur={(e) => handleTextChange("historyYears", e)}
+            >
+              {content.historyYears}
+            </div>
+            <div className="text-sm">År av Historia</div>
           </div>
         </div>
       </div>
     </section>
   )
 }
-
-export default StatsSection

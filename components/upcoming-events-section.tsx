@@ -1,144 +1,188 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Calendar, Clock } from "lucide-react"
-import { Card, CardContent } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
 import Link from "next/link"
+import { ArrowRight, CalendarDays, Clock, Goal } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 
-interface Event {
-  id: string
-  title: string
-  date: string
-  time: string
-  location: string
-  type: string
+interface Match {
+  date: string // YYYY-MM-DD
+  time: string // HH:MM or "Heldag"
+  title: string // Match title
 }
 
-interface UpcomingEventsProps {
-  content?: {
-    title: string
-    description: string
-  }
-}
-
-export function UpcomingEventsSection({ content }: UpcomingEventsProps) {
-  const [events, setEvents] = useState<Event[]>([])
+export default function UpcomingEventsSection() {
+  const [upcomingMatches, setUpcomingMatches] = useState<Match[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    const fetchEvents = async () => {
+    const fetchMatches = async () => {
       try {
-        const res = await fetch("/api/kalender-events")
-        if (res.ok) {
-          const data = await res.json()
-          setEvents(data.slice(0, 3)) // Show only the first 3 events
-        } else {
-          console.error("Failed to fetch events")
-          // Use sample data as fallback
-          setEvents(sampleEvents)
+        setLoading(true)
+        const now = new Date() // Use actual current date
+        const fetchedMatches: Match[] = []
+
+        // Loop over the current month and the next 5 months (total 6 months)
+        for (let i = 0; i < 6; i++) {
+          let currentYear = now.getFullYear()
+          let currentMonth = now.getMonth() + i // 0-indexed month
+
+          if (currentMonth > 11) {
+            currentMonth -= 12
+            currentYear++
+          }
+
+          const paddedMonth = (currentMonth + 1).toString().padStart(2, "0") // Convert to 1-indexed and pad
+          const url = `https://www.laget.se/HarnosandsHF/Event/FilterEvents?Year=${currentYear}&Month=${paddedMonth}&PrintMode=False&SiteType=Club&Visibility=2&types=6`
+
+          const response = await fetch(url)
+          if (!response.ok) {
+            console.warn(`Failed to fetch matches for ${currentYear}-${paddedMonth}: ${response.statusText}`)
+            continue
+          }
+
+          const html = await response.text()
+          const parser = new DOMParser()
+          const doc = parser.parseFromString(html, "text/html")
+
+          doc.querySelectorAll(".fullCalendar__day").forEach((dayElement) => {
+            const dateAttribute = dayElement.getAttribute("data-day")
+            if (!dateAttribute) return
+
+            const fullDate = dateAttribute
+
+            dayElement.querySelectorAll(".fullCalendar__list li").forEach((liElement) => {
+              let time = "Okänd tid"
+              let title = ""
+
+              const timeElement = liElement.querySelector("time")
+              if (timeElement) {
+                time = timeElement.textContent?.trim() || "Okänd tid"
+              }
+
+              let rawTitle = liElement.textContent?.trim() || ""
+
+              if (time !== "Okänd tid") {
+                rawTitle = rawTitle.replace(time, "").trim()
+              }
+
+              if (rawTitle.includes("Heldag")) {
+                time = "Heldag"
+                rawTitle = rawTitle.replace(/Heldag/i, "").trim()
+              }
+
+              title = rawTitle
+                .replace(/Läs mer/i, "")
+                .replace(/v\.\d+/i, "")
+                .replace(/\s+/g, " ")
+                .trim()
+
+              if (title) {
+                fetchedMatches.push({ date: fullDate, time, title })
+              }
+            })
+          })
         }
-      } catch (error) {
-        console.error("Error fetching events:", error)
-        // Use sample data as fallback
-        setEvents(sampleEvents)
+
+        // Filter out past matches and sort by date and time
+        const nowDateTime = new Date()
+        const filteredAndSortedMatches = fetchedMatches
+          .filter((match) => {
+            const matchDateTime = new Date(
+              `${match.date}T${match.time.replace("Okänd tid", "00:00").replace("Heldag", "00:00")}`,
+            )
+            return matchDateTime >= nowDateTime
+          })
+          .sort((a, b) => {
+            const dateTimeA = new Date(`${a.date}T${a.time.replace("Okänd tid", "00:00").replace("Heldag", "00:00")}`)
+            const dateTimeB = new Date(`${b.date}T${b.time.replace("Okänd tid", "00:00").replace("Heldag", "00:00")}`)
+            return dateTimeA.getTime() - dateTimeB.getTime()
+          })
+
+        setUpcomingMatches(filteredAndSortedMatches)
+      } catch (e: any) {
+        setError(e.message || "Failed to fetch matches.")
+        console.error("Client-side fetch error:", e)
       } finally {
         setLoading(false)
       }
     }
 
-    fetchEvents()
+    fetchMatches()
   }, [])
 
-  const defaultTitle = "Kommande Evenemang"
-  const defaultDescription = "Håll dig uppdaterad med våra senaste matcher och aktiviteter."
+  const formatMatchDate = (dateString: string) => {
+    const date = new Date(dateString)
+    return date.toLocaleDateString("sv-SE", {
+      weekday: "short",
+      day: "numeric",
+      month: "short",
+    })
+  }
 
   return (
     <section className="py-16 bg-gray-50">
       <div className="container mx-auto px-4">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl font-bold mb-4">{content?.title || defaultTitle}</h2>
-          <p className="text-gray-600 max-w-2xl mx-auto">{content?.description || defaultDescription}</p>
-        </div>
+        <Card className="bg-white rounded-lg shadow-lg overflow-hidden max-w-2xl mx-auto">
+          <CardHeader className="p-6 flex flex-col items-center text-center border-b border-gray-200">
+            <Goal className="w-16 h-16 text-green-600 mb-4" />
+            <CardTitle className="text-3xl font-bold text-green-600 mb-2">KOMMANDE MATCHER</CardTitle>
+            <p className="text-gray-600 text-lg">Håll dig uppdaterad med våra nästa matcher!</p>
+          </CardHeader>
+          <CardContent className="p-6">
+            {loading && <p className="text-center text-gray-600">Laddar matcher...</p>}
+            {error && (
+              <p className="text-center text-red-500">
+                Fel: {error}. Detta kan bero på CORS-begränsningar från källwebbplatsen.
+              </p>
+            )}
 
-        {loading ? (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {[1, 2, 3].map((i) => (
-              <Card key={i} className="animate-pulse">
-                <CardContent className="p-6">
-                  <div className="h-6 bg-gray-200 rounded mb-4"></div>
-                  <div className="h-4 bg-gray-200 rounded mb-2 w-3/4"></div>
-                  <div className="h-4 bg-gray-200 rounded mb-4 w-1/2"></div>
-                  <div className="h-10 bg-gray-200 rounded mt-4"></div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {events.map((event) => (
-              <Card key={event.id}>
-                <CardContent className="p-6">
-                  <h3 className="font-bold text-lg mb-2">{event.title}</h3>
-                  <div className="flex items-center text-gray-600 mb-1">
-                    <Calendar className="h-4 w-4 mr-2" />
-                    <span>{event.date}</span>
-                  </div>
-                  <div className="flex items-center text-gray-600 mb-3">
-                    <Clock className="h-4 w-4 mr-2" />
-                    <span>{event.time}</span>
-                  </div>
-                  <div className="text-sm text-gray-500 mb-4">
-                    <span className="inline-block bg-orange-100 text-orange-800 rounded-full px-3 py-1 text-xs font-semibold">
-                      {event.type}
-                    </span>
-                    <span className="ml-2">{event.location}</span>
-                  </div>
-                  <Button variant="outline" className="w-full bg-transparent" asChild>
-                    <Link href="/kalender">Läs mer</Link>
-                  </Button>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        )}
+            {!loading && !error && upcomingMatches.length === 0 && null}
 
-        <div className="text-center mt-10">
-          <Button asChild>
-            <Link href="/kalender">Visa alla evenemang</Link>
-          </Button>
-        </div>
+            {!loading && !error && upcomingMatches.length > 0 && (
+              <div className="space-y-4 mb-6">
+                {upcomingMatches.slice(0, 5).map(
+                  (
+                    match,
+                    index, // Display up to 5 matches
+                  ) => (
+                    <div
+                      key={index}
+                      className="flex items-center gap-4 p-3 bg-gray-50 rounded-md border border-gray-200"
+                    >
+                      <div className="flex-shrink-0 text-center">
+                        <CalendarDays className="w-6 h-6 text-orange-500" />
+                        <span className="block text-xs text-gray-600">{formatMatchDate(match.date)}</span>
+                      </div>
+                      <div className="flex-grow">
+                        <h4 className="font-semibold text-gray-800">{match.title}</h4>
+                        <div className="flex items-center text-sm text-gray-500 mt-1">
+                          <Clock className="w-4 h-4 mr-1" />
+                          <span>{match.time}</span>
+                        </div>
+                      </div>
+                    </div>
+                  ),
+                )}
+              </div>
+            )}
+
+            <div className="text-center">
+              <Button
+                asChild
+                className="bg-orange-500 hover:bg-orange-600 text-white px-8 py-3 rounded-md text-lg font-semibold transition-colors"
+              >
+                <Link href="/matcher">
+                  Visa Alla Matcher
+                  <ArrowRight className="ml-2 h-5 w-5" />
+                </Link>
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </section>
   )
 }
-
-// Sample events data as fallback
-const sampleEvents: Event[] = [
-  {
-    id: "1",
-    title: "HHF vs Sundsvall",
-    date: "2023-09-15",
-    time: "19:00",
-    location: "Härnösands Arena",
-    type: "Match",
-  },
-  {
-    id: "2",
-    title: "Ungdomsträning P14",
-    date: "2023-09-16",
-    time: "17:30",
-    location: "Härnösands Arena",
-    type: "Träning",
-  },
-  {
-    id: "3",
-    title: "Styrelsemöte",
-    date: "2023-09-18",
-    time: "18:00",
-    location: "Klubbhuset",
-    type: "Möte",
-  },
-]
-
-export default UpcomingEventsSection

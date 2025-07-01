@@ -5,17 +5,16 @@ import Link from "next/link"
 import Image from "next/image"
 import { Menu, X } from "lucide-react"
 import { usePathname } from "next/navigation"
-import { useAuth } from "@/components/auth-provider"
 
 function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
-  const [scrolled, setScrolled] = useState(false)
+  const [scrolled, setScrolled] = useState(false) // New state for scroll
   const pathname = usePathname()
-  const { isAuthenticated, loading } = useAuth()
 
   useEffect(() => {
     const handleScroll = () => {
       if (window.scrollY > 50) {
+        // Adjust scroll threshold as needed
         setScrolled(true)
       } else {
         setScrolled(false)
@@ -30,28 +29,23 @@ function Header() {
 
   const navLinks = [
     { name: "Hem", href: "/" },
-    { name: "Nyheter", href: "/nyheter" },
+    { name: "Nyheter", href: "/nyheter" }, // Changed from Arena to Nyheter
     { name: "Partners", href: "/partners" },
     { name: "Lag", href: "/lag" },
     { name: "Kontakt", href: "/kontakt" },
   ]
 
-  // Add editor link if authenticated
-  if (isAuthenticated) {
-    navLinks.push({ name: "Redigera", href: "/editor" })
-  }
-
   return (
     <header
       className={`fixed top-0 left-0 w-full z-50 text-white shadow-lg transition-all duration-300
-        ${
-          pathname === "/"
-            ? scrolled
-              ? "bg-black/90 backdrop-blur-md"
-              : "bg-transparent backdrop-blur-none"
-            : "bg-black/90 backdrop-blur-md"
-        }
-      `}
+  ${
+    pathname === "/"
+      ? scrolled
+        ? "bg-black/90 backdrop-blur-md"
+        : "bg-transparent backdrop-blur-none"
+      : "bg-black/90 backdrop-blur-md"
+  }
+`}
     >
       <div className="container mx-auto px-4 py-4 flex justify-between items-center">
         <Link href="/" className="flex items-center gap-3">
@@ -60,6 +54,7 @@ function Header() {
           </div>
           <div>
             <div className="font-bold text-xl">Härnösands HF</div>
+            {/* Removed "Förening" text */}
           </div>
         </Link>
 
@@ -90,16 +85,6 @@ function Header() {
               />
             </Link>
           ))}
-
-          {!isAuthenticated && !loading && (
-            <Link
-              href="/login"
-              className="relative text-lg font-medium py-2 group transition-colors duration-300 text-white hover:text-gray-300"
-            >
-              Logga in
-              <span className="absolute bottom-0 left-0 h-[3px] bg-orange-500 transition-all duration-300 ease-out w-0 group-hover:w-full" />
-            </Link>
-          )}
         </nav>
       </div>
 
@@ -113,21 +98,11 @@ function Header() {
               className={`relative text-lg font-medium py-2
                 ${pathname === link.href ? "text-orange-500" : "text-white hover:text-gray-300"}
               `}
-              onClick={() => setIsMenuOpen(false)}
+              onClick={() => setIsMenuOpen(false)} // Close menu on link click
             >
               {link.name}
             </Link>
           ))}
-
-          {!isAuthenticated && !loading && (
-            <Link
-              href="/login"
-              className="relative text-lg font-medium py-2 text-white hover:text-gray-300"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              Logga in
-            </Link>
-          )}
         </nav>
       )}
     </header>
@@ -135,4 +110,4 @@ function Header() {
 }
 
 export default Header
-export { Header } // Add named export for Header
+export { Header }

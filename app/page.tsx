@@ -1,23 +1,37 @@
-import { HeroSection } from "@/components/sections/hero-section"
-import { AboutClubSection } from "@/components/sections/about-club-section"
-import { StatsSection } from "@/components/sections/stats-section"
-import { PartnersCarouselSection } from "@/components/sections/partners-carousel-section"
-import { UpcomingEventsSection } from "@/components/upcoming-events-section"
-import { getContent } from "@/lib/content-store"
+"use client"
 
-// Force dynamic rendering for this page
-export const dynamic = "force-dynamic"
+import { useState, useEffect } from "react"
+import { type PageContent, loadContent } from "@/lib/content-store"
 
-export default async function Home() {
-  const content = await getContent()
+// Import the section components
+import HeroSection from "@/components/sections/hero-section"
+import StatsSection from "@/components/sections/stats-section"
+import AboutClubSection from "@/components/sections/about-club-section"
+import PartnersCarouselSection from "@/components/sections/partners-carousel-section"
+import UpcomingEventsSection from "@/components/upcoming-events-section" // This one is not editable via content.json
+
+export default function Home() {
+  const [content, setContent] = useState<PageContent | null>(null)
+
+  useEffect(() => {
+    const fetchContent = async () => {
+      const fetchedContent = await loadContent()
+      setContent(fetchedContent)
+    }
+    fetchContent()
+  }, [])
+
+  if (!content) {
+    return <div className="flex justify-center items-center min-h-screen">Laddar innehåll...</div>
+  }
 
   return (
-    <div className="flex flex-col min-h-[calc(100vh-80px)]">
+    <>
       <HeroSection content={content.hero} />
-      <AboutClubSection content={content.aboutClub} />
       <StatsSection content={content.stats} />
+      <UpcomingEventsSection /> {/* This section remains dynamic */}
+      <AboutClubSection content={content.aboutClub} />
       <PartnersCarouselSection content={content.partnersCarousel} />
-      <UpcomingEventsSection content={content.upcomingEvents} />
-    </div>
+    </>
   )
 }

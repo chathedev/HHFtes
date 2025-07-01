@@ -1,31 +1,37 @@
 import type React from "react"
-import "@/app/globals.css"
-import { Header } from "@/components/header"
-import { Footer } from "@/components/footer"
-import { ThemeProvider } from "@/components/theme-provider"
-import { AuthProvider } from "@/components/auth-provider"
-import { Toaster } from "@/components/ui/toaster"
+import type { Metadata } from "next"
+import { Inter } from "next/font/google"
+import "./globals.css"
+import Header from "@/components/header"
+import Footer from "@/components/footer"
+import { AuthProvider } from "@/components/auth-provider" // Import AuthProvider
+import { Toaster } from "@/components/ui/toaster" // Import Toaster
 
-export const metadata = {
-  title: "Härnösands HF",
-  description: "Officiell webbplats för Härnösands Handbollsförening",
-    generator: 'v0.dev'
+const inter = Inter({ subsets: ["latin"] })
+
+export const metadata: Metadata = {
+  title: "Härnösands HF - Handbollsklubb",
+  description: "En handbollsklubb med stolthet, gemenskap och passion för sporten",
+  icons: [{ rel: "icon", url: "/favicon.png", sizes: "any" }],
+  generator: "v0.dev",
 }
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function RootLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode
+}>) {
   return (
-    <html lang="sv" suppressHydrationWarning>
-      <body className="min-h-screen bg-background font-sans antialiased">
-        <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
-          <AuthProvider>
-            <div className="relative flex min-h-screen flex-col">
-              <Header />
-              <div className="flex-1">{children}</div>
-              <Footer />
-            </div>
-            <Toaster />
-          </AuthProvider>
-        </ThemeProvider>
+    <html lang="sv">
+      <body className={`${inter.className} bg-white`}>
+        <AuthProvider>
+          {" "}
+          {/* Wrap with AuthProvider */}
+          <Header />
+          <main>{children}</main>
+          <Footer />
+          <Toaster /> {/* Add Toaster for toasts */}
+        </AuthProvider>
       </body>
     </html>
   )
