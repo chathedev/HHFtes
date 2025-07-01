@@ -2,17 +2,18 @@
 
 import { useEffect, useState } from "react"
 
-/**
- * Primary hook – returns `true` when viewport width < 768 px (Tailwind md).
- */
+const MOBILE_BREAKPOINT = 768
+
+/** Primary hook used across the app */
 export function useMobile(): boolean {
-  const [isMobile, setIsMobile] = useState<boolean>(() =>
-    typeof window === "undefined" ? false : window.innerWidth < 768,
-  )
+  const [isMobile, setIsMobile] = useState<boolean>(() => {
+    if (typeof window === "undefined") return false
+    return window.innerWidth < MOBILE_BREAKPOINT
+  })
 
   useEffect(() => {
     function handleResize() {
-      setIsMobile(window.innerWidth < 768)
+      setIsMobile(window.innerWidth < MOBILE_BREAKPOINT)
     }
     window.addEventListener("resize", handleResize)
     return () => window.removeEventListener("resize", handleResize)
@@ -21,7 +22,5 @@ export function useMobile(): boolean {
   return isMobile
 }
 
-/**
- * Alias kept for backwards compatibility with older imports.
- */
+/** Alias kept for backwards-compat */
 export const useIsMobile = useMobile

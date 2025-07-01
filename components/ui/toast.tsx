@@ -16,7 +16,7 @@ import {
 } from "@radix-ui/react-toast"
 import { type VariantProps, cva } from "class-variance-authority"
 import { X } from "lucide-react"
-import { Toaster as SonnerToaster, type ToasterProps } from "sonner"
+import { Toaster as SonnerToaster, toast } from "sonner"
 
 import { cn } from "@/lib/utils"
 
@@ -112,15 +112,14 @@ ToastDescription.displayName = "ToastDescription"
  * Place <Toaster /> once (e.g. in `app/layout.tsx`).
  * All toasts dispatched via your custom hook / context will render here.
  */
-export function Toaster(props: ToasterProps) {
-  return <SonnerToaster {...props} />
+export function Toaster() {
+  return <SonnerToaster position="bottom-right" richColors closeButton theme="system" />
 }
 
 /* ────────────────────────────────────────────────────────────────────────── */
 /*  Exports                                                                 */
 /* ────────────────────────────────────────────────────────────────────────── */
 
-export { Toast, ToastAction, ToastClose, ToastTitle, ToastDescription, ToastViewport }
+export { Toast, ToastAction, ToastClose, ToastTitle, ToastDescription, ToastViewport, toast }
 
 // Re-export any types if consumers need them.
-export type { ToasterProps }

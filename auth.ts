@@ -9,19 +9,24 @@ type Credentials = { email: string; password: string }
 /* Simulated auth state held in memory (DO NOT USE IN PRODUCTION) */
 let signedIn = false
 
-export async function signIn({ email, password }: Credentials): Promise<boolean> {
-  // Very naive check – any non-empty credentials are accepted
-  if (email && password) {
-    signedIn = true
-    return true
-  }
-  return false
+export async function signIn(email: string, password: string): Promise<boolean> {
+  // TODO: swap this mock for a real sign-in flow.
+  console.log("🟢  signIn()", { email })
+  return true
 }
 
 export async function signOut(): Promise<void> {
+  // TODO: swap this mock for a real sign-out flow.
+  console.log("🟡  signOut()")
   signedIn = false
 }
 
-export async function authenticate(): Promise<boolean> {
-  return signedIn
+export async function authenticate(formData: FormData): Promise<{ success: boolean }> {
+  const email = formData.get("email") as string | null
+  const password = formData.get("password") as string | null
+  if (!email || !password) {
+    return { success: false }
+  }
+  const ok = await signIn(email, password)
+  return { success: ok }
 }

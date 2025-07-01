@@ -5,46 +5,24 @@
  * Here we keep everything in-memory for simplicity.
  */
 
-export type HeroContent = {
-  title: string
-  description: string
-  titleTextColorClass: string
-  titleFontSizeClass: string
-  descriptionTextColorClass: string
-  descriptionFontSizeClass: string
-  backgroundImageUrl: string
-  overlayColorClass: string
-  ctaPrimary: { text: string; href: string; bgClass: string; textClass: string }
-  ctaSecondary: { text: string; href: string; bgClass: string; textClass: string }
-}
-
-export type StatsContent = {
-  heading: string
-  items: { label: string; value: string }[]
-}
-
-export type AboutContent = {
-  heading: string
-  body: string
-  imageUrl: string
-}
-
-export type PartnersContent = {
-  heading: string
-  logos: string[]
-}
-
-export type UpcomingEventsContent = {
-  heading: string
-  events: { title: string; date: string; url: string }[]
-}
-
-export type PageContent = {
-  hero: HeroContent
-  stats: StatsContent
-  about: AboutContent
-  partners: PartnersContent
-  upcoming: UpcomingEventsContent
+export interface PageContent {
+  hero: {
+    title: string
+    description: string
+    titleTextColorClass: string
+    descriptionTextColorClass: string
+    titleFontSizeClass: string
+    descriptionFontSizeClass: string
+    backgroundImageUrl: string
+    overlayColorClass: string
+    buttons: Array<{
+      text: string
+      href: string
+      bgColorClass: string
+      textColorClass: string
+    }>
+  }
+  // Add other sections as needed…
 }
 
 /* -------------------------------------------------------------------------- */
@@ -54,50 +32,26 @@ export type PageContent = {
 export const defaultContent: PageContent = {
   hero: {
     title: "Välkommen till Härnösands HF",
-    description: "Handbollsföreningen i hjärtat av Ångermanland.",
+    description: "Officiell hemsida för handbollsföreningen från Härnösand.",
     titleTextColorClass: "text-white",
-    titleFontSizeClass: "text-4xl md:text-6xl",
     descriptionTextColorClass: "text-white/90",
-    descriptionFontSizeClass: "text-lg md:text-2xl",
-    backgroundImageUrl: "/placeholder.svg?height=1080&width=1920",
-    overlayColorClass: "bg-black/60",
-    ctaPrimary: {
-      text: "Bli medlem",
-      href: "/bli-medlem",
-      bgClass: "bg-red-600 hover:bg-red-700",
-      textClass: "text-white",
-    },
-    ctaSecondary: {
-      text: "Läs mer",
-      href: "/om-oss",
-      bgClass: "bg-white hover:bg-gray-200",
-      textClass: "text-red-600",
-    },
-  },
-  stats: {
-    heading: "Klubbstatistik",
-    items: [
-      { label: "Grundad", value: "1975" },
-      { label: "Medlemmar", value: "450+" },
-      { label: "SM-guld", value: "3" },
-    ],
-  },
-  about: {
-    heading: "Om Härnösands HF",
-    body:
-      "Härnösands HF är en ideell handbollsförening som engagerar barn, ungdomar och vuxna " +
-      "från hela regionen. Vi fokuserar på gemenskap, glädje och sportslig utveckling.",
-    imageUrl: "/placeholder.svg?height=600&width=800",
-  },
-  partners: {
-    heading: "Partners",
-    logos: ["/placeholder.svg?height=120&width=240", "/placeholder.svg?height=120&width=240"],
-  },
-  upcoming: {
-    heading: "Kommande matcher",
-    events: [
-      { title: "HHF vs. Örebro HK", date: "2025-09-14", url: "/matcher" },
-      { title: "Sundsvalls IF vs. HHF", date: "2025-09-21", url: "/matcher" },
+    titleFontSizeClass: "text-4xl md:text-6xl",
+    descriptionFontSizeClass: "text-lg md:text-xl",
+    backgroundImageUrl: "/placeholder.svg?height=900&width=1600",
+    overlayColorClass: "bg-black/40",
+    buttons: [
+      {
+        text: "Bli medlem",
+        href: "/bli-medlem",
+        bgColorClass: "bg-red-600",
+        textColorClass: "text-white",
+      },
+      {
+        text: "Matcher",
+        href: "/matcher",
+        bgColorClass: "bg-transparent border border-white",
+        textColorClass: "text-white",
+      },
     ],
   },
 }
@@ -109,55 +63,44 @@ export const defaultContent: PageContent = {
 /**
  * Deep-merge two objects (very small util; not production-ready for arrays etc.).
  */
-export function deepMerge<T extends Record<string, any>>(base: T, patch: Partial<T>): T {
-  const output = { ...base }
-  for (const key of Object.keys(patch)) {
-    // If both values are objects, recurse.
-    if (typeof patch[key] === "object" && patch[key] !== null) {
-      // @ts-expect-error – we know the index exists
-      output[key] = deepMerge(output[key], patch[key])
-    } else {
-      // @ts-expect-error – we know the index exists
-      output[key] = patch[key]
+export function deepMerge<T extends object>(base: T, patch: Partial<T>): T {
+  const output = { ...base } as T
+  for (const key of Object.keys(patch) as Array<keyof T>) {
+    const value = patch[key]
+    if (value && typeof value === "object" && !Array.isArray(value) && key in base) {
+      // @ts-ignore – safe recursive merge
+      output[key] = deepMerge(base[key] as any, value as any)
+    } else if (value !== undefined) {
+      output[key] = value as T[typeof key]
     }
   }
   return output
 }
 
 /**
- * Returns the Vercel URL on the server or window.location.origin on the client.
- */
-export function getBaseUrl(): string {
-  if (typeof window !== "undefined") return window.location.origin
-  return process.env.NEXT_PUBLIC_VERCEL_URL ? `https://${process.env.NEXT_PUBLIC_VERCEL_URL}` : "http://localhost:3000"
-}
-
-/* -------------------------------------------------------------------------- */
-/*                             IN-MEMORY CONTENT DB                            */
-/* -------------------------------------------------------------------------- */
-
-let currentContent: PageContent = structuredClone(defaultContent)
-
-/**
- * Load the current content (fetch from API in real app, here just return memory).
+ * Load content from an API or localStorage.
+ * Falls back to `defaultContent` on any error.
  */
 export async function loadContent(): Promise<PageContent> {
-  // Simulate an async fetch for parity with real usage.
-  return Promise.resolve(structuredClone(currentContent))
+  try {
+    // Example fetch – replace with real endpoint if you have one.
+    const res = await fetch("/api/editor-content")
+    if (res.ok) {
+      const json = (await res.json()) as Partial<PageContent>
+      return deepMerge(defaultContent, json)
+    }
+    // eslint-disable-next-line no-empty
+  } catch {}
+  return structuredClone(defaultContent)
 }
 
-/**
- * Reset the content to its default values.
- */
+/** Reset to factory defaults (use in the editor’s “Återställ” button). */
 export function resetContent(): PageContent {
-  currentContent = structuredClone(defaultContent)
-  return currentContent
+  return structuredClone(defaultContent)
 }
 
-/**
- * Update (patch) a fragment of the page content.
- */
-export function patchContent(patch: Partial<PageContent>): PageContent {
-  currentContent = deepMerge(currentContent, patch)
-  return currentContent
+/** Resolve absolute base-URL both locally and on Vercel. */
+export function getBaseUrl(): string {
+  if (typeof window !== "undefined") return ""
+  return process.env.NEXT_PUBLIC_VERCEL_URL ? `https://${process.env.NEXT_PUBLIC_VERCEL_URL}` : "http://localhost:3000"
 }
