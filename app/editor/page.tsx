@@ -1,184 +1,147 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
-import { Button } from "@/components/ui/button"
-import { toast } from "@/components/ui/use-toast"
-import { type PageContent, loadContent } from "@/lib/content-store"
-import { saveEditorContentServer, resetEditorContentServer } from "@/app/actions/editor-content"
-import { Badge } from "@/components/ui/badge" // Import Badge for editing mode indicator
-
-// Import the section components
+import { useEffect, useState, useTransition } from "react"
+import { loadContent, saveContent, defaultContent, type PageContent } from "@/lib/content-store"
 import HeroSection from "@/components/sections/hero-section"
-import StatsSection from "@/components/sections/stats-section"
 import AboutClubSection from "@/components/sections/about-club-section"
 import PartnersCarouselSection from "@/components/sections/partners-carousel-section"
 import UpcomingEventsSection from "@/components/upcoming-events-section"
+import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
+import { useToast } from "@/components/ui/use-toast"
+import { Loader2, Save, RefreshCcw } from "lucide-react"
 
 export default function EditorPage() {
-  const [content, setContent] = useState<PageContent | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [saving, setSaving] = useState(false)
+  const [content, setContent] = useState<PageContent>(defaultContent)
+  const [isEditing, setIsEditing] = useState(true)
+  const [isPending, startTransition] = useTransition()
+  const { toast } = useToast()
+
+  const availablePages = [
+    { name: "Hem", path: "/" },
+    { name: "Kalender", path: "/kalender" },
+    { name: "Lag", path: "/lag" },
+    { name: "Matcher", path: "/matcher" },
+    { name: "Nyheter", path: "/nyheter" },
+    { name: "Partners", path: "/partners" },
+    { name: "Kontakt", path: "/kontakt" },
+    { name: "Logga in", path: "/login" },
+  ]
 
   useEffect(() => {
-    const fetchContent = async () => {
-      setLoading(true)
-      try {
-        const fetchedContent = await loadContent()
-
-        // Explicitly ensure correct image URLs for the editor,
-        // overriding any stale data from the backend if necessary.
-        fetchedContent.hero.imageUrl = "https://az316141.cdn.laget.se/2317159/11348130.jpg"
-        fetchedContent.aboutClub.imageSrc =
-          "https://i.ibb.co/Zt8gppK/491897759-17872413642339702-3719173158843008539-n.jpg"
-
-        setContent(fetchedContent)
-      } catch (error) {
-        console.error("Failed to load content for editor:", error)
-        toast({
-          title: "Fel vid laddning",
-          description: "Kunde inte ladda innehåll från servern.",
-          variant: "destructive",
-        })
-      } finally {
-        setLoading(false)
-      }
-    }
-    fetchContent()
+    startTransition(async () => {
+      const fetchedContent = await loadContent()
+      // Explicitly set image URLs to ensure they are not placeholders in editor
+      setContent({
+        ...fetchedContent,
+        hero: {
+          ...fetchedContent.hero,
+          imageUrl: "https://az316141.cdn.laget.se/2317159/11348130.jpg",
+        },
+        aboutClub: {
+          ...fetchedContent.aboutClub,
+          imageSrc: "https://i.ibb.co/Zt8gppK/491897759-17872413642339702-3719173158843008539-n.jpg",
+        },
+      })
+    })
   }, [])
 
-  const handleContentChange = useCallback(
-    (sectionKey: keyof PageContent, field: keyof PageContent[keyof PageContent], value: string | number) => {
-      if (!content) return
-
-      setContent((prevContent) => {
-        if (!prevContent) return null
-
-        const updatedSection = {
-          ...prevContent[sectionKey],
-          [field]: value,
-        }
-
-        return {
-          ...prevContent,
-          [sectionKey]: updatedSection,
-        }
-      })
-    },
-    [content],
-  )
-
-  const handleSave = useCallback(async () => {
-    if (!content) return
-    setSaving(true)
-    const result = await saveEditorContentServer(content)
-    if (result.success) {
-      toast({
-        title: "Innehåll sparat!",
-        description: result.message,
-        variant: "default",
-      })
-    } else {
-      toast({
-        title: "Fel vid sparning",
-        description: result.message,
-        variant: "destructive",
-      })
-    }
-    setSaving(false)
-  }, [content])
-
-  const handleReset = useCallback(async () => {
-    if (window.confirm("Är du säker på att du vill återställa allt innehåll till standard? Detta kan inte ångras.")) {
-      setLoading(true)
-      try {
-        const fetchedContent = await resetEditorContentServer()
-        // Ensure correct images after reset as well
-        fetchedContent.hero.imageUrl = "https://az316141.cdn.laget.se/2317159/11348130.jpg"
-        fetchedContent.aboutClub.imageSrc =
-          "https://i.ibb.co/Zt8gppK/491897759-17872413642339702-3719173158843008539-n.jpg"
-        setContent(fetchedContent)
-        toast({
-          title: "Innehåll återställt!",
-          description: "Allt innehåll har återställts till standardvärden.",
-          variant: "default",
-        })
-      } catch (error) {
-        console.error("Failed to reset content:", error)
-        toast({
-          title: "Fel vid återställning",
-          description: "Kunde inte återställa innehåll från servern.",
-          variant: "destructive",
-        })
-      } finally {
-        setLoading(false)
-      }
-    }
-  }, [])
-
-  if (loading) {
-    return <div className="flex justify-center items-center min-h-screen">Laddar redigerare...</div>
+  const handleContentChange = (section: keyof PageContent, field: string, value: string | number) => {
+    setContent((prevContent) => ({
+      ...prevContent,
+      [section]: {
+        ...prevContent[section],
+        [field]: value,
+      },
+    }))
   }
 
-  if (!content) {
-    return (
-      <div className="flex justify-center items-center min-h-screen text-red-500">
-        Kunde inte ladda innehåll för redigering.
-      </div>
-    )
+  const handleSave = async () => {
+    startTransition(async () => {
+      const result = await saveContent(content)
+      if (result.success) {
+        toast({
+          title: "Innehåll sparat!",
+          description: result.message,
+          variant: "default",
+        })
+      } else {
+        toast({
+          title: "Fel vid sparning",
+          description: result.message,
+          variant: "destructive",
+        })
+      }
+    })
+  }
+
+  const handleReset = () => {
+    startTransition(async () => {
+      // Reset to default content, ensuring correct images
+      setContent({
+        ...defaultContent,
+        hero: {
+          ...defaultContent.hero,
+          imageUrl: "https://az316141.cdn.laget.se/2317159/11348130.jpg",
+        },
+        aboutClub: {
+          ...defaultContent.aboutClub,
+          imageSrc: "https://i.ibb.co/Zt8gppK/491897759-17872413642339702-3719173158843008539-n.jpg",
+        },
+      })
+      toast({
+        title: "Innehåll återställt!",
+        description: "Sidan har återställts till standardinnehållet.",
+        variant: "default",
+      })
+    })
   }
 
   return (
-    <div className="relative">
-      {/* Editor Controls */}
-      <div className="fixed top-0 left-0 right-0 bg-gradient-to-r from-green-700 to-orange-500 shadow-lg z-50 p-4 flex flex-col sm:flex-row justify-center items-center gap-4 border-b border-gray-300">
-        <Badge variant="secondary" className="bg-white text-green-800 px-3 py-1 text-sm font-semibold">
-          Redigeringsläge Aktivt
-        </Badge>
-        <div className="flex gap-4">
-          <Button
-            onClick={handleSave}
-            disabled={saving}
-            className="bg-white hover:bg-gray-100 text-green-800 font-semibold"
-          >
-            {saving ? "Sparar..." : "Spara ändringar"}
+    <div className="relative min-h-screen bg-gray-50">
+      <div className="sticky top-0 z-50 w-full bg-white shadow-md p-4 flex justify-between items-center border-b border-gray-200">
+        <div className="flex items-center gap-4">
+          <h1 className="text-2xl font-bold text-gray-800">Redigeringsläge</h1>
+          <Badge variant="secondary" className="bg-green-100 text-green-700 px-3 py-1 text-sm">
+            Redigeringsläge Aktivt
+          </Badge>
+        </div>
+        <div className="flex gap-2">
+          <Button onClick={handleReset} variant="outline" disabled={isPending}>
+            <RefreshCcw className="h-4 w-4 mr-2" />
+            {isPending ? "Återställer..." : "Återställ"}
           </Button>
-          <Button
-            onClick={handleReset}
-            variant="outline"
-            disabled={saving}
-            className="bg-white hover:bg-gray-100 text-orange-700 font-semibold border-orange-700"
-          >
-            Återställ till standard
+          <Button onClick={handleSave} disabled={isPending}>
+            {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
+            {isPending ? "Sparar..." : "Spara ändringar"}
           </Button>
         </div>
       </div>
 
-      {/* Live Preview of the website sections */}
-      <div className="pt-28">
-        {" "}
-        {/* Increased padding-top to account for enhanced fixed header */}
+      <main className="relative z-10">
         <HeroSection
           content={content.hero}
-          isEditing={true}
+          isEditing={isEditing}
           onContentChange={(field, value) => handleContentChange("hero", field, value)}
+          availablePages={availablePages}
         />
-        <StatsSection
-          content={content.stats}
-          isEditing={true}
-          onContentChange={(field, value) => handleContentChange("stats", field, value)}
-        />
-        <UpcomingEventsSection />
         <AboutClubSection
           content={content.aboutClub}
-          isEditing={true}
+          isEditing={isEditing}
           onContentChange={(field, value) => handleContentChange("aboutClub", field, value)}
+          availablePages={availablePages}
         />
         <PartnersCarouselSection
-          content={content.partnersCarousel}
-          isEditing={true}
-          onContentChange={(field, value) => handleContentChange("partnersCarousel", field, value)}
+          content={content.partners}
+          isEditing={isEditing}
+          onContentChange={(field, value) => handleContentChange("partners", field, value)}
         />
-      </div>
+        <UpcomingEventsSection
+          content={content.upcomingEvents}
+          isEditing={isEditing}
+          onContentChange={(field, value) => handleContentChange("upcomingEvents", field, value)}
+        />
+      </main>
     </div>
   )
 }
