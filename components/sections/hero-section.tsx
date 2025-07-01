@@ -37,7 +37,7 @@ export default function HeroSection({ content, isEditing = false, onContentChang
   return (
     <section className="relative h-[600px] w-full overflow-hidden">
       <Image
-        src={content.imageUrl || "/placeholder.svg"} // No placeholder fallback here
+        src={content.imageUrl || "/placeholder.svg"} // Re-introduced fallback for safety
         alt="Härnösands FF fotbollsplan"
         fill
         className="object-cover object-center"

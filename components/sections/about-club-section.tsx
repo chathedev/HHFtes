@@ -52,7 +52,7 @@ export default function AboutClubSection({
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
           <div className="relative h-64 md:h-96 lg:h-[500px] rounded-lg overflow-hidden shadow-lg">
             <Image
-              src={content.imageSrc || "/placeholder.svg"} // No placeholder fallback here
+              src={content.imageSrc || "/placeholder.svg"} // Re-introduced fallback for safety
               alt="Härnösands FF lagbild"
               fill
               className="object-cover object-center"

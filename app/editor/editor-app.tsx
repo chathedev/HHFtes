@@ -32,7 +32,12 @@ export default function EditorApp() {
   /* ───────────────────────── load initial content ───────────────────────── */
   useEffect(() => {
     startTransition(async () => {
-      setContent(await loadContent())
+      const fetchedContent = await loadContent()
+      // Explicitly set image URLs to ensure they are not placeholders in editor
+      fetchedContent.hero.imageUrl = "https://az316141.cdn.laget.se/2317159/11348130.jpg"
+      fetchedContent.aboutClub.imageSrc =
+        "https://i.ibb.co/Zt8gppK/491897759-17872413642339702-3719173158843008539-n.jpg"
+      setContent(fetchedContent)
     })
   }, [])
 
@@ -60,7 +65,11 @@ export default function EditorApp() {
   }
 
   const resetContent = () => {
-    setContent(defaultContent)
+    const resetData = { ...defaultContent }
+    // Ensure reset also uses the correct images
+    resetData.hero.imageUrl = "https://az316141.cdn.laget.se/2317159/11348130.jpg"
+    resetData.aboutClub.imageSrc = "https://i.ibb.co/Zt8gppK/491897759-17872413642339702-3719173158843008539-n.jpg"
+    setContent(resetData)
     toast({ title: "Återställt!", description: "Standardinnehållet har laddats." })
   }
 
@@ -83,7 +92,7 @@ export default function EditorApp() {
           </Button>
           <Button onClick={saveToServer} disabled={isPending}>
             {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
-            {isPending ? "Sparar..." : "Spara"}
+            {isPending ? "Spara..." : "Spara"}
           </Button>
         </div>
       </div>

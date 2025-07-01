@@ -1,9 +1,6 @@
-"use client"
+import EditorApp from "./editor-app"
 
-import dynamic from "next/dynamic"
-
-/* Dynamically import the client bundle only on the browser. */
-const EditorApp = dynamic(() => import("./editor-app"), { ssr: false })
+export const dynamic = "force-dynamic" // Ensure this page is always rendered dynamically
 
 export default function EditorPage() {
   return <EditorApp />
