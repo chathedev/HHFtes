@@ -1,30 +1,33 @@
-import type { Partner } from "./content-types"
-
 /**
- * Local fallback data.
- * Your production site should normally pull the real data from
- * https://api.nuredo.se, but several components (e.g. the
- * partners-carousel client) still import `allPartners` at build time.
- *
- * Keeping this array guarantees the build succeeds even if the remote
- * API is temporarily unavailable.
+ * Local fallback dataset used at build-time.
+ * In production, the live content coming from
+ *  https://api.nuredo.se/api/content  will overwrite this.
  */
+
+import type { Partner } from "@/lib/content-types"
+
 export const allPartners: Partner[] = [
   {
     id: "highcon",
     tier: "Diamantpartner",
     src: "/placeholder-logo.png",
-    alt: "HighCon AB",
-    linkUrl: "https://example.com",
+    alt: "Highcon AB",
+    linkUrl: "https://highcon.example",
     visibleInCarousel: true,
   },
   {
-    id: "demo-gold",
+    id: "acme",
     tier: "Guldpartner",
     src: "/placeholder-logo.png",
-    alt: "Guldföretaget",
-    linkUrl: "https://example.com",
+    alt: "ACME Industries",
+    linkUrl: "https://acme.example",
     visibleInCarousel: true,
   },
-  /** add more seed partners here or load them dynamically */
+  {
+    id: "beta",
+    tier: "Silverpartner",
+    src: "/placeholder-logo.png",
+    alt: "Beta Bygg",
+    visibleInCarousel: true,
+  },
 ]

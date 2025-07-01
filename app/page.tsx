@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic"
+
 import Hero from "@/components/hero"
 import PartnersCarouselClient from "./partners-carousel-client"
 import Stats from "@/components/stats"
@@ -10,9 +12,7 @@ const BACKEND_API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL || "https://api.
 
 async function getDynamicContent(): Promise<FullContent> {
   try {
-    const res = await fetch(`${BACKEND_API_URL}/api/content`, {
-      next: { revalidate: 0 }, // Always revalidate on request for latest content
-    })
+    const res = await fetch(`${BACKEND_API_URL}/api/content`, { cache: "no-store" })
     if (!res.ok) {
       console.error(`Failed to fetch content from backend: ${res.statusText}`)
       return defaultContent // Fallback to default content
