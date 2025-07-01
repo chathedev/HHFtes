@@ -41,6 +41,18 @@ export default function PartnersCarouselSection({
     }
   }
 
+  const handlePartnerLinkClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+    if (isEditing) {
+      e.preventDefault()
+    }
+  }
+
+  const handleCallToActionLinkClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    if (isEditing) {
+      e.preventDefault()
+    }
+  }
+
   const partnersForDisplay = allPartners.filter((p) => p.visibleInCarousel)
 
   const partnersByTier: Record<string, Partner[]> = partnersForDisplay.reduce(
@@ -141,8 +153,14 @@ export default function PartnersCarouselSection({
                               {hoveredCardId === partner.id && partner.linkUrl && (
                                 <div className="absolute inset-0 bg-black bg-opacity-70 flex items-center justify-center rounded-lg transition-opacity duration-300 opacity-0 group-hover:opacity-100">
                                   <Button
-                                    onClick={() => window.open(partner.linkUrl, "_blank")}
-                                    className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-md"
+                                    onClick={(e) => {
+                                      if (isEditing) {
+                                        e.preventDefault()
+                                      } else {
+                                        window.open(partner.linkUrl, "_blank")
+                                      }
+                                    }}
+                                    className={`bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-md ${isEditing ? "pointer-events-none cursor-default" : ""}`}
                                   >
                                     Gå till
                                   </Button>
@@ -179,7 +197,8 @@ export default function PartnersCarouselSection({
           <div className="flex flex-col sm:flex-row justify-center gap-4">
             <Link
               href={content.callToActionLink}
-              className="bg-orange-500 hover:bg-orange-600 text-white px-8 py-3 rounded-md"
+              className={`bg-orange-500 hover:bg-orange-600 text-white px-8 py-3 rounded-md ${isEditing ? "pointer-events-none cursor-default" : ""}`}
+              onClick={handleCallToActionLinkClick}
             >
               <span
                 contentEditable={isEditing}

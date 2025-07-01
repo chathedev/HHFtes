@@ -1,10 +1,3 @@
-import type { ReadonlyURLSearchParams } from "next/navigation"
-
-export interface FAQItem {
-  question: string
-  answer: string
-}
-
 export interface PageContent {
   sections: string[]
   hero: {
@@ -29,14 +22,14 @@ export interface PageContent {
     passionText: string
     developmentText: string
     communityText: string
-    button1Text: string
-    button1Link: string
-    button2Text: string
-    button2Link: string
     imageSrc: string
     imageAlt: string
     totalTeamsCallout: number
     totalTeamsCalloutText: string
+    button1Text: string
+    button1Link: string
+    button2Text: string
+    button2Link: string
   }
   partnersCarousel: {
     title: string
@@ -47,16 +40,12 @@ export interface PageContent {
     callToActionLink: string
   }
   kontaktPage: {
-    emailTitle: string
-    emailDescription: string
-    emailAddress: string
-    addressTitle: string
-    addressDescription: string
-    addressLocation: string
-    boardTitle: string
-    boardDescription: string
-    boardContact: string
-    faqItems: FAQItem[]
+    title: string
+    description: string
+    address: string
+    phone: string
+    email: string
+    mapEmbedUrl: string
   }
   partnersPage: {
     title: string
@@ -69,151 +58,95 @@ export interface PageContent {
 }
 
 export const defaultContent: PageContent = {
-  sections: ["hero", "stats", "aboutClub", "partnersCarousel"],
+  sections: ["hero", "stats", "upcomingEvents", "aboutClub", "partnersCarousel"],
   hero: {
-    title: "Välkommen till Härnösands FF",
-    description:
-      "Härnösands FF är en fotbollsklubb med en rik historia och en stark gemenskap. Vi strävar efter att utveckla både spelare och människor, från ungdom till elit.",
-    imageUrl: "/placeholder.svg?height=800&width=1200",
-    button1Text: "Våra lag",
+    title: "Härnösands Handbollsförening",
+    description: "Din lokala handbollsklubb i Härnösand. Gemenskap, glädje och utveckling för alla åldrar.",
+    imageUrl: "/placeholder.svg?height=800&width=1200&text=Hero Image",
+    button1Text: "Våra Lag",
     button1Link: "/lag",
-    button2Text: "Kalender",
-    button2Link: "/kalender",
+    button2Text: "Bli Medlem",
+    button2Link: "/kontakt",
   },
   stats: {
     totalTeams: 15,
     aTeams: 2,
     youthTeams: 13,
-    historyYears: "1900-tal",
+    historyYears: "40+",
   },
   aboutClub: {
-    title: "Om Härnösands FF",
+    title: "Om Härnösands HF",
     paragraph1:
-      "Härnösands FF grundades med en vision om att skapa en inkluderande och framgångsrik fotbollsmiljö. Sedan dess har vi vuxit till en av regionens mest respekterade klubbar, känd för vår starka gemenskap och engagemang för ungdomsfotboll.",
+      "Härnösands Handbollsförening grundades med en vision om att skapa en levande och inkluderande handbollsmiljö i Härnösand. Vi strävar efter att erbjuda en plats där alla, oavsett ålder eller erfarenhet, kan utvecklas som handbollsspelare och som individer.",
     paragraph2:
-      "Vi tror på att fotboll är mer än bara ett spel – det är en plattform för personlig utveckling, lagarbete och att bygga livslånga vänskaper. Våra tränare och ledare är dedikerade till att inspirera och vägleda varje spelare att nå sin fulla potential, både på och utanför planen.",
-    passionText: "Passion för fotboll",
-    developmentText: "Utveckling för alla",
-    communityText: "Stark gemenskap",
-    button1Text: "Bli medlem",
-    button1Link: "/bli-medlem",
-    button2Text: "Kontakta oss",
-    button2Link: "/kontakt",
-    imageSrc: "/placeholder.svg?height=400&width=600",
-    imageAlt: "Härnösands FF lag i en ring",
+      "Vår förening bygger på starka värderingar som gemenskap, respekt och idrottsglädje. Vi är stolta över vår historia och ser fram emot att fortsätta växa och bidra till handbollens framtid i regionen.",
+    passionText: "Engagemang för sporten",
+    developmentText: "Fokus på individuell tillväxt",
+    communityText: "Stark laganda och vänskap",
+    imageSrc: "/placeholder.svg?height=400&width=600&text=About Club Image",
+    imageAlt: "Handbollsträning",
     totalTeamsCallout: 15,
     totalTeamsCalloutText: "Aktiva lag",
+    button1Text: "Läs Mer",
+    button1Link: "/om-oss",
+    button2Text: "Kontakta Oss",
+    button2Link: "/kontakt",
   },
   partnersCarousel: {
-    title: "Våra Partners",
+    title: "Våra Viktiga Partners",
     description:
-      "Vi är stolta över våra samarbeten med lokala företag och organisationer som delar vår passion för fotboll och samhällsengagemang. Tillsammans bygger vi en starkare framtid för Härnösands FF.",
-    callToActionTitle: "Bli Partner",
-    callToActionDescription:
-      "Är ditt företag intresserat av att stödja Härnösands FF och bidra till vår fortsatta framgång? Kontakta oss för att diskutera olika partnerskapsmöjligheter.",
-    callToActionLinkText: "Läs mer om partnerskap",
-    callToActionLink: "/partners",
+      "Vi är oerhört tacksamma för det stöd vi får från våra partners. Deras bidrag är avgörande för vår verksamhet och hjälper oss att fortsätta utveckla handbollen i Härnösand.",
+    callToActionTitle: "Bli en del av vårt team!",
+    callToActionDescription: "Är ditt företag intresserat av att stödja Härnösands HF och synas tillsammans med oss?",
+    callToActionLinkText: "Bli Partner",
+    callToActionLink: "/kontakt",
   },
   kontaktPage: {
-    emailTitle: "E-post",
-    emailDescription: "För allmänna frågor och information.",
-    emailAddress: "info@harnosandsff.se",
-    addressTitle: "Besöksadress",
-    addressDescription: "Välkommen att besöka oss på vår anläggning.",
-    addressLocation: "Härnösands Arena, Arenavägen 1, 871 40 Härnösand",
-    boardTitle: "Styrelsen",
-    boardDescription: "Kontakta styrelsen för ärenden som rör klubbens ledning och strategi.",
-    boardContact: "styrelsen@harnosandsff.se",
-    faqItems: [
-      {
-        question: "Hur blir jag medlem?",
-        answer: "Du kan bli medlem genom att fylla i vårt online-formulär under sektionen 'Bli medlem'.",
-      },
-      {
-        question: "Var hittar jag matchschemat?",
-        answer: "Matchschemat för alla lag finns tillgängligt på 'Matcher'-sidan.",
-      },
-      {
-        question: "Kan jag provträna med ett lag?",
-        answer: "Ja, kontakta respektive lags tränare för att arrangera en provträning.",
-      },
-    ],
+    title: "Kontakta Oss",
+    description:
+      "Har du frågor, funderingar eller vill du komma i kontakt med oss? Fyll i formuläret nedan eller använd våra kontaktuppgifter.",
+    address: "Arenavägen 10, 871 40 Härnösand",
+    phone: "070-123 45 67",
+    email: "info@harnosandshf.se",
+    mapEmbedUrl:
+      "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2000.0000000000002!2d17.9333333!3d62.6333333!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zNjLCjMzhJzAwLjAiTiAxN8KwNTYnNTkuOSJF!5e0!3m2!1sen!2sse!4v1678901234567!5m2!1sen!2sse",
   },
   partnersPage: {
     title: "Våra Partners",
     description:
-      "Härnösands FF är djupt tacksamma för det ovärderliga stöd vi får från våra partners. Deras engagemang är avgörande för vår förmåga att bedriva verksamheten, utveckla våra spelare och bidra positivt till lokalsamhället. Tillsammans skapar vi framgång på och utanför planen.",
-    callToActionTitle: "Bli en del av vårt vinnande lag – Bli Partner!",
+      "Vi är stolta över att samarbeta med en rad fantastiska partners som delar vår passion för handboll och stöder vår förening. Deras engagemang är avgörande för vår framgång och utveckling.",
+    callToActionTitle: "Vill du också bli partner?",
     callToActionDescription:
-      "Är ditt företag intresserat av att synas tillsammans med Härnösands FF och stödja en levande idrottsförening? Vi erbjuder skräddarsydda partnerskap som ger exponering och möjlighet att associeras med positiva värden som gemenskap, hälsa och framgång. Kontakta oss för att utforska hur vi kan samarbeta.",
+      "Vi söker ständigt nya samarbeten som kan bidra till vår förenings framtid. Kontakta oss för att diskutera hur ditt företag kan bli en del av Härnösands HF-familjen.",
     callToActionLinkText: "Kontakta oss om partnerskap",
     callToActionLink: "/kontakt",
   },
 }
 
-/* ------------------------------------------------------------------
-   Load content from backend and merge with defaults
--------------------------------------------------------------------*/
 export async function loadContent(): Promise<PageContent> {
+  // In a real application, this would fetch from a database or a CMS.
+  // For this example, we'll use the default content.
+  // If you have a backend, you would fetch from it here.
   try {
-    const res = await fetch("https://api.nuredo.se/api/content", {
-      headers: { "Content-Type": "application/json" },
-      cache: "no-store",
+    const response = await fetch(`${process.env.BACKEND_API_URL}/api/content`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      // Use 'force-cache' for static pages, 'no-store' for dynamic content that needs to be fresh
+      // For the public facing page, we want to cache it.
+      next: { revalidate: 3600 }, // Revalidate every hour
     })
 
-    if (res.ok) {
-      const json = (await res.json()) as Partial<PageContent>
-      return deepMerge(defaultContent, json)
+    if (!response.ok) {
+      console.error(`Failed to fetch content from backend: ${response.status} ${response.statusText}`)
+      return defaultContent // Fallback to default content on error
     }
 
-    console.warn(`[loadContent] Backend responded ${res.status}. Falling back to defaults.`)
-  } catch (err) {
-    console.error("[loadContent] Backend fetch failed:", err)
+    const data = await response.json()
+    return data as PageContent
+  } catch (error) {
+    console.error("Network error fetching content:", error)
+    return defaultContent // Fallback to default content on network error
   }
-
-  // Fallback to defaults if anything goes wrong
-  return defaultContent
-}
-
-// Helper function for deep merging objects (used internally by loadContentFromLocalStorage and server actions)
-// This is kept here because it's used by the defaultContent logic and might be useful if content structure changes.
-export function deepMerge<T extends object>(target: T, source: Partial<T>): T {
-  const output = { ...target } as T
-
-  if (target && typeof target === "object" && source && typeof source === "object") {
-    Object.keys(source).forEach((key) => {
-      if (Object.prototype.hasOwnProperty.call(source, key)) {
-        const targetValue = target[key as keyof T]
-        const sourceValue = source[key as keyof T]
-
-        if (Array.isArray(targetValue) && Array.isArray(sourceValue)) {
-          // For arrays, replace completely rather than merging elements
-          output[key as keyof T] = sourceValue as T[keyof T]
-        } else if (
-          typeof targetValue === "object" &&
-          targetValue !== null &&
-          typeof sourceValue === "object" &&
-          sourceValue !== null &&
-          !Array.isArray(targetValue) &&
-          !Array.isArray(sourceValue) // Ensure it's not an array before deep merging
-        ) {
-          output[key as keyof T] = deepMerge(targetValue as object, sourceValue as object) as T[keyof T]
-        } else {
-          output[key as keyof T] = sourceValue as T[keyof T]
-        }
-      }
-    })
-  }
-  return output
-}
-
-export function getBaseUrl(searchParams?: ReadonlyURLSearchParams) {
-  const url = process.env.NEXT_PUBLIC_VERCEL_URL
-    ? `https://${process.env.NEXT_PUBLIC_VERCEL_URL}`
-    : "http://localhost:3000"
-
-  if (searchParams) {
-    return `${url}?${searchParams.toString()}`
-  }
-  return url
 }

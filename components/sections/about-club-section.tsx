@@ -45,6 +45,12 @@ export default function AboutClubSection({ content, isEditing = false, onContent
     }
   }
 
+  const handleLinkClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    if (isEditing) {
+      e.preventDefault()
+    }
+  }
+
   return (
     <section className="py-16">
       <div className="container mx-auto px-4">
@@ -121,7 +127,8 @@ export default function AboutClubSection({ content, isEditing = false, onContent
             <div className="flex flex-wrap gap-4">
               <Link
                 href={content.button1Link}
-                className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-2 rounded-md font-medium transition-colors"
+                className={`bg-orange-500 hover:bg-orange-600 text-white px-6 py-2 rounded-md font-medium transition-colors ${isEditing ? "pointer-events-none cursor-default" : ""}`}
+                onClick={handleLinkClick}
               >
                 <span
                   contentEditable={isEditing}
@@ -143,7 +150,8 @@ export default function AboutClubSection({ content, isEditing = false, onContent
               </Link>
               <Link
                 href={content.button2Link}
-                className="bg-white border border-gray-300 hover:bg-gray-100 text-gray-800 px-6 py-2 rounded-md font-medium transition-colors"
+                className={`bg-white border border-gray-300 hover:bg-gray-100 text-gray-800 px-6 py-2 rounded-md font-medium transition-colors ${isEditing ? "pointer-events-none cursor-default" : ""}`}
+                onClick={handleLinkClick}
               >
                 <span
                   contentEditable={isEditing}

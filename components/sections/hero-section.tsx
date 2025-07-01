@@ -30,6 +30,12 @@ export default function HeroSection({ content, isEditing = false, onContentChang
     }
   }
 
+  const handleLinkClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    if (isEditing) {
+      e.preventDefault()
+    }
+  }
+
   return (
     <section className="relative w-full h-screen flex items-center justify-center overflow-hidden">
       <div className="absolute inset-0 z-0">
@@ -72,9 +78,9 @@ export default function HeroSection({ content, isEditing = false, onContentChang
         <div className="flex flex-col sm:flex-row justify-center gap-6 animate-fade-in-up delay-400">
           <Button
             asChild
-            className="bg-orange-500 hover:bg-orange-600 text-white px-10 py-4 rounded-md text-lg font-semibold shadow-lg transition-transform duration-300 hover:scale-105"
+            className={`bg-orange-500 hover:bg-orange-600 text-white px-10 py-4 rounded-md text-lg font-semibold shadow-lg transition-transform duration-300 hover:scale-105 ${isEditing ? "pointer-events-none cursor-default" : ""}`}
           >
-            <Link href={content.button1Link}>
+            <Link href={content.button1Link} onClick={handleLinkClick}>
               <span
                 contentEditable={isEditing}
                 suppressContentEditableWarning={true}
@@ -87,9 +93,9 @@ export default function HeroSection({ content, isEditing = false, onContentChang
           </Button>
           <Button
             asChild
-            className="bg-green-700 hover:bg-green-800 text-white px-10 py-4 rounded-md text-lg font-semibold shadow-lg transition-transform duration-300 hover:scale-105"
+            className={`bg-green-700 hover:bg-green-800 text-white px-10 py-4 rounded-md text-lg font-semibold shadow-lg transition-transform duration-300 hover:scale-105 ${isEditing ? "pointer-events-none cursor-default" : ""}`}
           >
-            <Link href={content.button2Link}>
+            <Link href={content.button2Link} onClick={handleLinkClick}>
               <span
                 contentEditable={isEditing}
                 suppressContentEditableWarning={true}

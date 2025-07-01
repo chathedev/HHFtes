@@ -1,37 +1,26 @@
-"use client"
-
-import { useState, useEffect } from "react"
-import { type PageContent, loadContent } from "@/lib/content-store"
-
-// Import the section components
+import { Header } from "@/components/header"
+import { Footer } from "@/components/footer"
 import HeroSection from "@/components/sections/hero-section"
 import StatsSection from "@/components/sections/stats-section"
 import AboutClubSection from "@/components/sections/about-club-section"
 import PartnersCarouselSection from "@/components/sections/partners-carousel-section"
-import UpcomingEventsSection from "@/components/upcoming-events-section" // This one is not editable via content.json
+import UpcomingEventsSection from "@/components/upcoming-events-section"
+import { loadContent } from "@/lib/content-store"
 
-export default function Home() {
-  const [content, setContent] = useState<PageContent | null>(null)
-
-  useEffect(() => {
-    const fetchContent = async () => {
-      const fetchedContent = await loadContent()
-      setContent(fetchedContent)
-    }
-    fetchContent()
-  }, [])
-
-  if (!content) {
-    return <div className="flex justify-center items-center min-h-screen">Laddar innehåll...</div>
-  }
+export default async function HomePage() {
+  const content = await loadContent()
 
   return (
-    <>
-      <HeroSection content={content.hero} />
-      <StatsSection content={content.stats} />
-      <UpcomingEventsSection /> {/* This section remains dynamic */}
-      <AboutClubSection content={content.aboutClub} />
-      <PartnersCarouselSection content={content.partnersCarousel} />
-    </>
+    <div className="flex flex-col min-h-screen">
+      <Header />
+      <main className="flex-1">
+        <HeroSection content={content.hero} />
+        <StatsSection content={content.stats} />
+        <UpcomingEventsSection />
+        <AboutClubSection content={content.aboutClub} />
+        <PartnersCarouselSection content={content.partnersCarousel} />
+      </main>
+      <Footer />
+    </div>
   )
 }

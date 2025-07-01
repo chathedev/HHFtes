@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react"
 import { Button } from "@/components/ui/button"
 import { toast } from "@/components/ui/use-toast"
-import { type PageContent, loadContent } from "@/lib/content-store" // Use loadContent from lib
+import { type PageContent, loadContent } from "@/lib/content-store"
 import { saveEditorContentServer, resetEditorContentServer } from "@/app/actions/editor-content"
 
 // Import the section components
@@ -22,7 +22,7 @@ export default function EditorPage() {
     const fetchContent = async () => {
       setLoading(true)
       try {
-        const fetchedContent = await loadContent() // Load content using the shared loadContent
+        const fetchedContent = await loadContent()
         setContent(fetchedContent)
       } catch (error) {
         console.error("Failed to load content for editor:", error)
@@ -84,7 +84,7 @@ export default function EditorPage() {
     if (window.confirm("Är du säker på att du vill återställa allt innehåll till standard? Detta kan inte ångras.")) {
       setLoading(true)
       try {
-        const fetchedContent = await resetEditorContentServer() // This returns default content
+        const fetchedContent = await resetEditorContentServer()
         setContent(fetchedContent)
         toast({
           title: "Innehåll återställt!",
@@ -129,30 +129,30 @@ export default function EditorPage() {
       </div>
 
       {/* Live Preview of the website sections */}
-      <div className="pt-20">
-        {" "}
-        {/* Add padding-top to account for fixed header */}
-        <HeroSection
-          content={content.hero}
-          isEditing={true}
-          onContentChange={(field, value) => handleContentChange("hero", field, value)}
-        />
-        <StatsSection
-          content={content.stats}
-          isEditing={true}
-          onContentChange={(field, value) => handleContentChange("stats", field, value)}
-        />
-        <UpcomingEventsSection /> {/* This section is dynamic and not editable via content.json */}
-        <AboutClubSection
-          content={content.aboutClub}
-          isEditing={true}
-          onContentChange={(field, value) => handleContentChange("aboutClub", field, value)}
-        />
-        <PartnersCarouselSection
-          content={content.partnersCarousel}
-          isEditing={true}
-          onContentChange={(field, value) => handleContentChange("partnersCarousel", field, value)}
-        />
+      <div className="pt-20 bg-gray-100 min-h-screen">
+        <div className="max-w-screen-lg mx-auto bg-white shadow-lg border-x border-gray-200">
+          <HeroSection
+            content={content.hero}
+            isEditing={true}
+            onContentChange={(field, value) => handleContentChange("hero", field, value)}
+          />
+          <StatsSection
+            content={content.stats}
+            isEditing={true}
+            onContentChange={(field, value) => handleContentChange("stats", field, value)}
+          />
+          <UpcomingEventsSection /> {/* This section is dynamic and not editable via content.json */}
+          <AboutClubSection
+            content={content.aboutClub}
+            isEditing={true}
+            onContentChange={(field, value) => handleContentChange("aboutClub", field, value)}
+          />
+          <PartnersCarouselSection
+            content={content.partnersCarousel}
+            isEditing={true}
+            onContentChange={(field, value) => handleContentChange("partnersCarousel", field, value)}
+          />
+        </div>
       </div>
     </div>
   )

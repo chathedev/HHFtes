@@ -1,5 +1,7 @@
 "use client"
 
+import type React from "react"
+
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import Image from "next/image"
@@ -8,13 +10,13 @@ import { usePathname } from "next/navigation"
 
 function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
-  const [scrolled, setScrolled] = useState(false) // New state for scroll
+  const [scrolled, setScrolled] = useState(false)
   const pathname = usePathname()
+  const isEditorMode = pathname === "/editor"
 
   useEffect(() => {
     const handleScroll = () => {
       if (window.scrollY > 50) {
-        // Adjust scroll threshold as needed
         setScrolled(true)
       } else {
         setScrolled(false)
@@ -29,11 +31,18 @@ function Header() {
 
   const navLinks = [
     { name: "Hem", href: "/" },
-    { name: "Nyheter", href: "/nyheter" }, // Changed from Arena to Nyheter
+    { name: "Nyheter", href: "/nyheter" },
     { name: "Partners", href: "/partners" },
     { name: "Lag", href: "/lag" },
     { name: "Kontakt", href: "/kontakt" },
   ]
+
+  const handleLinkClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    if (isEditorMode) {
+      e.preventDefault()
+      // Optionally, show a toast or message that navigation is disabled in editor mode
+    }
+  }
 
   return (
     <header
@@ -48,13 +57,16 @@ function Header() {
 `}
     >
       <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-        <Link href="/" className="flex items-center gap-3">
+        <Link
+          href="/"
+          className={`flex items-center gap-3 ${isEditorMode ? "pointer-events-none" : ""}`}
+          onClick={handleLinkClick}
+        >
           <div className="relative w-12 h-12">
             <Image src="/logo.png" alt="Härnösands HF Logo" fill className="object-contain" priority />
           </div>
           <div>
             <div className="font-bold text-xl">Härnösands HF</div>
-            {/* Removed "Förening" text */}
           </div>
         </Link>
 
@@ -75,7 +87,9 @@ function Header() {
               href={link.href}
               className={`relative text-lg font-medium py-2 group transition-colors duration-300
                 ${pathname === link.href ? "text-orange-500" : "text-white hover:text-gray-300"}
+                ${isEditorMode ? "pointer-events-none cursor-default" : ""}
               `}
+              onClick={handleLinkClick}
             >
               {link.name}
               <span
@@ -97,8 +111,12 @@ function Header() {
               href={link.href}
               className={`relative text-lg font-medium py-2
                 ${pathname === link.href ? "text-orange-500" : "text-white hover:text-gray-300"}
+                ${isEditorMode ? "pointer-events-none cursor-default" : ""}
               `}
-              onClick={() => setIsMenuOpen(false)} // Close menu on link click
+              onClick={(e) => {
+                handleLinkClick(e)
+                setIsMenuOpen(false) // Close menu on link click
+              }}
             >
               {link.name}
             </Link>
