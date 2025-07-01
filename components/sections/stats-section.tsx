@@ -1,89 +1,94 @@
 "use client"
-
-import type React from "react"
-
-import { Users, Trophy, Award, History } from "lucide-react"
+import { Users, Trophy, CalendarDays } from "lucide-react"
 import type { PageContent } from "@/lib/content-store"
+import { cn } from "@/lib/utils"
 
 interface StatsSectionProps {
-  content: PageContent["stats"]
+  className?: string
   isEditing?: boolean
-  onContentChange?: (field: keyof PageContent["stats"], value: string | number) => void
+  content: PageContent["stats"]
+  onContentChange?: (newContent: any) => void
 }
 
-export default function StatsSection({ content, isEditing = false, onContentChange }: StatsSectionProps) {
-  const handleNumberChange = (field: keyof PageContent["stats"], e: React.ChangeEvent<HTMLDivElement>) => {
+export function StatsSection({ className, isEditing = false, content, onContentChange }: StatsSectionProps) {
+  const handleChange = (field: string, value: any) => {
     if (onContentChange) {
-      const value = Number.parseInt(e.currentTarget.innerText, 10)
-      if (!isNaN(value)) {
-        onContentChange(field, value)
-      }
-    }
-  }
-
-  const handleTextChange = (field: keyof PageContent["stats"], e: React.ChangeEvent<HTMLDivElement>) => {
-    if (onContentChange) {
-      onContentChange(field, e.currentTarget.innerText)
+      onContentChange({
+        ...content,
+        [field]: value,
+      })
     }
   }
 
   return (
-    <section className="bg-green-600 text-white py-12">
-      <div className="container mx-auto px-4">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+    <section className={cn("py-12 md:py-16 lg:py-20 bg-gray-50", className)}>
+      <div className="container px-4 md:px-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
           <div className="flex flex-col items-center">
-            <Users className="w-12 h-12 mb-2" />
-            <div
-              className="text-4xl font-bold"
-              contentEditable={isEditing}
-              suppressContentEditableWarning={true}
-              onBlur={(e) => handleNumberChange("totalTeams", e)}
-            >
-              {content.totalTeams}
+            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 mb-4">
+              <Users className="h-8 w-8 text-primary" />
             </div>
-            <div className="text-sm">Totalt Lag</div>
+            <div className="space-y-2">
+              <h3 className="text-3xl font-bold">
+                {isEditing ? (
+                  <input
+                    type="number"
+                    value={content.totalTeams}
+                    onChange={(e) => handleChange("totalTeams", Number.parseInt(e.target.value))}
+                    className="w-20 text-center border rounded px-2"
+                  />
+                ) : (
+                  content.totalTeams
+                )}
+              </h3>
+              <p className="text-muted-foreground">Totalt antal lag</p>
+            </div>
           </div>
-
           <div className="flex flex-col items-center">
-            <Trophy className="w-12 h-12 mb-2" />
-            <div
-              className="text-4xl font-bold"
-              contentEditable={isEditing}
-              suppressContentEditableWarning={true}
-              onBlur={(e) => handleNumberChange("aTeams", e)}
-            >
-              {content.aTeams}
+            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 mb-4">
+              <Trophy className="h-8 w-8 text-primary" />
             </div>
-            <div className="text-sm">A-lag</div>
+            <div className="space-y-2">
+              <h3 className="text-3xl font-bold">
+                {isEditing ? (
+                  <input
+                    type="number"
+                    value={content.aTeams}
+                    onChange={(e) => handleChange("aTeams", Number.parseInt(e.target.value))}
+                    className="w-20 text-center border rounded px-2"
+                  />
+                ) : (
+                  content.aTeams
+                )}
+              </h3>
+              <p className="text-muted-foreground">A-lag</p>
+            </div>
           </div>
-
           <div className="flex flex-col items-center">
-            <Award className="w-12 h-12 mb-2" />
-            <div
-              className="text-4xl font-bold"
-              contentEditable={isEditing}
-              suppressContentEditableWarning={true}
-              onBlur={(e) => handleNumberChange("youthTeams", e)}
-            >
-              {content.youthTeams}
+            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 mb-4">
+              <CalendarDays className="h-8 w-8 text-primary" />
             </div>
-            <div className="text-sm">Ungdomslag</div>
-          </div>
-
-          <div className="flex flex-col items-center">
-            <History className="w-12 h-12 mb-2" />
-            <div
-              className="text-4xl font-bold"
-              contentEditable={isEditing}
-              suppressContentEditableWarning={true}
-              onBlur={(e) => handleTextChange("historyYears", e)}
-            >
-              {content.historyYears}
+            <div className="space-y-2">
+              <h3 className="text-3xl font-bold">
+                {isEditing ? (
+                  <input
+                    type="number"
+                    value={content.youthTeams}
+                    onChange={(e) => handleChange("youthTeams", Number.parseInt(e.target.value))}
+                    className="w-20 text-center border rounded px-2"
+                  />
+                ) : (
+                  content.youthTeams
+                )}
+              </h3>
+              <p className="text-muted-foreground">Ungdomslag</p>
             </div>
-            <div className="text-sm">År av Historia</div>
           </div>
         </div>
       </div>
     </section>
   )
 }
+
+// Add default export that points to the named export for backward compatibility
+export default StatsSection

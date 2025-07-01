@@ -1,207 +1,155 @@
 "use client"
-
-import type React from "react"
-
 import Image from "next/image"
 import Link from "next/link"
-import { allPartners, type Partner } from "@/lib/partners-data"
-import { Star, Plus, Minus } from "lucide-react"
-import { Card } from "@/components/ui/card"
+import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
-import { useState } from "react"
-import type { PageContent } from "@/lib/content-store"
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel"
 
 interface PartnersCarouselSectionProps {
-  content: PageContent["partnersCarousel"]
+  className?: string
   isEditing?: boolean
-  onContentChange?: (field: keyof PageContent["partnersCarousel"], value: string | number) => void
+  content: {
+    title: string
+    description: string
+    callToActionTitle: string
+    callToActionDescription: string
+    callToActionLinkText: string
+    callToActionLink: string
+  }
+  onContentChange?: (newContent: any) => void
 }
 
-export default function PartnersCarouselSection({
-  content,
+export function PartnersCarouselSection({
+  className,
   isEditing = false,
+  content,
   onContentChange,
 }: PartnersCarouselSectionProps) {
-  const [openTier, setOpenTier] = useState<string | null>("Diamantpartner") // Default to Diamantpartner open
-  const [hoveredCardId, setHoveredCardId] = useState<string | null>(null) // State to manage hovered card
-
-  const handleToggle = (tierName: string) => {
-    setOpenTier((prevOpenTier) => (prevOpenTier === tierName ? null : tierName))
-  }
-
-  const handleTextChange = (field: keyof PageContent["partnersCarousel"], e: React.ChangeEvent<HTMLDivElement>) => {
+  const handleChange = (field: string, value: string) => {
     if (onContentChange) {
-      onContentChange(field, e.currentTarget.innerText)
+      onContentChange({
+        ...content,
+        [field]: value,
+      })
     }
   }
 
-  const handleLinkChange = (field: keyof PageContent["partnersCarousel"], e: React.ChangeEvent<HTMLInputElement>) => {
-    if (onContentChange) {
-      onContentChange(field, e.target.value)
-    }
-  }
-
-  const partnersForDisplay = allPartners.filter((p) => p.visibleInCarousel)
-
-  const partnersByTier: Record<string, Partner[]> = partnersForDisplay.reduce(
-    (acc, partner) => {
-      if (!acc[partner.tier]) {
-        acc[partner.tier] = []
-      }
-      acc[partner.tier].push(partner)
-      return acc
-    },
-    {} as Record<string, Partner[]>,
-  )
-
-  const tierOrder = ["Diamantpartner", "Platinapartner", "Guldpartner", "Silverpartner", "Bronspartner"]
+  // Sample partner logos for demonstration
+  const partnerLogos = [
+    "/placeholder-logo.png",
+    "/placeholder-logo.png",
+    "/placeholder-logo.png",
+    "/placeholder-logo.png",
+    "/placeholder-logo.png",
+    "/placeholder-logo.png",
+  ]
 
   return (
-    <section className="py-16 bg-gray-50">
-      <div className="container mx-auto px-4">
-        <h2 className="text-4xl font-bold text-center mb-2">
-          <span
-            contentEditable={isEditing}
-            suppressContentEditableWarning={true}
-            onBlur={(e) => handleTextChange("title", e)}
-          >
-            {content.title.split(" ")[0]}{" "}
-          </span>
-          <span className="text-orange-500">
-            <span
-              contentEditable={isEditing}
-              suppressContentEditableWarning={true}
-              onBlur={(e) => handleTextChange("title", e)}
-            >
-              {content.title.split(" ").slice(1).join(" ")}
-            </span>
-          </span>
-        </h2>
-        <p
-          className="text-center text-gray-600 mb-12 max-w-2xl mx-auto"
-          contentEditable={isEditing}
-          suppressContentEditableWarning={true}
-          onBlur={(e) => handleTextChange("description", e)}
-        >
-          {content.description}
-        </p>
-
-        {tierOrder.map(
-          (tierName) =>
-            partnersByTier[tierName] && (
-              <section key={tierName} className="mb-8 border-b border-gray-200 pb-4">
-                <div
-                  className="flex justify-between items-center mb-4 cursor-pointer"
-                  onClick={() => handleToggle(tierName)}
-                >
-                  <h3 className="text-3xl font-bold text-green-600">{tierName}</h3>
-                  <Button variant="ghost" size="icon" aria-expanded={openTier === tierName}>
-                    {openTier === tierName ? (
-                      <Minus className="w-6 h-6 text-green-700" />
-                    ) : (
-                      <Plus className="w-6 h-6 text-green-700" />
-                    )}
-                  </Button>
-                </div>
-                {openTier === tierName && (
-                  <div className="flex justify-center animate-fade-in">
-                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
-                      {partnersByTier[tierName].map((partner) => {
-                        const isDiamant = partner.tier === "Diamantpartner"
-                        const isHighcon = partner.id === "highcon"
-                        return (
-                          <div
-                            key={partner.id}
-                            className="relative group w-full h-36"
-                            onMouseEnter={() => setHoveredCardId(partner.id)}
-                            onMouseLeave={() => setHoveredCardId(null)}
-                          >
-                            <Card
-                              className={`p-4 shadow-lg rounded-lg flex flex-col items-center justify-center h-full w-full text-center
-                                ${isDiamant ? "border-2 border-yellow-500" : "bg-white/80"}
-                              `}
-                            >
-                              {isDiamant && (
-                                <Star className="absolute top-1 right-1 w-5 h-5 text-yellow-500 fill-yellow-500" />
-                              )}
-                              <div className={`relative w-full mb-2 ${isHighcon ? "h-24" : "h-20"}`}>
-                                <Image
-                                  src={partner.src || "/placeholder.svg"}
-                                  alt={partner.alt}
-                                  fill
-                                  unoptimized
-                                  className="object-contain transition-transform duration-300 group-hover:scale-105"
-                                />
-                              </div>
-                              <h4 className={`text-sm font-semibold ${isDiamant ? "text-gray-900" : "text-gray-800"}`}>
-                                {partner.alt}
-                              </h4>
-
-                              {/* Hover Overlay */}
-                              {hoveredCardId === partner.id && partner.linkUrl && (
-                                <div className="absolute inset-0 bg-black bg-opacity-70 flex items-center justify-center rounded-lg transition-opacity duration-300 opacity-0 group-hover:opacity-100">
-                                  <Button
-                                    onClick={() => window.open(partner.linkUrl, "_blank")}
-                                    className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-md"
-                                  >
-                                    Gå till
-                                  </Button>
-                                </div>
-                              )}
-                            </Card>
-                          </div>
-                        )
-                      })}
-                    </div>
-                  </div>
-                )}
-              </section>
-            ),
-        )}
-
-        <section className="bg-green-700 text-white p-8 rounded-lg shadow-lg text-center mt-12">
-          <h2
-            className="text-3xl font-bold mb-4"
-            contentEditable={isEditing}
-            suppressContentEditableWarning={true}
-            onBlur={(e) => handleTextChange("callToActionTitle", e)}
-          >
-            {content.callToActionTitle}
+    <section className={cn("py-12 md:py-16 lg:py-20", className)}>
+      <div className="container px-4 md:px-6">
+        <div className="flex flex-col items-center text-center mb-10">
+          <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl mb-4">
+            {isEditing ? (
+              <input
+                type="text"
+                value={content.title}
+                onChange={(e) => handleChange("title", e.target.value)}
+                className="w-full text-center border rounded px-2"
+              />
+            ) : (
+              content.title
+            )}
           </h2>
-          <p
-            className="text-lg mb-8"
-            contentEditable={isEditing}
-            suppressContentEditableWarning={true}
-            onBlur={(e) => handleTextChange("callToActionDescription", e)}
-          >
-            {content.callToActionDescription}
+          <p className="max-w-[700px] text-gray-500 md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
+            {isEditing ? (
+              <textarea
+                value={content.description}
+                onChange={(e) => handleChange("description", e.target.value)}
+                className="w-full text-center border rounded px-2"
+                rows={3}
+              />
+            ) : (
+              content.description
+            )}
           </p>
-          <div className="flex flex-col sm:flex-row justify-center gap-4">
-            <Link
-              href={content.callToActionLink}
-              className="bg-orange-500 hover:bg-orange-600 text-white px-8 py-3 rounded-md"
-            >
-              <span
-                contentEditable={isEditing}
-                suppressContentEditableWarning={true}
-                onBlur={(e) => handleTextChange("callToActionLinkText", e)}
-              >
-                {content.callToActionLinkText}
-              </span>
-              {isEditing && (
-                <input
-                  type="text"
-                  value={content.callToActionLink}
-                  onChange={(e) => handleLinkChange("callToActionLink", e)}
-                  className="ml-2 p-1 text-xs text-gray-800 bg-white rounded"
-                  placeholder="Länk"
-                  onClick={(e) => e.stopPropagation()} // Prevent link click
-                />
-              )}
-            </Link>
+        </div>
+
+        <Carousel className="w-full max-w-5xl mx-auto">
+          <CarouselContent>
+            {partnerLogos.map((logo, index) => (
+              <CarouselItem key={index} className="md:basis-1/3 lg:basis-1/4">
+                <div className="p-4">
+                  <div className="flex items-center justify-center h-24 bg-white rounded-lg shadow-sm p-4">
+                    <Image
+                      src={logo || "/placeholder.svg"}
+                      alt={`Partner ${index + 1}`}
+                      width={120}
+                      height={60}
+                      className="object-contain"
+                    />
+                  </div>
+                </div>
+              </CarouselItem>
+            ))}
+          </CarouselContent>
+          <div className="flex justify-center mt-6">
+            <CarouselPrevious className="relative mr-2" />
+            <CarouselNext className="relative ml-2" />
           </div>
-        </section>
+        </Carousel>
+
+        <div className="mt-16 bg-gray-50 rounded-lg p-8 max-w-3xl mx-auto">
+          <h3 className="text-2xl font-bold mb-4">
+            {isEditing ? (
+              <input
+                type="text"
+                value={content.callToActionTitle}
+                onChange={(e) => handleChange("callToActionTitle", e.target.value)}
+                className="w-full border rounded px-2"
+              />
+            ) : (
+              content.callToActionTitle
+            )}
+          </h3>
+          <p className="text-gray-500 mb-6">
+            {isEditing ? (
+              <textarea
+                value={content.callToActionDescription}
+                onChange={(e) => handleChange("callToActionDescription", e.target.value)}
+                className="w-full border rounded px-2"
+                rows={3}
+              />
+            ) : (
+              content.callToActionDescription
+            )}
+          </p>
+          {isEditing ? (
+            <div className="flex flex-col gap-2">
+              <input
+                type="text"
+                value={content.callToActionLinkText}
+                onChange={(e) => handleChange("callToActionLinkText", e.target.value)}
+                className="w-full border rounded px-2"
+                placeholder="Länktext"
+              />
+              <input
+                type="text"
+                value={content.callToActionLink}
+                onChange={(e) => handleChange("callToActionLink", e.target.value)}
+                className="w-full border rounded px-2"
+                placeholder="Länk URL"
+              />
+            </div>
+          ) : (
+            <Button asChild>
+              <Link href={content.callToActionLink}>{content.callToActionLinkText}</Link>
+            </Button>
+          )}
+        </div>
       </div>
     </section>
   )
 }
+
+// Add default export for backward compatibility
+export default PartnersCarouselSection

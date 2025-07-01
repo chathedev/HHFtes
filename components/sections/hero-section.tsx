@@ -1,158 +1,176 @@
 "use client"
 
+import { Label } from "@/components/ui/label"
+
 import type React from "react"
 
 import Image from "next/image"
 import Link from "next/link"
-import { ArrowRight } from "lucide-react"
-import type { PageContent } from "@/lib/content-store"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { useState } from "react"
 
 interface HeroSectionProps {
-  content: PageContent["hero"]
+  content: {
+    title: string
+    description: string
+    primaryButtonText: string
+    primaryButtonLink: string
+    secondaryButtonText: string
+    secondaryButtonLink: string
+    imageUrl: string
+  }
   isEditing?: boolean
-  onContentChange?: (field: keyof PageContent["hero"], value: string | number) => void
-  availablePages: { name: string; path: string }[]
+  setContent?: React.Dispatch<React.SetStateAction<any>>
 }
 
-export default function HeroSection({ content, isEditing = false, onContentChange, availablePages }: HeroSectionProps) {
-  const handleTextChange = (field: keyof PageContent["hero"], e: React.ChangeEvent<HTMLDivElement>) => {
-    if (onContentChange) {
-      onContentChange(field, e.currentTarget.innerText)
-    }
-  }
+const availablePages = [
+  { name: "Hem", path: "/" },
+  { name: "Nyheter", path: "/nyheter" },
+  { name: "Kalender", path: "/kalender" },
+  { name: "Lag", path: "/lag" },
+  { name: "Matcher", path: "/matcher" },
+  { name: "Partners", path: "/partners" },
+  { name: "Kontakt", path: "/kontakt" },
+  { name: "Logga in", path: "/login" },
+]
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (onContentChange) {
-      onContentChange("imageUrl", e.target.value)
-    }
-  }
+export function HeroSection({ content, isEditing = false, setContent }: HeroSectionProps) {
+  const [localContent, setLocalContent] = useState(content)
 
-  const handleLinkChange = (field: keyof PageContent["hero"], value: string) => {
-    if (onContentChange) {
-      onContentChange(field, value)
+  // Update local state when content prop changes (e.g., on save/reset from parent)
+  useState(() => {
+    setLocalContent(content)
+  }, [content])
+
+  const handleContentChange = (field: string, value: string | number) => {
+    const updatedContent = { ...localContent, [field]: value }
+    setLocalContent(updatedContent)
+    if (setContent) {
+      setContent((prev: any) => ({
+        ...prev,
+        hero: updatedContent,
+      }))
     }
   }
 
   return (
-    <section className="relative h-[600px] w-full overflow-hidden">
+    <section className="relative w-full h-[60vh] md:h-[70vh] lg:h-[80vh] flex items-center justify-center text-center">
       <Image
-        src={content.imageUrl || "/placeholder.svg"} // Re-introduced fallback for safety
-        alt="Härnösands FF fotbollsplan"
-        fill
-        className="object-cover object-center"
+        alt="Hero Background"
+        className="absolute inset-0 w-full h-full object-cover"
+        height={1080}
+        src={localContent.imageUrl || "/placeholder.svg?height=1080&width=1920&query=hero background"}
+        style={{
+          aspectRatio: "1920/1080",
+          objectFit: "cover",
+        }}
+        width={1920}
         priority
-        onContextMenu={(e) => e.preventDefault()}
-        onDragStart={(e) => e.preventDefault()}
       />
-      {isEditing && (
-        <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-          <span className="text-white text-lg font-bold">Redigera bild</span>
-        </div>
-      )}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
-      <div className="relative z-10 flex h-full items-end p-8 md:p-12">
-        <div className="max-w-3xl text-white">
-          <h1
-            className="text-4xl font-bold leading-tight md:text-6xl lg:text-7xl outline-none focus:ring-2 focus:ring-white rounded px-1"
-            contentEditable={isEditing}
-            suppressContentEditableWarning={true}
-            onBlur={(e) => handleTextChange("title", e)}
-          >
-            {content.title}
-          </h1>
-          <p
-            className="mt-4 text-lg md:text-xl lg:text-2xl outline-none focus:ring-2 focus:ring-white rounded px-1"
-            contentEditable={isEditing}
-            suppressContentEditableWarning={true}
-            onBlur={(e) => handleTextChange("description", e)}
-          >
-            {content.description}
-          </p>
-          <div className="mt-8 flex flex-col sm:flex-row flex-wrap gap-4">
-            {isEditing ? (
-              <div className="flex items-center gap-2 bg-green-600 text-white px-6 py-3 rounded-md font-medium">
-                <span
-                  contentEditable={isEditing}
-                  suppressContentEditableWarning={true}
-                  onBlur={(e) => handleTextChange("button1Text", e)}
-                  className="outline-none focus:ring-2 focus:ring-white rounded px-1"
-                >
-                  {content.button1Text}
-                </span>
-                <Select value={content.button1Link} onValueChange={(value) => handleLinkChange("button1Link", value)}>
-                  <SelectTrigger className="w-[120px] h-auto p-1 text-xs bg-white text-gray-800 outline-none focus:ring-2 focus:ring-green-300">
-                    <SelectValue placeholder="Välj sida" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {availablePages.map((page) => (
-                      <SelectItem key={page.path} value={page.path}>
-                        {page.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <ArrowRight className="ml-1 h-5 w-5" />
-              </div>
-            ) : (
-              <Link
-                href={content.button1Link}
-                className="inline-flex items-center justify-center rounded-md bg-green-600 px-6 py-3 text-base font-medium text-white shadow transition-colors hover:bg-green-700"
-              >
-                {content.button1Text}
-                <ArrowRight className="ml-2 h-5 w-5" />
-              </Link>
-            )}
-
-            {isEditing ? (
-              <div className="flex items-center gap-2 bg-white text-gray-800 px-6 py-3 rounded-md font-medium border border-gray-300">
-                <span
-                  contentEditable={isEditing}
-                  suppressContentEditableWarning={true}
-                  onBlur={(e) => handleTextChange("button2Text", e)}
-                  className="outline-none focus:ring-2 focus:ring-gray-300 rounded px-1"
-                >
-                  {content.button2Text}
-                </span>
-                <Select value={content.button2Link} onValueChange={(value) => handleLinkChange("button2Link", value)}>
-                  <SelectTrigger className="w-[120px] h-auto p-1 text-xs bg-white text-gray-800 outline-none focus:ring-2 focus:ring-gray-300">
-                    <SelectValue placeholder="Välj sida" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {availablePages.map((page) => (
-                      <SelectItem key={page.path} value={page.path}>
-                        {page.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            ) : (
-              <Link
-                href={content.button2Link}
-                className="inline-flex items-center justify-center rounded-md border border-gray-300 bg-white px-6 py-3 text-base font-medium text-gray-800 shadow-sm transition-colors hover:bg-gray-100"
-              >
-                {content.button2Text}
-              </Link>
-            )}
-          </div>
-        </div>
-      </div>
-      {isEditing && (
-        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-30 bg-white p-4 rounded-lg shadow-lg flex gap-2 items-center">
-          <label htmlFor="hero-image-url" className="sr-only">
-            Hero Bild URL
-          </label>
-          <input
-            id="hero-image-url"
-            type="text"
-            value={content.imageUrl}
-            onChange={handleImageChange}
-            placeholder="Hero Bild URL"
-            className="border p-2 rounded w-80 text-gray-800 outline-none focus:ring-2 focus:ring-blue-500"
+      <div className="absolute inset-0 bg-black/50" />
+      <div className="relative z-10 text-white px-4 md:px-6 max-w-4xl mx-auto">
+        {isEditing ? (
+          <Textarea
+            className="text-4xl md:text-6xl lg:text-7xl font-bold mb-4 bg-white/20 text-white text-center resize-none focus:ring-2 focus:ring-orange-400"
+            value={localContent.title}
+            onChange={(e) => handleContentChange("title", e.target.value)}
+            rows={2}
           />
+        ) : (
+          <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold mb-4">{localContent.title}</h1>
+        )}
+        {isEditing ? (
+          <Textarea
+            className="text-lg md:text-xl lg:text-2xl mb-8 bg-white/20 text-white text-center resize-none focus:ring-2 focus:ring-orange-400"
+            value={localContent.description}
+            onChange={(e) => handleContentChange("description", e.target.value)}
+            rows={3}
+          />
+        ) : (
+          <p className="text-lg md:text-xl lg:text-2xl mb-8">{localContent.description}</p>
+        )}
+        <div className="flex flex-col sm:flex-row justify-center gap-4">
+          {isEditing ? (
+            <div className="flex flex-col gap-2 items-center">
+              <Input
+                className="bg-white/20 text-white placeholder:text-gray-300 focus:ring-2 focus:ring-orange-400"
+                value={localContent.primaryButtonText}
+                onChange={(e) => handleContentChange("primaryButtonText", e.target.value)}
+                placeholder="Primary Button Text"
+              />
+              <Select
+                value={localContent.primaryButtonLink}
+                onValueChange={(value) => handleContentChange("primaryButtonLink", value)}
+              >
+                <SelectTrigger className="w-[180px] bg-white/20 text-white focus:ring-2 focus:ring-orange-400">
+                  <SelectValue placeholder="Välj sida" />
+                </SelectTrigger>
+                <SelectContent className="bg-white text-gray-900">
+                  {availablePages.map((page) => (
+                    <SelectItem key={page.path} value={page.path}>
+                      {page.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          ) : (
+            <Link href={localContent.primaryButtonLink}>
+              <Button className="px-8 py-3 text-lg bg-orange-500 hover:bg-orange-600 text-white">
+                {localContent.primaryButtonText}
+              </Button>
+            </Link>
+          )}
+          {isEditing ? (
+            <div className="flex flex-col gap-2 items-center">
+              <Input
+                className="bg-white/20 text-white placeholder:text-gray-300 focus:ring-2 focus:ring-orange-400"
+                value={localContent.secondaryButtonText}
+                onChange={(e) => handleContentChange("secondaryButtonText", e.target.value)}
+                placeholder="Secondary Button Text"
+              />
+              <Select
+                value={localContent.secondaryButtonLink}
+                onValueChange={(value) => handleContentChange("secondaryButtonLink", value)}
+              >
+                <SelectTrigger className="w-[180px] bg-white/20 text-white focus:ring-2 focus:ring-orange-400">
+                  <SelectValue placeholder="Välj sida" />
+                </SelectTrigger>
+                <SelectContent className="bg-white text-gray-900">
+                  {availablePages.map((page) => (
+                    <SelectItem key={page.path} value={page.path}>
+                      {page.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          ) : (
+            <Link href={localContent.secondaryButtonLink}>
+              <Button className="px-8 py-3 text-lg bg-transparent border border-white hover:bg-white/20 text-white">
+                {localContent.secondaryButtonText}
+              </Button>
+            </Link>
+          )}
         </div>
-      )}
+        {isEditing && (
+          <div className="mt-8 flex flex-col items-center gap-2">
+            <Label htmlFor="hero-image-url" className="text-white">
+              Hero Image URL
+            </Label>
+            <Input
+              id="hero-image-url"
+              className="w-full max-w-md bg-white/20 text-white placeholder:text-gray-300 focus:ring-2 focus:ring-orange-400"
+              value={localContent.imageUrl}
+              onChange={(e) => handleContentChange("imageUrl", e.target.value)}
+              placeholder="Enter image URL"
+            />
+          </div>
+        )}
+      </div>
     </section>
   )
 }

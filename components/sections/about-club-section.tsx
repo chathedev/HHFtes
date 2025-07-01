@@ -1,161 +1,97 @@
 "use client"
 
 import type React from "react"
+
 import Image from "next/image"
 import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
-import { Users, Trophy, CalendarDays } from "lucide-react"
-import type { PageContent } from "@/lib/content-store"
+import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
+import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { useState } from "react"
 
 interface AboutClubSectionProps {
-  content: PageContent["aboutClub"]
+  content: {
+    title: string
+    description: string
+    linkText: string
+    linkUrl: string
+    totalTeamsCallout: number
+    imageSrc: string
+  }
   isEditing?: boolean
-  onContentChange?: (field: keyof PageContent["aboutClub"], value: string | number) => void
-  availablePages: { name: string; path: string }[]
+  setContent?: React.Dispatch<React.SetStateAction<any>>
 }
 
-export default function AboutClubSection({
-  content,
-  isEditing = false,
-  onContentChange,
-  availablePages,
-}: AboutClubSectionProps) {
-  const handleTextChange = (field: keyof PageContent["aboutClub"], e: React.ChangeEvent<HTMLDivElement>) => {
-    if (onContentChange) {
-      onContentChange(field, e.currentTarget.innerText)
-    }
-  }
+const availablePages = [
+  { name: "Hem", path: "/" },
+  { name: "Nyheter", path: "/nyheter" },
+  { name: "Kalender", path: "/kalender" },
+  { name: "Lag", path: "/lag" },
+  { name: "Matcher", path: "/matcher" },
+  { name: "Partners", path: "/partners" },
+  { name: "Kontakt", path: "/kontakt" },
+  { name: "Logga in", path: "/login" },
+]
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (onContentChange) {
-      onContentChange("imageSrc", e.target.value)
-    }
-  }
+export function AboutClubSection({ content, isEditing = false, setContent }: AboutClubSectionProps) {
+  const [localContent, setLocalContent] = useState(content)
 
-  const handleLinkChange = (field: keyof PageContent["aboutClub"], value: string) => {
-    if (onContentChange) {
-      onContentChange(field, value)
-    }
-  }
+  // Update local state when content prop changes (e.g., on save/reset from parent)
+  useState(() => {
+    setLocalContent(content)
+  }, [content])
 
-  const handleNumberChange = (field: keyof PageContent["aboutClub"], e: React.ChangeEvent<HTMLInputElement>) => {
-    if (onContentChange) {
-      onContentChange(field, Number.parseInt(e.target.value) || 0)
+  const handleContentChange = (field: string, value: string | number) => {
+    const updatedContent = { ...localContent, [field]: value }
+    setLocalContent(updatedContent)
+    if (setContent) {
+      setContent((prev: any) => ({
+        ...prev,
+        aboutClub: updatedContent,
+      }))
     }
   }
 
   return (
-    <section className="py-12 md:py-20 bg-gray-50">
-      <div className="container mx-auto px-4">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
-          <div className="relative h-64 md:h-96 lg:h-[500px] rounded-lg overflow-hidden shadow-lg">
-            <Image
-              src={content.imageSrc || "/placeholder.svg"} // Re-introduced fallback for safety
-              alt="Härnösands FF lagbild"
-              fill
-              className="object-cover object-center"
-              onContextMenu={(e) => e.preventDefault()}
-              onDragStart={(e) => e.preventDefault()}
-            />
-            {isEditing && (
-              <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-                <span className="text-white text-lg font-bold">Redigera bild</span>
-              </div>
-            )}
-          </div>
+    <section className="w-full py-12 md:py-24 lg:py-32 bg-gray-50">
+      <div className="container px-4 md:px-6">
+        <div className="grid gap-8 lg:grid-cols-2 lg:gap-12 items-center">
           <div className="space-y-6">
-            <h2
-              className="text-3xl md:text-4xl font-bold text-gray-900 outline-none focus:ring-2 focus:ring-blue-500 rounded px-1"
-              contentEditable={isEditing}
-              suppressContentEditableWarning={true}
-              onBlur={(e) => handleTextChange("title", e)}
-            >
-              {content.title}
-            </h2>
-            <p
-              className="text-gray-700 text-lg leading-relaxed outline-none focus:ring-2 focus:ring-blue-500 rounded px-1"
-              contentEditable={isEditing}
-              suppressContentEditableWarning={true}
-              onBlur={(e) => handleTextChange("description", e)}
-            >
-              {content.description}
-            </p>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <Card className="text-center p-4 shadow-sm">
-                <CardContent className="flex flex-col items-center justify-center p-0">
-                  <Users className="h-8 w-8 text-green-600 mb-2" />
-                  <div className="text-3xl font-bold text-gray-900">
-                    {isEditing ? (
-                      <input
-                        type="number"
-                        value={content.totalTeamsCallout}
-                        onChange={(e) => handleNumberChange("totalTeamsCallout", e)}
-                        className="w-20 text-center border p-1 rounded outline-none focus:ring-2 focus:ring-green-300"
-                      />
-                    ) : (
-                      content.totalTeamsCallout
-                    )}
-                  </div>
-                  <p className="text-sm text-gray-600">Lag</p>
-                </CardContent>
-              </Card>
-              <Card className="text-center p-4 shadow-sm">
-                <CardContent className="flex flex-col items-center justify-center p-0">
-                  <Trophy className="h-8 w-8 text-orange-500 mb-2" />
-                  <div className="text-3xl font-bold text-gray-900">
-                    {isEditing ? (
-                      <input
-                        type="number"
-                        value={content.totalMembersCallout}
-                        onChange={(e) => handleNumberChange("totalMembersCallout", e)}
-                        className="w-20 text-center border p-1 rounded outline-none focus:ring-2 focus:ring-orange-300"
-                      />
-                    ) : (
-                      content.totalMembersCallout
-                    )}
-                  </div>
-                  <p className="text-sm text-gray-600">Medlemmar</p>
-                </CardContent>
-              </Card>
-              <Card className="text-center p-4 shadow-sm">
-                <CardContent className="flex flex-col items-center justify-center p-0">
-                  <CalendarDays className="h-8 w-8 text-blue-600 mb-2" />
-                  <div className="text-3xl font-bold text-gray-900">
-                    {isEditing ? (
-                      <input
-                        type="number"
-                        value={content.totalYearsCallout}
-                        onChange={(e) => handleNumberChange("totalYearsCallout", e)}
-                        className="w-20 text-center border p-1 rounded outline-none focus:ring-2 focus:ring-blue-300"
-                      />
-                    ) : (
-                      content.totalYearsCallout
-                    )}
-                  </div>
-                  <p className="text-sm text-gray-600">År i drift</p>
-                </CardContent>
-              </Card>
-            </div>
-            <div className="mt-6">
+            {isEditing ? (
+              <Textarea
+                className="text-3xl md:text-4xl font-bold bg-white border border-gray-300 focus:ring-2 focus:ring-orange-400 resize-none"
+                value={localContent.title}
+                onChange={(e) => handleContentChange("title", e.target.value)}
+                rows={1}
+              />
+            ) : (
+              <h2 className="text-3xl md:text-4xl font-bold">{localContent.title}</h2>
+            )}
+            {isEditing ? (
+              <Textarea
+                className="text-gray-600 md:text-lg bg-white border border-gray-300 focus:ring-2 focus:ring-orange-400 resize-none"
+                value={localContent.description}
+                onChange={(e) => handleContentChange("description", e.target.value)}
+                rows={5}
+              />
+            ) : (
+              <p className="text-gray-600 md:text-lg">{localContent.description}</p>
+            )}
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
               {isEditing ? (
-                <div className="flex items-center gap-2">
-                  <Button asChild className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-md font-medium">
-                    <span
-                      contentEditable={isEditing}
-                      suppressContentEditableWarning={true}
-                      onBlur={(e) => handleTextChange("linkText", e)}
-                      className="outline-none focus:ring-2 focus:ring-white rounded px-1"
-                    >
-                      {content.linkText}
-                    </span>
-                  </Button>
-                  <Select value={content.linkHref} onValueChange={(value) => handleLinkChange("linkHref", value)}>
-                    <SelectTrigger className="w-[150px] h-auto p-1 text-sm bg-white text-gray-800 outline-none focus:ring-2 focus:ring-blue-300">
+                <div className="flex flex-col gap-2 w-full sm:w-auto">
+                  <Input
+                    className="bg-white border border-gray-300 focus:ring-2 focus:ring-orange-400"
+                    value={localContent.linkText}
+                    onChange={(e) => handleContentChange("linkText", e.target.value)}
+                    placeholder="Link Text"
+                  />
+                  <Select value={localContent.linkUrl} onValueChange={(value) => handleContentChange("linkUrl", value)}>
+                    <SelectTrigger className="w-full bg-white border border-gray-300 focus:ring-2 focus:ring-orange-400">
                       <SelectValue placeholder="Välj sida" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="bg-white text-gray-900">
                       {availablePages.map((page) => (
                         <SelectItem key={page.path} value={page.path}>
                           {page.name}
@@ -166,32 +102,55 @@ export default function AboutClubSection({
                 </div>
               ) : (
                 <Link
-                  href={content.linkHref}
-                  className="inline-flex items-center justify-center rounded-md bg-blue-600 px-6 py-3 text-base font-medium text-white shadow transition-colors hover:bg-blue-700"
+                  className="inline-flex h-10 items-center justify-center rounded-md bg-orange-500 px-6 text-sm font-medium text-white shadow transition-colors hover:bg-orange-600 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-orange-700"
+                  href={localContent.linkUrl}
                 >
-                  {content.linkText}
+                  {localContent.linkText}
                 </Link>
               )}
+              <div className="text-2xl font-bold text-orange-500">
+                {isEditing ? (
+                  <Input
+                    type="number"
+                    className="w-24 bg-white border border-gray-300 focus:ring-2 focus:ring-orange-400"
+                    value={localContent.totalTeamsCallout}
+                    onChange={(e) => handleContentChange("totalTeamsCallout", Number.parseInt(e.target.value) || 0)}
+                  />
+                ) : (
+                  localContent.totalTeamsCallout
+                )}{" "}
+                Lag
+              </div>
             </div>
+          </div>
+          <div className="relative h-[300px] md:h-[400px] lg:h-[500px] rounded-lg overflow-hidden">
+            <Image
+              alt="About Club"
+              className="object-cover w-full h-full"
+              height={500}
+              src={localContent.imageSrc || "/placeholder.svg?height=500&width=800&query=about club image"}
+              style={{
+                aspectRatio: "800/500",
+                objectFit: "cover",
+              }}
+              width={800}
+            />
+            {isEditing && (
+              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 w-full max-w-md px-4">
+                <Label htmlFor="about-image-url" className="sr-only">
+                  About Image URL
+                </Label>
+                <Input
+                  id="about-image-url"
+                  className="w-full bg-white/90 text-gray-900 placeholder:text-gray-500 focus:ring-2 focus:ring-orange-400"
+                  value={localContent.imageSrc}
+                  onChange={(e) => handleContentChange("imageSrc", e.target.value)}
+                  placeholder="Enter image URL"
+                />
+              </div>
+            )}
           </div>
         </div>
-        {isEditing && (
-          <div className="mt-8 flex justify-center">
-            <div className="bg-white p-4 rounded-lg shadow-lg flex gap-2 items-center">
-              <label htmlFor="about-image-url" className="sr-only">
-                Om Bild URL
-              </label>
-              <input
-                id="about-image-url"
-                type="text"
-                value={content.imageSrc}
-                onChange={handleImageChange}
-                placeholder="Om Bild URL"
-                className="border p-2 rounded w-80 text-gray-800 outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-          </div>
-        )}
       </div>
     </section>
   )

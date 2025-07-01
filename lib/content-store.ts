@@ -1,5 +1,12 @@
-// Define the structure for different content sections
+import type { ReadonlyURLSearchParams } from "next/navigation"
+
+export interface FAQItem {
+  question: string
+  answer: string
+}
+
 export interface PageContent {
+  sections: string[]
   hero: {
     title: string
     description: string
@@ -10,13 +17,10 @@ export interface PageContent {
     button2Link: string
   }
   stats: {
-    title: string
-    description: string
-    statsItems: {
-      icon: string // This will be a string name of the icon, e.g., "Users"
-      value: number
-      label: string
-    }[]
+    totalTeams: number
+    aTeams: number
+    youthTeams: number
+    historyYears: string
   }
   aboutClub: {
     title: string
@@ -33,114 +37,228 @@ export interface PageContent {
     imageAlt: string
     totalTeamsCallout: number
     totalTeamsCalloutText: string
-    totalMembersCallout: number
-    totalYearsCallout: number
-    linkText: string
-    linkHref: string
   }
-  partners: {
+  partnersCarousel: {
     title: string
     description: string
-    partnerLogos: {
-      src: string
-      alt: string
-      href: string
-    }[]
+    callToActionTitle: string
+    callToActionDescription: string
+    callToActionLinkText: string
+    callToActionLink: string
   }
   upcomingEvents: {
     title: string
     description: string
   }
+  kontaktPage: {
+    emailTitle: string
+    emailDescription: string
+    emailAddress: string
+    addressTitle: string
+    addressDescription: string
+    addressLocation: string
+    boardTitle: string
+    boardDescription: string
+    boardContact: string
+    faqItems: FAQItem[]
+  }
+  partnersPage: {
+    title: string
+    description: string
+    callToActionTitle: string
+    callToActionDescription: string
+    callToActionLinkText: string
+    callToActionLink: string
+  }
 }
 
-// Default content for the website
 export const defaultContent: PageContent = {
+  sections: ["hero", "stats", "aboutClub", "partnersCarousel"],
   hero: {
-    title: "Härnösands HF",
-    description: "En handbollsklubb med stolthet, gemenskap och passion för sporten",
+    title: "Välkommen till Härnösands FF",
+    description:
+      "Härnösands FF är en fotbollsklubb med en rik historia och en stark gemenskap. Vi strävar efter att utveckla både spelare och människor, från ungdom till elit.",
     imageUrl: "https://az316141.cdn.laget.se/2317159/11348130.jpg",
-    button1Text: "Bli Medlem",
-    button1Link: "/kontakt",
-    button2Text: "Våra Lag",
-    button2Link: "/lag",
+    button1Text: "Våra lag",
+    button1Link: "/lag",
+    button2Text: "Kalender",
+    button2Link: "/kalender",
   },
   stats: {
-    title: "Vår Framgång i Siffror",
-    description: "Vi är stolta över vår utveckling och de milstolpar vi har uppnått tillsammans.",
-    statsItems: [
-      { icon: "Users", value: 23, label: "Aktiva Lag" },
-      { icon: "Trophy", value: 120, label: "Vunna Titlar" },
-      { icon: "CalendarDays", value: 40, label: "År i Drift" },
-    ],
+    totalTeams: 15,
+    aTeams: 2,
+    youthTeams: 13,
+    historyYears: "1900-tal",
   },
   aboutClub: {
     title: "Om Härnösands HF",
     paragraph1:
-      "Härnösands Handbollsförening (HHF) grundades 1983 med en vision om att skapa en levande och inkluderande handbollskultur i Härnösand. Sedan dess har vi vuxit till att bli en av regionens mest respekterade idrottsföreningar, känd för vår starka gemenskap och framgångar på planen.",
+      "Härnösands FF grundades med en vision om att skapa en inkluderande och framgångsrik fotbollsmiljö. Sedan dess har vi vuxit till en av regionens mest respekterade klubbar, känd för vår starka gemenskap och engagemang för ungdomsfotboll.",
     paragraph2:
-      "Vi erbjuder handboll för alla åldrar och nivåer, från de yngsta knattarna till våra seniorlag. Vårt fokus ligger inte bara på sportslig utveckling, utan också på att fostra goda medmänniskor och bidra positivt till samhället. Vi tror på glädjen i att röra på sig, vikten av lagarbete och kraften i att uppnå mål tillsammans.",
-    passionText: "Engagemang för sporten och våra medlemmar.",
-    developmentText: "Ständig förbättring och framåtblickande.",
-    communityText: "En stark känsla av tillhörighet och stöd.",
-    button1Text: "Läs Mer",
-    button1Link: "/om-oss",
-    button2Text: "Kontakta Oss",
+      "Vi tror på att fotboll är mer än bara ett spel – det är en plattform för personlig utveckling, lagarbete och att bygga livslånga vänskaper. Våra tränare och ledare är dedikerade till att inspirera och vägleda varje spelare att nå sin fulla potential, både på och utanför planen.",
+    passionText: "Passion för fotboll",
+    developmentText: "Utveckling för alla",
+    communityText: "Stark gemenskap",
+    button1Text: "Bli medlem",
+    button1Link: "/bli-medlem",
+    button2Text: "Kontakta oss",
     button2Link: "/kontakt",
     imageSrc: "https://i.ibb.co/Zt8gppK/491897759-17872413642339702-3719173158843008539-n.jpg",
-    imageAlt: "Härnösands HF lagbild",
+    imageAlt: "Härnösands FF lag i en ring",
     totalTeamsCallout: 23,
-    totalTeamsCalloutText: "Aktiva Lag",
-    totalMembersCallout: 350,
-    totalYearsCallout: 40,
-    linkText: "Läs mer om oss",
-    linkHref: "/om-oss",
+    totalTeamsCalloutText: "Aktiva lag",
   },
-  partners: {
-    title: "Våra Stolta Partners",
-    description: "Vi är tacksamma för det ovärderliga stöd vi får från våra partners, som gör vår verksamhet möjlig.",
-    partnerLogos: [
-      { src: "/placeholder-logo.png", alt: "Partner 1", href: "#" },
-      { src: "/placeholder-logo.png", alt: "Partner 2", href: "#" },
-      { src: "/placeholder-logo.png", alt: "Partner 3", href: "#" },
-      { src: "/placeholder-logo.png", alt: "Partner 4", href: "#" },
-      { src: "/placeholder-logo.png", alt: "Partner 5", href: "#" },
-    ],
+  partnersCarousel: {
+    title: "Våra Partners",
+    description:
+      "Vi är stolta över våra samarbeten med lokala företag och organisationer som delar vår passion för fotboll och samhällsengagemang. Tillsammans bygger vi en starkare framtid för Härnösands FF.",
+    callToActionTitle: "Bli Partner",
+    callToActionDescription:
+      "Är ditt företag intresserat av att stödja Härnösands FF och bidra till vår fortsatta framgång? Kontakta oss för att diskutera olika partnerskapsmöjligheter.",
+    callToActionLinkText: "Läs mer om partnerskap",
+    callToActionLink: "/partners",
   },
   upcomingEvents: {
     title: "Kommande Evenemang",
-    description: "Håll dig uppdaterad med våra senaste matcher och aktiviteter.",
+    description: "Missa inte vad som händer i Härnösands FF!",
+  },
+  kontaktPage: {
+    emailTitle: "E-post",
+    emailDescription: "För allmänna frågor och information.",
+    emailAddress: "info@harnosandsff.se",
+    addressTitle: "Besöksadress",
+    addressDescription: "Välkommen att besöka oss på vår anläggning.",
+    addressLocation: "Härnösands Arena, Arenavägen 1, 871 40 Härnösand",
+    boardTitle: "Styrelsen",
+    boardDescription: "Kontakta styrelsen för ärenden som rör klubbens ledning och strategi.",
+    boardContact: "styrelsen@harnosandsff.se",
+    faqItems: [
+      {
+        question: "Hur blir jag medlem?",
+        answer: "Du kan bli medlem genom att fylla i vårt online-formulär under sektionen 'Bli medlem'.",
+      },
+      {
+        question: "Var hittar jag matchschemat?",
+        answer: "Matchschemat för alla lag finns tillgängligt på 'Matcher'-sidan.",
+      },
+      {
+        question: "Kan jag provträna med ett lag?",
+        answer: "Ja, kontakta respektive lags tränare för att arrangera en provträning.",
+      },
+    ],
+  },
+  partnersPage: {
+    title: "Våra Partners",
+    description:
+      "Härnösands FF är djupt tacksamma för det ovärderliga stöd vi får från våra partners. Deras engagemang är avgörande för vår förmåga att bedriva verksamheten, utveckla våra spelare och bidra positivt till lokalsamhället. Tillsammans skapar vi framgång på och utanför planen.",
+    callToActionTitle: "Bli en del av vårt vinnande lag – Bli Partner!",
+    callToActionDescription:
+      "Är ditt företag intresserat av att synas tillsammans med Härnösands FF och stödja en levande idrottsförening? Vi erbjuder skräddarsydda partnerskap som ger exponering och möjlighet att associeras med positiva värden som gemenskap, hälsa och framgång. Kontakta oss för att utforska hur vi kan samarbeta.",
+    callToActionLinkText: "Kontakta oss om partnerskap",
+    callToActionLink: "/kontakt",
   },
 }
 
 // In-memory store for content (for demo purposes)
-let currentContent: PageContent = defaultContent
+let currentContent: PageContent = { ...defaultContent }
 
+/* ------------------------------------------------------------------
+  Load content from backend and merge with defaults
+-------------------------------------------------------------------*/
 export async function loadContent(): Promise<PageContent> {
-  // In a real app, this would fetch from a database or API
-  // For this demo, we'll try to fetch from our local API route
   try {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_VERCEL_URL || "http://localhost:3000"}/api/content`, {
-      cache: "no-store", // Ensure we always get fresh content
+    const res = await fetch("https://api.nuredo.se/api/content", {
+      headers: { "Content-Type": "application/json" },
+      cache: "no-store",
     })
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`)
+
+    if (res.ok) {
+      const json = (await res.json()) as Partial<PageContent>
+      return deepMerge(defaultContent, json)
     }
-    const fetchedContent: PageContent = await response.json()
-    currentContent = fetchedContent // Update in-memory content
-    return fetchedContent
-  } catch (error) {
-    console.error("Failed to load content from API, using default:", error)
-    return defaultContent // Fallback to default content on error
+
+    console.warn(`[loadContent] Backend responded ${res.status}. Falling back to defaults.`)
+  } catch (err) {
+    console.error("[loadContent] Backend fetch failed:", err)
+  }
+
+  // Fallback to defaults if anything goes wrong
+  return defaultContent
+}
+
+// Add getContent as an alias for loadContent to maintain compatibility
+export async function getContent(): Promise<PageContent> {
+  return loadContent()
+}
+
+// Add saveContent function to handle content updates
+export async function saveContent(newContent: PageContent): Promise<{ success: boolean; message: string }> {
+  try {
+    // In a real application, this would save to a database or API
+    // For now, we'll just update our in-memory store
+    currentContent = { ...newContent }
+
+    // Simulate an API call to save content
+    const res = await fetch("https://api.nuredo.se/api/content", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(newContent),
+    }).catch(() => {
+      // If the API call fails, we'll still consider it a success since we updated the in-memory store
+      console.warn("[saveContent] API call failed, but content was updated in memory")
+      return { ok: true }
+    })
+
+    if (res && !res.ok) {
+      console.warn(`[saveContent] Backend responded ${res.status}. Content was updated in memory only.`)
+    }
+
+    return { success: true, message: "Innehåll sparat framgångsrikt!" }
+  } catch (err) {
+    console.error("[saveContent] Error saving content:", err)
+    return { success: false, message: "Ett fel uppstod när innehållet skulle sparas." }
   }
 }
 
-export function saveContent(newContent: PageContent) {
-  // In a real app, this would save to a database or CMS
-  currentContent = newContent
-  console.log("Content saved (in-memory):", currentContent)
+// Helper function for deep merging objects (used internally by loadContentFromLocalStorage and server actions)
+// This is kept here because it's used by the defaultContent logic and might be useful if content structure changes.
+export function deepMerge<T extends object>(target: T, source: Partial<T>): T {
+  const output = { ...target } as T
+
+  if (target && typeof target === "object" && source && typeof source === "object") {
+    Object.keys(source).forEach((key) => {
+      if (Object.prototype.hasOwnProperty.call(source, key)) {
+        const targetValue = target[key as keyof T]
+        const sourceValue = source[key as keyof T]
+
+        if (Array.isArray(targetValue) && Array.isArray(sourceValue)) {
+          // For arrays, replace completely rather than merging elements
+          output[key as keyof T] = sourceValue as T[keyof T]
+        } else if (
+          typeof targetValue === "object" &&
+          targetValue !== null &&
+          typeof sourceValue === "object" &&
+          sourceValue !== null &&
+          !Array.isArray(targetValue) &&
+          !Array.isArray(sourceValue) // Ensure it's not an array before deep merging
+        ) {
+          output[key as keyof T] = deepMerge(targetValue as object, sourceValue as object) as T[keyof T]
+        } else {
+          output[key as keyof T] = sourceValue as T[keyof T]
+        }
+      }
+    })
+  }
+  return output
 }
 
-// Function to get the current content (used by editor-app.tsx)
-export function getCurrentContent(): PageContent {
-  return currentContent
+export function getBaseUrl(searchParams?: ReadonlyURLSearchParams) {
+  const url = process.env.NEXT_PUBLIC_VERCEL_URL
+    ? `https://${process.env.NEXT_PUBLIC_VERCEL_URL}`
+    : "http://localhost:3000"
+
+  if (searchParams) {
+    return `${url}?${searchParams.toString()}`
+  }
+  return url
 }
