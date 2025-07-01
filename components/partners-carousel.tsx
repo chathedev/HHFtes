@@ -6,7 +6,7 @@ import type { Partner } from "@/lib/content-types"
 import { Star, Plus, Minus } from "lucide-react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 
 interface PartnersCarouselProps {
   partners: Partner[]
@@ -15,6 +15,14 @@ interface PartnersCarouselProps {
 export default function PartnersCarousel({ partners }: PartnersCarouselProps) {
   const [openTier, setOpenTier] = useState<string | null>("Diamantpartner")
   const [hoveredCardId, setHoveredCardId] = useState<string | null>(null)
+
+  useEffect(() => {
+    console.log("PartnersCarousel: partners prop received:", partners)
+    console.log("PartnersCarousel: Array.isArray(partners):", Array.isArray(partners))
+    if (!Array.isArray(partners)) {
+      console.error("PartnersCarousel: partners prop is NOT an array!", partners)
+    }
+  }, [partners])
 
   const handleToggle = (tierName: string) => {
     setOpenTier((prevOpenTier) => (prevOpenTier === tierName ? null : tierName))

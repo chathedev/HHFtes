@@ -6,7 +6,7 @@ import Stats from "@/components/stats"
 import UpcomingEvents from "@/components/upcoming-events"
 import type { FullContent } from "@/lib/content-types"
 import { defaultContent } from "@/lib/default-content"
-import A from "@/components/about-club" // Declare the variable before using it
+import A from "@/components/about-club"
 
 const BACKEND_API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL || "https://api.nuredo.se"
 
@@ -18,8 +18,13 @@ async function getDynamicContent(): Promise<FullContent> {
       return defaultContent // Fallback to default content
     }
     const data = await res.json()
+
+    // Ensure partners is always an array. If data.partners is not an array,
+    // fall back to defaultContent.partners.
+    const fetchedPartners = Array.isArray(data.partners) ? data.partners : defaultContent.partners
+
     // Merge fetched content with default to ensure all fields exist
-    return { ...defaultContent, ...data, partners: data.partners || defaultContent.partners }
+    return { ...defaultContent, ...data, partners: fetchedPartners }
   } catch (error) {
     console.error("Error fetching dynamic content:", error)
     return defaultContent // Fallback to default content on error
@@ -34,7 +39,7 @@ function DynamicHomeContent({ content }: DynamicHomeContentProps) {
   const sectionComponents: { [key: string]: JSX.Element } = {
     hero: <Hero content={content.hero} />,
     stats: <Stats content={content.stats} />,
-    upcomingEvents: <UpcomingEvents />, // UpcomingEvents fetches its own data
+    upcomingEvents: <UpcomingEvents />,
     aboutClub: <A content={content.aboutClub} />,
     partnersCarousel: <PartnersCarouselClient partners={content.partners} />,
   }
@@ -58,4 +63,4 @@ export default async function Home() {
   return <DynamicHomeContent content={content} />
 }
 
-export { DynamicHomeContent } // Export for use in editor
+export { DynamicHomeContent }

@@ -12,25 +12,25 @@ export default function Stats({ content }: StatsProps) {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
           <div className="flex flex-col items-center">
             <Users className="w-12 h-12 mb-2" />
-            <div className="text-4xl font-bold">{content.totalTeams}</div>
+            <div className="text-4xl font-bold">{"23 lag!"}</div>
             <div className="text-sm">Totalt Lag</div>
           </div>
 
           <div className="flex flex-col items-center">
             <Trophy className="w-12 h-12 mb-2" />
-            <div className="text-4xl font-bold">{content.aTeams}</div>
+            <div className="text-4xl font-bold">{"2 A lag"}</div>
             <div className="text-sm">A-lag</div>
           </div>
 
           <div className="flex flex-col items-center">
             <Award className="w-12 h-12 mb-2" />
-            <div className="text-4xl font-bold">{content.youthTeams}</div>
+            <div className="text-4xl font-bold">{"21 ungdomslag!"}</div>
             <div className="text-sm">Ungdomslag</div>
           </div>
 
           <div className="flex flex-col items-center">
             <History className="w-12 h-12 mb-2" />
-            <div className="text-4xl font-bold">{content.yearsHistory}</div>
+            <div className="text-4xl font-bold">{"50+ år av historia!"}</div>
             <div className="text-sm">År av Historia</div>
           </div>
         </div>
