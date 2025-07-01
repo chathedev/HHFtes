@@ -2,37 +2,35 @@
 
 import { useState, useEffect, useCallback } from "react"
 import { Button } from "@/components/ui/button"
-import { Textarea } from "@/components/ui/textarea"
-import { Label } from "@/components/ui/label"
 import { toast } from "@/components/ui/use-toast"
-import { type PageContent, defaultContent } from "@/lib/content-store" // Keep defaultContent for client-side fallback/initial state
-import {
-  loadEditorContentServer,
-  saveEditorContentServer,
-  resetEditorContentServer,
-} from "@/app/actions/editor-content"
+import { type PageContent, loadContent } from "@/lib/content-store" // Use loadContent from lib
+import { saveEditorContentServer, resetEditorContentServer } from "@/app/actions/editor-content"
+
+// Import the section components
+import HeroSection from "@/components/sections/hero-section"
+import StatsSection from "@/components/sections/stats-section"
+import AboutClubSection from "@/components/sections/about-club-section"
+import PartnersCarouselSection from "@/components/sections/partners-carousel-section"
+import UpcomingEventsSection from "@/components/upcoming-events-section" // This one is not editable via content.json
 
 export default function EditorPage() {
-  const [contentJsonString, setContentJsonString] = useState<string>("")
+  const [content, setContent] = useState<PageContent | null>(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
 
-  // Load content on initial render
   useEffect(() => {
     const fetchContent = async () => {
       setLoading(true)
       try {
-        const fetchedContent = await loadEditorContentServer()
-        setContentJsonString(JSON.stringify(fetchedContent, null, 2))
+        const fetchedContent = await loadContent() // Load content using the shared loadContent
+        setContent(fetchedContent)
       } catch (error) {
-        console.error("Failed to load content:", error)
+        console.error("Failed to load content for editor:", error)
         toast({
           title: "Fel vid laddning",
-          description: "Kunde inte ladda innehåll från servern. Visar standardinnehåll.",
+          description: "Kunde inte ladda innehåll från servern.",
           variant: "destructive",
         })
-        // Fallback to default content if server fetch fails
-        setContentJsonString(JSON.stringify(defaultContent, null, 2))
       } finally {
         setLoading(false)
       }
@@ -40,42 +38,54 @@ export default function EditorPage() {
     fetchContent()
   }, [])
 
+  // Generic handler for content changes from child components
+  const handleContentChange = useCallback(
+    (sectionKey: keyof PageContent, field: keyof PageContent[keyof PageContent], value: string | number) => {
+      if (!content) return
+
+      setContent((prevContent) => {
+        if (!prevContent) return null
+
+        const updatedSection = {
+          ...prevContent[sectionKey],
+          [field]: value,
+        }
+
+        return {
+          ...prevContent,
+          [sectionKey]: updatedSection,
+        }
+      })
+    },
+    [content],
+  )
+
   const handleSave = useCallback(async () => {
+    if (!content) return
     setSaving(true)
-    try {
-      const contentToSave: PageContent = JSON.parse(contentJsonString)
-      const result = await saveEditorContentServer(contentToSave)
-      if (result.success) {
-        toast({
-          title: "Innehåll sparat!",
-          description: result.message,
-          variant: "default",
-        })
-      } else {
-        toast({
-          title: "Fel vid sparning",
-          description: result.message,
-          variant: "destructive",
-        })
-      }
-    } catch (error) {
-      console.error("Error parsing or saving content:", error)
+    const result = await saveEditorContentServer(content)
+    if (result.success) {
       toast({
-        title: "Felaktigt JSON-format",
-        description: "Kontrollera att innehållet är giltig JSON.",
+        title: "Innehåll sparat!",
+        description: result.message,
+        variant: "default",
+      })
+    } else {
+      toast({
+        title: "Fel vid sparning",
+        description: result.message,
         variant: "destructive",
       })
-    } finally {
-      setSaving(false)
     }
-  }, [contentJsonString])
+    setSaving(false)
+  }, [content])
 
   const handleReset = useCallback(async () => {
     if (window.confirm("Är du säker på att du vill återställa allt innehåll till standard? Detta kan inte ångras.")) {
       setLoading(true)
       try {
-        const fetchedContent = await resetEditorContentServer()
-        setContentJsonString(JSON.stringify(fetchedContent, null, 2))
+        const fetchedContent = await resetEditorContentServer() // This returns default content
+        setContent(fetchedContent)
         toast({
           title: "Innehåll återställt!",
           description: "Allt innehåll har återställts till standardvärden.",
@@ -98,14 +108,18 @@ export default function EditorPage() {
     return <div className="flex justify-center items-center min-h-screen">Laddar redigerare...</div>
   }
 
-  return (
-    <div className="container mx-auto px-4 py-8 pt-24">
-      <h1 className="text-4xl font-bold text-green-700 mb-8 text-center">Webbplatsredigerare</h1>
-      <p className="text-center text-gray-700 mb-12 max-w-2xl mx-auto">
-        Redigera webbplatsens innehåll direkt som JSON. Ändringar sparas till din backend.
-      </p>
+  if (!content) {
+    return (
+      <div className="flex justify-center items-center min-h-screen text-red-500">
+        Kunde inte ladda innehåll för redigering.
+      </div>
+    )
+  }
 
-      <div className="flex justify-center gap-4 mb-8">
+  return (
+    <div className="relative">
+      {/* Editor Controls */}
+      <div className="fixed top-0 left-0 right-0 bg-white shadow-md z-50 p-4 flex justify-center gap-4 border-b border-gray-200">
         <Button onClick={handleSave} disabled={saving} className="bg-orange-500 hover:bg-orange-600 text-white">
           {saving ? "Sparar..." : "Spara ändringar"}
         </Button>
@@ -114,20 +128,31 @@ export default function EditorPage() {
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 p-4">
-        <div>
-          <Label htmlFor="contentEditor" className="sr-only">
-            Redigera innehåll (JSON)
-          </Label>
-          <Textarea
-            id="contentEditor"
-            value={contentJsonString}
-            onChange={(e) => setContentJsonString(e.target.value)}
-            className="min-h-[600px] font-mono text-sm"
-            placeholder="Laddar innehåll..."
-            aria-label="Redigera webbplatsens innehåll som JSON"
-          />
-        </div>
+      {/* Live Preview of the website sections */}
+      <div className="pt-20">
+        {" "}
+        {/* Add padding-top to account for fixed header */}
+        <HeroSection
+          content={content.hero}
+          isEditing={true}
+          onContentChange={(field, value) => handleContentChange("hero", field, value)}
+        />
+        <StatsSection
+          content={content.stats}
+          isEditing={true}
+          onContentChange={(field, value) => handleContentChange("stats", field, value)}
+        />
+        <UpcomingEventsSection /> {/* This section is dynamic and not editable via content.json */}
+        <AboutClubSection
+          content={content.aboutClub}
+          isEditing={true}
+          onContentChange={(field, value) => handleContentChange("aboutClub", field, value)}
+        />
+        <PartnersCarouselSection
+          content={content.partnersCarousel}
+          isEditing={true}
+          onContentChange={(field, value) => handleContentChange("partnersCarousel", field, value)}
+        />
       </div>
     </div>
   )

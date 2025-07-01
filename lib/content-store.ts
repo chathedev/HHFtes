@@ -175,35 +175,6 @@ export async function loadContent(): Promise<PageContent> {
   return defaultContent
 }
 
-// No local storage functions needed as per new requirements
-// export function saveContentToLocalStorage(content: PageContent) {
-//   if (typeof window !== "undefined") {
-//     localStorage.setItem("hhf_website_content", JSON.stringify(content));
-//   }
-// }
-
-// export function loadContentFromLocalStorage(): PageContent {
-//   if (typeof window !== "undefined") {
-//     const savedContent = localStorage.getItem("hhf_website_content");
-//     if (savedContent) {
-//       try {
-//         const parsedContent = JSON.parse(savedContent);
-//         // Merge with default to ensure all new fields are present
-//         return deepMerge(defaultContent, parsedContent);
-//       } catch (e) {
-//         console.error("Failed to parse content from local storage, using default.", e);
-//       }
-//     }
-//   }
-//   return defaultContent;
-// }
-
-// export function resetContent() {
-//   if (typeof window !== "undefined") {
-//     localStorage.removeItem("hhf_website_content");
-//   }
-// }
-
 // Helper function for deep merging objects (used internally by loadContentFromLocalStorage and server actions)
 // This is kept here because it's used by the defaultContent logic and might be useful if content structure changes.
 export function deepMerge<T extends object>(target: T, source: Partial<T>): T {
