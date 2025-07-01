@@ -113,7 +113,7 @@ ToastDescription.displayName = "ToastDescription"
  * All toasts dispatched via your custom hook / context will render here.
  */
 export function Toaster() {
-  return <SonnerToaster position="bottom-right" richColors closeButton theme="system" />
+  return <SonnerToaster position="bottom-right" richColors closeButton theme="system" duration={4000} />
 }
 
 /* ────────────────────────────────────────────────────────────────────────── */

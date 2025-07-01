@@ -1,10 +1,3 @@
-/**
- * Central content store used by the editor & runtime rendering.
- *
- * NOTE: In a real-world app you would back this with a database or KV.
- * Here we keep everything in-memory for simplicity.
- */
-
 export interface PageContent {
   hero: {
     title: string
@@ -15,20 +8,16 @@ export interface PageContent {
     descriptionFontSizeClass: string
     backgroundImageUrl: string
     overlayColorClass: string
-    buttons: Array<{
+    buttons: {
       text: string
       href: string
       bgColorClass: string
       textColorClass: string
-    }>
+    }[]
   }
-  // Add other sections as needed…
 }
 
-/* -------------------------------------------------------------------------- */
-/*                                  DEFAULTS                                  */
-/* -------------------------------------------------------------------------- */
-
+/* ---------------------------- DEFAULT CONTENT --------------------------- */
 export const defaultContent: PageContent = {
   hero: {
     title: "Välkommen till Härnösands HF",
@@ -56,50 +45,31 @@ export const defaultContent: PageContent = {
   },
 }
 
-/* -------------------------------------------------------------------------- */
-/*                               HELPER UTILITIES                              */
-/* -------------------------------------------------------------------------- */
-
-/**
- * Deep-merge two objects (very small util; not production-ready for arrays etc.).
- */
+/* ----------------------------- UTILITIES -------------------------------- */
 export function deepMerge<T extends object>(base: T, patch: Partial<T>): T {
-  const output = { ...base } as T
-  for (const key of Object.keys(patch) as Array<keyof T>) {
-    const value = patch[key]
-    if (value && typeof value === "object" && !Array.isArray(value) && key in base) {
-      // @ts-ignore – safe recursive merge
-      output[key] = deepMerge(base[key] as any, value as any)
-    } else if (value !== undefined) {
-      output[key] = value as T[typeof key]
-    }
+  const out = { ...base } as T
+  for (const k in patch) {
+    // @ts-expect-error generic merge
+    out[k] =
+      typeof patch[k] === "object" && !Array.isArray(patch[k])
+        ? deepMerge(base[k], patch[k] as any)
+        : (patch[k] ?? base[k])
   }
-  return output
+  return out
 }
 
-/**
- * Load content from an API or localStorage.
- * Falls back to `defaultContent` on any error.
- */
+let currentContent: PageContent = structuredClone(defaultContent)
+
 export async function loadContent(): Promise<PageContent> {
-  try {
-    // Example fetch – replace with real endpoint if you have one.
-    const res = await fetch("/api/editor-content")
-    if (res.ok) {
-      const json = (await res.json()) as Partial<PageContent>
-      return deepMerge(defaultContent, json)
-    }
-    // eslint-disable-next-line no-empty
-  } catch {}
-  return structuredClone(defaultContent)
+  // In a real app fetch from DB / API.
+  return structuredClone(currentContent)
 }
 
-/** Reset to factory defaults (use in the editor’s “Återställ” button). */
 export function resetContent(): PageContent {
-  return structuredClone(defaultContent)
+  currentContent = structuredClone(defaultContent)
+  return currentContent
 }
 
-/** Resolve absolute base-URL both locally and on Vercel. */
 export function getBaseUrl(): string {
   if (typeof window !== "undefined") return ""
   return process.env.NEXT_PUBLIC_VERCEL_URL ? `https://${process.env.NEXT_PUBLIC_VERCEL_URL}` : "http://localhost:3000"
