@@ -2,8 +2,7 @@
 
 import { type PageContent, defaultContent } from "@/lib/content-store"
 
-// Use an environment variable for the backend API URL
-const BACKEND_API_URL = process.env.BACKEND_API_URL || "http://localhost:3001/api/content"
+const BACKEND_API_URL = "https://api.nuredo.se/api/content"
 
 // Helper function for deep merging objects (copied from lib/content-store.ts for server-side use)
 function deepMerge<T extends object>(target: T, source: Partial<T>): T {
@@ -23,7 +22,7 @@ function deepMerge<T extends object>(target: T, source: Partial<T>): T {
           typeof sourceValue === "object" &&
           sourceValue !== null &&
           !Array.isArray(targetValue) &&
-          !Array.isArray(sourceValue)
+          !ArrayOfArrays(sourceValue)
         ) {
           output[key as keyof T] = deepMerge(targetValue as object, sourceValue as object) as T[keyof T]
         } else {
@@ -33,6 +32,11 @@ function deepMerge<T extends object>(target: T, source: Partial<T>): T {
     })
   }
   return output
+}
+
+// Helper to check if a value is an array of arrays (to prevent deep merging arrays)
+function ArrayOfArrays(value: any): boolean {
+  return Array.isArray(value) && value.some((item) => Array.isArray(item))
 }
 
 export async function loadEditorContentServer(): Promise<PageContent> {
@@ -83,7 +87,7 @@ export async function saveEditorContentServer(content: PageContent): Promise<{ s
       return { success: false, message: `Kunde inte spara innehållet: ${errorData.message || response.statusText}` }
     }
   } catch (error) {
-    console.error("Network error during server-side content save:", error)
+    console.error("Network error during server-side content save, falling back to default content:", error)
     return { success: false, message: "Nätverksfel vid sparande av innehåll." }
   }
 }

@@ -89,7 +89,7 @@ function deepMerge<T extends object>(target: T, source: Partial<T>): T {
           typeof sourceValue === "object" &&
           sourceValue !== null &&
           !Array.isArray(targetValue) &&
-          !Array.isArray(sourceValue)
+          !ArrayOfArrays(sourceValue)
         ) {
           output[key as keyof T] = deepMerge(targetValue as object, sourceValue as object) as T[keyof T]
         } else {
@@ -99,6 +99,11 @@ function deepMerge<T extends object>(target: T, source: Partial<T>): T {
     })
   }
   return output
+}
+
+// Helper to check if a value is an array of arrays (to prevent deep merging arrays)
+function ArrayOfArrays(value: any): boolean {
+  return Array.isArray(value) && value.some((item) => Array.isArray(item))
 }
 
 // Default content for the website (should match public/default-content.json)
@@ -203,9 +208,7 @@ export async function loadContent(): Promise<PageContent> {
 
   // Server side → fetch from backend, merge with defaults
   try {
-    // Use an environment variable for the backend API URL
-    const backendApiUrl = process.env.BACKEND_API_URL || "http://localhost:3001/api/content"
-    const res = await fetch(backendApiUrl, {
+    const res = await fetch("https://api.nuredo.se/api/content", {
       // GET endpoint on your backend does NOT require auth
       headers: { "Content-Type": "application/json" },
       // 10 s timeout to avoid hanging builds
