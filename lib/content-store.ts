@@ -74,7 +74,7 @@ export const defaultContent: PageContent = {
     title: "Välkommen till Härnösands FF",
     description:
       "Härnösands FF är en fotbollsklubb med en rik historia och en stark gemenskap. Vi strävar efter att utveckla både spelare och människor, från ungdom till elit.",
-    imageUrl: "/placeholder.svg?height=800&width=1200",
+    imageUrl: "https://az316141.cdn.laget.se/2317159/11348130.jpg",
     button1Text: "Våra lag",
     button1Link: "/lag",
     button2Text: "Kalender",
@@ -99,9 +99,9 @@ export const defaultContent: PageContent = {
     button1Link: "/bli-medlem",
     button2Text: "Kontakta oss",
     button2Link: "/kontakt",
-    imageSrc: "/placeholder.svg?height=400&width=600",
+    imageSrc: "https://i.ibb.co/Zt8gppK/491897759-17872413642339702-3719173158843008539-n.jpg", // Updated about image URL
     imageAlt: "Härnösands FF lag i en ring",
-    totalTeamsCallout: 15,
+    totalTeamsCallout: 23,
     totalTeamsCalloutText: "Aktiva lag",
   },
   partnersCarousel: {
