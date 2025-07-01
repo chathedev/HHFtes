@@ -1,8 +1,8 @@
 {
   "sections": [
     "hero",
-    "stats",
     "upcomingEvents",
+    "stats",
     "aboutClub",
     "partnersCarousel"
   ],
