@@ -9,6 +9,7 @@ function stripHtml(html: string): string {
 }
 
 export async function GET() {
+  // Manually parsed data from the provided RSS XML snippet
   const newsData = [
     {
       title: "Årsmöte HHF",
@@ -141,7 +142,7 @@ export async function GET() {
       link: "https://www.laget.se/HarnosandsHF/News/7025098/Paminnelse-Kallelse-till-Arsmote-HHK-2022-08-22",
       pubDate: "Wed, 20 Jul 2022 18:00:00 GMT",
       description: stripHtml(
-        "Härmed kallas alla medlemmar i Härnösands handbollsklubb till ÅRSMÖTE.<br><br>Måndag den 22a augusti klockan 18.30<br>HHK kansli, SkepparKarlsgränd 11<br><br>Eventuella förslag eller motioner till årsmötet skall vara styrelsen tillhanda senast 2022-06-23, kan lämnas på kansliet.<br><br>Program: Sedvanliga årsmötesförhandlingar med information om bokslut, budget och verksamhetsplan för kommande säsong, val av ny styrelse. <br><br>Ett årsmöte är en förenings viktigaste möte där den enskilde medlemmen kan påverka hur föreningen skall arbeta under kommande säsong. Ofta är det våra spelare som är medlemmar men där är det föräldrarna som representerar på årsmötet.<br/><i>Publicerad: 2022-07-20 20:00</i>",
+        "Härmed kallas alla medlemmar i Härnösands handbollsklubb till ÅRSMÖTE.<br><br>Måndag den 22a augusti klockan 18.30<br>HHK kansli, SkepparKarlsgränd 11<br><br>Eventuella förslag eller motioner till årsmötet skall vara styrelsen tillhanda senast 2022-06-23, kan lämnas på kansliet.<br><br>Program: Sedvanliga årsmötesförhandlingar med information om bokslut, budget och verksamhetsplan för kommande säsong, val av ny styrelse. <br><br>Ett årsmöte är en förenings viktigaste möte där den enskilde medlemmen kan påverka hur föreningen skall arbeta under kommande säsong. Ofta är det våra spelare som är medlemmar men där är det föräldrarna som representerar på årsmötet.<br/><br/><i>Publicerad: 2022-07-20 20:00</i>",
       ),
       imageUrl: undefined,
     },
@@ -191,69 +192,32 @@ export async function GET() {
       imageUrl: "https://laget001.blob.core.windows.net/9867129_medium.jpg",
     },
     {
-      id: "5",
+      id: "1",
       title: "Storseger för Härnösands HF i säsongspremiären!",
       date: "2024-02-29",
       summary: "Härnösands HF inledde säsongen starkt med en övertygande seger på hemmaplan.",
       imageUrl: "/placeholder.svg?height=400&width=600",
-      link: "/nyheter/artikel-5",
     },
     {
-      id: "6",
+      id: "2",
       title: "Nyförvärv förstärker truppen inför vårsäsongen",
       date: "2024-02-25",
       summary: "Klubben presenterar stolt två nya spelare som ansluter till laget.",
       imageUrl: "/placeholder.svg?height=400&width=600",
-      link: "/nyheter/artikel-6",
     },
     {
-      id: "7",
+      id: "3",
       title: "Framgångsrik ungdomsturnering i Härnösand",
       date: "2024-02-20",
       summary: "Helgens ungdomsturnering lockade lag från hela regionen och blev en stor succé.",
       imageUrl: "/placeholder.svg?height=400&width=600",
-      link: "/nyheter/artikel-7",
     },
     {
-      id: "8",
+      id: "4",
       title: "Träningsläger i Spanien gav mersmak",
       date: "2024-02-15",
       summary: "A-laget har återvänt från ett intensivt och givande träningsläger i södra Spanien.",
       imageUrl: "/placeholder.svg?height=400&width=600",
-      link: "/nyheter/artikel-8",
-    },
-    {
-      id: "1",
-      date: "2024-07-15",
-      title: "Härnösands FF säkrar nyckelspelare inför höstsäsongen",
-      summary: "Klubben är glada att meddela att mittfältaren Anna Karlsson har skrivit på ett nytt tvåårskontrakt.",
-      imageUrl: "/placeholder.svg?height=200&width=300",
-      link: "/nyheter/artikel-1",
-    },
-    {
-      id: "2",
-      date: "2024-07-10",
-      title: "Framgångsrik ungdomsturnering i helgen",
-      summary: "Över 50 lag deltog i årets upplaga av Härnösands Ungdomscup, som bjöd på spännande matcher och glädje.",
-      imageUrl: "/placeholder.svg?height=200&width=300",
-      link: "/nyheter/artikel-2",
-    },
-    {
-      id: "3",
-      date: "2024-07-05",
-      title: "Herrlaget förbereder sig inför derbyt",
-      summary: "Intensiv träning pågår inför den kommande matchen mot ärkerivalerna Sundsvalls BK på lördag.",
-      imageUrl: "/placeholder.svg?height=200&width=300",
-      link: "/nyheter/artikel-3",
-    },
-    {
-      id: "4",
-      date: "2024-06-28",
-      title: "Nya partners ansluter till Härnösands FF",
-      summary:
-        "Vi välkomnar Stjärnbygg AB och Lokala Elbolaget som nya partners till klubben. Deras stöd är ovärderligt.",
-      imageUrl: "/placeholder.svg?height=200&width=300",
-      link: "/nyheter/artikel-4",
     },
   ]
 

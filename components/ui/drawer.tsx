@@ -1,5 +1,4 @@
 "use client"
-
 import * as React from "react"
 import { Drawer as DrawerPrimitive } from "vaul"
 
@@ -75,9 +74,9 @@ DrawerDescription.displayName = DrawerPrimitive.Description.displayName
 
 export {
   Drawer,
+  DrawerTrigger,
   DrawerPortal,
   DrawerOverlay,
-  DrawerTrigger,
   DrawerContent,
   DrawerHeader,
   DrawerFooter,

@@ -18,16 +18,13 @@
 # misc
 .DS_Store
 *.pem
+
+# debug
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-.env*.local
-.vercel/
-.turbo/
 
 # local env files
+.env*.local
+.vercel/output/
 .env
-.env.development.local
-.env.test.local
-.env.production.local
-.env.local

@@ -18,7 +18,7 @@ const InputOTP = React.forwardRef<React.ElementRef<typeof OTPInput>, OTPInputPro
 )
 InputOTP.displayName = "InputOTP"
 
-const InputOTPGroup = React.forwardRef<React.ElementRef<"div">, React.ComponentPropsWithoutRef<"div">>(
+const InputOTPGroup = React.forwardRef<React.ElementRef<"div">, React.HTMLAttributes<HTMLDivElement>>(
   ({ className, ...props }, ref) => <div ref={ref} className={cn("flex items-center", className)} {...props} />,
 )
 InputOTPGroup.displayName = "InputOTPGroup"
@@ -40,7 +40,7 @@ const InputOTPSlot = React.forwardRef<
 ))
 InputOTPSlot.displayName = "InputOTPSlot"
 
-const InputOTPSeparator = React.forwardRef<React.ElementRef<"div">, React.ComponentPropsWithoutRef<"div">>(
+const InputOTPSeparator = React.forwardRef<React.ElementRef<"div">, React.HTMLAttributes<HTMLDivElement>>(
   ({ ...props }, ref) => (
     <div ref={ref} role="separator" {...props}>
       <Minus />

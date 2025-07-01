@@ -1,94 +1,78 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Users, Shirt, Shield } from "lucide-react"
+import Image from "next/image"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 
 interface Team {
   id: string
   name: string
-  category: string
   description: string
+  imageUrl: string
   coach: string
-  playersCount: number
+  league: string
 }
 
 const teams: Team[] = [
   {
-    id: "herr-a",
-    name: "Herrlaget A",
-    category: "Senior",
-    description: "Vårt flaggskeppslag som tävlar i Division 3.",
+    id: "1",
+    name: "Herrlaget",
+    description: "Vårt seniorlag på herrsidan, tävlar i Division 2 Norra.",
+    imageUrl: "/placeholder.svg?height=400&width=600",
     coach: "Erik Johansson",
-    playersCount: 25,
+    league: "Division 2 Norra",
   },
   {
-    id: "dam-a",
-    name: "Damlaget A",
-    category: "Senior",
-    description: "Vårt damlag som spelar i Division 2.",
-    coach: "Maria Andersson",
-    playersCount: 22,
+    id: "2",
+    name: "Damlaget",
+    description: "Vårt seniorlag på damsidan, kämpar i Division 1 Mellansvenska.",
+    imageUrl: "/placeholder.svg?height=400&width=600",
+    coach: "Anna Svensson",
+    league: "Division 1 Mellansvenska",
   },
   {
-    id: "u19-herr",
-    name: "Pojkar U19",
-    category: "Ungdom",
-    description: "Framtidens stjärnor i vår U19-trupp.",
-    coach: "Jonas Lindgren",
-    playersCount: 20,
+    id: "3",
+    name: "Pojkar 16",
+    description: "Ungdomslag för pojkar födda 2008.",
+    imageUrl: "/placeholder.svg?height=400&width=600",
+    coach: "Jonas Karlsson",
+    league: "Ungdomsserie P16",
   },
   {
-    id: "u17-dam",
-    name: "Flickor U17",
-    category: "Ungdom",
-    description: "Vårt lovande U17-lag för tjejer.",
-    coach: "Sofia Karlsson",
-    playersCount: 18,
-  },
-  {
-    id: "u15-herr",
-    name: "Pojkar U15",
-    category: "Ungdom",
-    description: "Utvecklingslaget för pojkar 15 år och yngre.",
-    coach: "Patrik Nilsson",
-    playersCount: 20,
-  },
-  {
-    id: "u13-dam",
-    name: "Flickor U13",
-    category: "Ungdom",
-    description: "Vårt yngsta tävlingslag för flickor.",
-    coach: "Lena Bergström",
-    playersCount: 15,
+    id: "4",
+    name: "Flickor 14",
+    description: "Ungdomslag för flickor födda 2010.",
+    imageUrl: "/placeholder.svg?height=400&width=600",
+    coach: "Maria Lindgren",
+    league: "Ungdomsserie F14",
   },
 ]
 
 export default function LagPage() {
   return (
-    <div className="container mx-auto px-4 py-8 md:py-12">
-      <h1 className="text-4xl font-bold text-center text-green-700 mb-8">Våra Lag</h1>
+    <div className="container mx-auto px-4 py-8 pt-24">
+      <h1 className="text-4xl font-bold text-center mb-12 text-gray-800">Våra Lag</h1>
 
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
         {teams.map((team) => (
-          <Card key={team.id} className="shadow-md hover:shadow-lg transition-shadow">
-            <CardHeader>
-              <CardTitle className="text-green-600">{team.name}</CardTitle>
-              <p className="text-sm text-gray-500">{team.category}</p>
+          <Card key={team.id} className="bg-white shadow-lg rounded-lg overflow-hidden">
+            <div className="relative w-full h-48">
+              <Image
+                src={team.imageUrl || "/placeholder.svg"}
+                alt={team.name}
+                layout="fill"
+                objectFit="cover"
+                className="rounded-t-lg"
+              />
+            </div>
+            <CardHeader className="p-4">
+              <CardTitle className="text-2xl font-semibold text-gray-800">{team.name}</CardTitle>
+              <CardDescription className="text-gray-600">{team.description}</CardDescription>
             </CardHeader>
-            <CardContent className="text-gray-700 space-y-2">
-              <p>{team.description}</p>
-              <div className="flex items-center gap-2 text-sm">
-                <Shirt className="w-4 h-4 text-orange-500" />
-                <span>Tränare: {team.coach}</span>
-              </div>
-              <div className="flex items-center gap-2 text-sm">
-                <Users className="w-4 h-4 text-orange-500" />
-                <span>Antal spelare: {team.playersCount}</span>
-              </div>
-              {team.category === "Senior" && (
-                <div className="flex items-center gap-2 text-sm">
-                  <Shield className="w-4 h-4 text-orange-500" />
-                  <span>Division: {team.name.includes("Herr") ? "Division 3" : "Division 2"}</span>
-                </div>
-              )}
+            <CardContent className="p-4 pt-0 text-gray-700">
+              <p className="mb-1">
+                <span className="font-semibold">Tränare:</span> {team.coach}
+              </p>
+              <p>
+                <span className="font-semibold">Liga:</span> {team.league}
+              </p>
             </CardContent>
           </Card>
         ))}

@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import Image from "next/image"
-import { CalendarDays, Clock, MapPin } from "lucide-react"
+import { Separator } from "@/components/ui/separator"
+import { cn } from "@/lib/utils"
 
 interface Match {
   id: string
@@ -8,12 +8,10 @@ interface Match {
   time: string
   homeTeam: string
   awayTeam: string
+  homeScore: number | null
+  awayScore: number | null
+  status: "upcoming" | "finished"
   location: string
-  homeLogo: string
-  awayLogo: string
-  homeScore?: number
-  awayScore?: number
-  league: string
 }
 
 interface MatchCardProps {
@@ -21,64 +19,35 @@ interface MatchCardProps {
 }
 
 export function MatchCard({ match }: MatchCardProps) {
-  const matchDate = new Date(match.date)
-  const formattedDate = matchDate.toLocaleDateString("sv-SE", {
-    weekday: "short",
-    day: "numeric",
-    month: "short",
-  })
-
-  const isPastMatch = match.homeScore !== undefined && match.awayScore !== undefined
+  const isFinished = match.status === "finished"
 
   return (
-    <Card className="shadow-md hover:shadow-lg transition-shadow flex flex-col">
-      <CardHeader className="pb-2">
-        <CardTitle className="text-lg font-semibold text-center mb-2">{match.league}</CardTitle>
-        <div className="flex items-center justify-around text-center">
-          <div className="flex flex-col items-center">
-            <Image
-              src={match.homeLogo || "/placeholder.svg"}
-              alt={`${match.homeTeam} logo`}
-              width={60}
-              height={60}
-              className="object-contain mb-1"
-            />
-            <span className="text-md font-medium">{match.homeTeam}</span>
-          </div>
-          <div className="text-2xl font-bold mx-4">
-            {isPastMatch ? (
-              <span className="text-green-600">
-                {match.homeScore} - {match.awayScore}
-              </span>
-            ) : (
-              <span className="text-gray-500">vs</span>
-            )}
-          </div>
-          <div className="flex flex-col items-center">
-            <Image
-              src={match.awayLogo || "/placeholder.svg"}
-              alt={`${match.awayTeam} logo`}
-              width={60}
-              height={60}
-              className="object-contain mb-1"
-            />
-            <span className="text-md font-medium">{match.awayTeam}</span>
-          </div>
-        </div>
+    <Card className="bg-white shadow-lg rounded-lg overflow-hidden">
+      <CardHeader
+        className={cn(
+          "p-4 text-white",
+          isFinished ? "bg-gray-700" : "bg-orange-500", // Different color for finished matches
+        )}
+      >
+        <CardTitle className="text-xl font-semibold text-center">
+          {match.homeTeam} vs. {match.awayTeam}
+        </CardTitle>
       </CardHeader>
-      <CardContent className="pt-2 text-gray-700 text-sm space-y-1">
-        <div className="flex items-center gap-2">
-          <CalendarDays className="w-4 h-4 text-orange-500" />
-          <span>{formattedDate}</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <Clock className="w-4 h-4 text-orange-500" />
-          <span>{match.time}</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <MapPin className="w-4 h-4 text-orange-500" />
-          <span>{match.location}</span>
-        </div>
+      <CardContent className="p-4 text-gray-700 text-center">
+        <p className="text-lg font-medium mb-2">
+          {match.date} - {match.time}
+        </p>
+        {isFinished ? (
+          <div className="flex justify-center items-center gap-4 text-3xl font-bold mb-4">
+            <span>{match.homeScore}</span>
+            <span className="text-gray-400">-</span>
+            <span>{match.awayScore}</span>
+          </div>
+        ) : (
+          <p className="text-xl font-bold text-green-600 mb-4">Kommande Match</p>
+        )}
+        <Separator className="my-3" />
+        <p className="text-sm text-gray-600">Plats: {match.location}</p>
       </CardContent>
     </Card>
   )

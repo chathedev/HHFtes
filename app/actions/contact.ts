@@ -1,67 +1,76 @@
 "use server"
 
-import { Resend } from "resend"
 import { z } from "zod"
 
-const resend = new Resend(process.env.RESEND_API_KEY)
-
+// Define a schema for form validation
 const contactFormSchema = z.object({
-  name: z.string().min(2, "Namn måste vara minst 2 tecken."),
-  email: z.string().email("Ogiltig e-postadress."),
-  subject: z.string().min(5, "Ämne måste vara minst 5 tecken."),
-  message: z.string().min(10, "Meddelande måste vara minst 10 tecken."),
+  name: z.string().min(1, "Namn är obligatoriskt"),
+  email: z.string().email("Ogiltig e-postadress"),
+  subject: z.string().min(1, "Ämne är obligatoriskt"),
+  message: z.string().min(10, "Meddelandet måste vara minst 10 tecken långt"),
 })
 
-export async function sendContactForm(prevState: any, formData: FormData) {
-  const validatedFields = contactFormSchema.safeParse({
+export async function submitContactForm(prevState: any, formData: FormData) {
+  const data = {
     name: formData.get("name"),
     email: formData.get("email"),
     subject: formData.get("subject"),
     message: formData.get("message"),
-  })
+  }
 
-  if (!validatedFields.success) {
+  // Validate form data
+  const validationResult = contactFormSchema.safeParse(data)
+
+  if (!validationResult.success) {
     return {
       success: false,
-      message: "Valideringsfel.",
-      errors: validatedFields.error.flatten().fieldErrors,
+      message: "Valideringsfel. Kontrollera dina uppgifter.",
+      errors: validationResult.error.flatten().fieldErrors,
     }
   }
 
-  const { name, email, subject, message } = validatedFields.data
+  const { name, email, subject, message } = validationResult.data
+
+  // Ensure API_SECRET is available
+  if (!process.env.API_SECRET) {
+    console.error("API_SECRET environment variable is not set.")
+    return {
+      success: false,
+      message: "Serverkonfigurationsfel: API-token saknas.",
+    }
+  }
 
   try {
-    const { data, error } = await resend.emails.send({
-      from: "Acme <onboarding@resend.dev>", // Replace with your verified Resend domain
-      to: "delivered@resend.dev", // Replace with your recipient email
-      subject: `Kontaktformulär: ${subject} från ${name}`,
-      html: `
-        <p><strong>Namn:</strong> ${name}</p>
-        <p><strong>E-post:</strong> ${email}</p>
-        <p><strong>Ämne:</strong> ${subject}</p>
-        <p><strong>Meddelande:</strong></p>
-        <p>${message}</p>
-      `,
+    const response = await fetch("https://api.nuredo.se/contact", {
+      // Assuming /contact endpoint
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${process.env.API_SECRET}`, // Sending the updated token
+      },
+      body: JSON.stringify({ name, email, subject, message }),
     })
 
-    if (error) {
-      console.error("Resend error:", error)
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({ message: "Okänt fel" }))
+      console.error("Backend API error:", response.status, errorData)
       return {
         success: false,
-        message: "Kunde inte skicka meddelandet. Försök igen senare.",
+        message: `Kunde inte skicka meddelandet: ${errorData.message || "Serverfel"}`,
       }
     }
 
-    console.log("Email sent:", data)
+    const result = await response.json()
+    console.log("Backend API success:", result)
     return {
       success: true,
-      message: "Ditt meddelande har skickats!",
+      message: "Ditt meddelande har skickats framgångsrikt!",
     }
   } catch (error) {
-    console.error("Unexpected error:", error)
+    console.error("Error submitting contact form:", error)
     return {
       success: false,
-      message: "Ett oväntat fel uppstod.",
+      message: "Ett oväntat fel uppstod. Försök igen senare.",
     }
   }
 }

@@ -1,45 +1,34 @@
 "use server"
 
-/**
- * Centralised authentication Server Actions.
- * We proxy through Next-Auth helpers so the rest of the app can
- * import everything from a single place.
- */
+import { cookies } from "next/headers"
+import { redirect } from "next/navigation"
 
-import { signIn, signOut } from "@/auth"
+const AUTH_COOKIE_NAME = "hhf_auth_session"
 
-/**
- * authenticate – Server Action used by the login form (RSC `useFormState`).
- *
- * @param prevState  previous return value – not used here but required by the React API
- * @param formData   <form> payload containing `email` and `password`
- * @returns          undefined on success or a string error code on failure
- */
-export async function authenticate(prevState: string | undefined, formData: FormData) {
-  try {
-    // Credentials provider will read `email` / `password` from the object
-    await signIn("credentials", Object.fromEntries(formData))
-    return undefined
-  } catch (error) {
-    // Bubble a short error code to the client component
-    if ((error as Error).message?.includes("CredentialsSignin")) {
-      return "CredentialsSignin"
-    }
-    throw error
+export async function login(formData: FormData) {
+  const password = formData.get("password")
+
+  // In a real application, you would hash the password and compare it securely.
+  // For this demo, we're directly comparing against API_SECRET.
+  if (password === process.env.API_SECRET) {
+    // Set a simple session cookie. For production, use a more robust session management.
+    cookies().set(AUTH_COOKIE_NAME, "authenticated", {
+      httpOnly: true, // Important for security
+      secure: process.env.NODE_ENV === "production",
+      maxAge: 60 * 60 * 24, // 1 day
+      path: "/",
+    })
+    redirect("/editor")
+  } else {
+    return { success: false, message: "Felaktigt lösenord." }
   }
 }
 
-/**
- * Convenience wrapper for the sign-out flow so components can simply call
- * `logout()` instead of pulling in next-auth directly.
- */
 export async function logout() {
-  await signOut()
+  cookies().delete(AUTH_COOKIE_NAME)
+  redirect("/login")
 }
 
-/* ────────────────────────────────────────────────────────────────────────── */
-/*  Re-export helpers so other files can do                                 */
-/*    import { signIn, signOut } from "app/actions/auth"                    */
-/*  without reaching into "@/auth" directly.                                */
-/* ────────────────────────────────────────────────────────────────────────── */
-export { signIn, signOut }
+export async function isAuthenticatedServer(): Promise<boolean> {
+  return cookies().get(AUTH_COOKIE_NAME)?.value === "authenticated"
+}

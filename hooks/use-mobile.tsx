@@ -1,21 +1,24 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import * as React from "react"
 
-const BREAKPOINT = 768
+const MOBILE_BREAKPOINT = 768
 
-export function useMobile(): boolean {
-  const [isMobile, setIsMobile] = useState<boolean>(() =>
-    typeof window === "undefined" ? false : window.innerWidth < BREAKPOINT,
-  )
+export function useIsMobile() {
+  const [isMobile, setIsMobile] = React.useState(false)
 
-  useEffect(() => {
-    const handler = () => setIsMobile(window.innerWidth < BREAKPOINT)
-    window.addEventListener("resize", handler)
-    return () => window.removeEventListener("resize", handler)
+  React.useEffect(() => {
+    const checkIsMobile = () => {
+      setIsMobile(window.innerWidth < MOBILE_BREAKPOINT) // Tailwind's 'md' breakpoint is 768px
+    }
+
+    checkIsMobile() // Check on mount
+    window.addEventListener("resize", checkIsMobile) // Add event listener for resize
+
+    return () => {
+      window.removeEventListener("resize", checkIsMobile) // Clean up
+    }
   }, [])
 
   return isMobile
 }
-
-export const useIsMobile = useMobile

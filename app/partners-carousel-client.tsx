@@ -1,48 +1,53 @@
 "use client"
 
 import Image from "next/image"
-import { Card } from "@/components/ui/card"
-import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel"
+import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel"
 import Autoplay from "embla-carousel-autoplay"
-import { allPartners } from "@/lib/partners-data"
+import * as React from "react"
 
-export function PartnersCarouselClient() {
-  const visiblePartners = allPartners.filter((p) => p.visibleInCarousel)
+interface Partner {
+  name: string
+  logo: string
+  url: string
+}
+
+interface PartnersCarouselClientProps {
+  partners: Partner[]
+}
+
+export function PartnersCarouselClient({ partners }: PartnersCarouselClientProps) {
+  const plugin = React.useRef(Autoplay({ delay: 3000, stopOnInteraction: false }))
 
   return (
     <Carousel
-      opts={{
-        align: "start",
-        loop: true,
-      }}
-      plugins={[
-        Autoplay({
-          delay: 3000,
-          stopOnInteraction: false,
-          stopOnMouseEnter: true,
-        }),
-      ]}
+      plugins={[plugin.current]}
       className="w-full max-w-6xl mx-auto"
+      onMouseEnter={plugin.current.stop}
+      onMouseLeave={plugin.current.play}
     >
       <CarouselContent className="-ml-4">
-        {visiblePartners.map((partner, index) => (
-          <CarouselItem key={index} className="pl-4 basis-1/2 md:basis-1/3 lg:basis-1/4 xl:basis-1/5">
+        {partners.map((partner, index) => (
+          <CarouselItem key={index} className="pl-4 basis-1/2 md:basis-1/3 lg:basis-1/4">
             <div className="p-1">
-              <Card className="flex aspect-square items-center justify-center p-6 h-32 w-full">
+              <a
+                href={partner.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-center h-24 bg-white rounded-lg shadow-md p-4 transition-transform duration-300 hover:scale-105"
+              >
                 <Image
-                  src={partner.src || "/placeholder.svg"}
-                  alt={partner.alt}
-                  width={120}
-                  height={80}
-                  className="object-contain max-h-full max-w-full"
+                  src={partner.logo || "/placeholder.svg"}
+                  alt={partner.name}
+                  width={150}
+                  height={60}
+                  objectFit="contain"
+                  className="max-h-full max-w-full"
                 />
-              </Card>
+              </a>
             </div>
           </CarouselItem>
         ))}
       </CarouselContent>
-      <CarouselPrevious />
-      <CarouselNext />
     </Carousel>
   )
 }
