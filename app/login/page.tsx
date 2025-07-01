@@ -1,53 +1,57 @@
 "use client"
 
-import { useActionState } from "react"
-import { useRouter } from "next/navigation"
+import { useFormState, useFormStatus } from "react-dom"
+import { authenticate } from "@/app/actions/auth"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { login } from "@/app/actions/auth"
-import { useAuth } from "@/components/auth-provider"
-import { useEffect } from "react"
+import { Loader2 } from "lucide-react"
 
 export default function LoginPage() {
-  const router = useRouter()
-  const [state, formAction, isPending] = useActionState(login, null)
-  const { isAuthenticated, setIsAuthenticated } = useAuth()
-
-  useEffect(() => {
-    if (isAuthenticated) {
-      router.push("/editor")
-    }
-  }, [isAuthenticated, router])
-
-  useEffect(() => {
-    if (state?.success) {
-      setIsAuthenticated(true)
-      router.push("/editor")
-    }
-  }, [state, setIsAuthenticated, router])
+  const [errorMessage, dispatch] = useFormState(authenticate, undefined)
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-100 px-4">
       <Card className="w-full max-w-md">
-        <CardHeader className="space-y-1 text-center">
-          <CardTitle className="text-2xl font-bold">Logga in till redigeraren</CardTitle>
-          <CardDescription>Ange lösenordet för att komma åt webbplatsredigeraren.</CardDescription>
+        <CardHeader className="text-center">
+          <CardTitle className="text-3xl font-bold text-green-700">Logga in</CardTitle>
+          <CardDescription className="text-gray-600">
+            Använd ditt användarnamn och lösenord för att logga in.
+          </CardDescription>
         </CardHeader>
         <CardContent>
-          <form action={formAction} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="password">Lösenord</Label>
-              <Input id="password" name="password" type="password" required />
+          <form action={dispatch} className="space-y-6">
+            <div>
+              <Label htmlFor="username">Användarnamn</Label>
+              <Input id="username" name="username" type="text" placeholder="ditt.användarnamn" required />
             </div>
-            {state?.message && <p className="text-red-500 text-sm">{state.message}</p>}
-            <Button type="submit" className="w-full" disabled={isPending}>
-              {isPending ? "Loggar in..." : "Logga in"}
-            </Button>
+            <div>
+              <Label htmlFor="password">Lösenord</Label>
+              <Input id="password" name="password" type="password" placeholder="********" required />
+            </div>
+            {errorMessage && <div className="text-red-500 text-sm text-center">{errorMessage}</div>}
+            <LoginButton />
           </form>
         </CardContent>
       </Card>
     </div>
+  )
+}
+
+function LoginButton() {
+  const { pending } = useFormStatus()
+
+  return (
+    <Button type="submit" className="w-full" aria-disabled={pending}>
+      {pending ? (
+        <>
+          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          Loggar in...
+        </>
+      ) : (
+        "Logga in"
+      )}
+    </Button>
   )
 }

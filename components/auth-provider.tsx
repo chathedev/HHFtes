@@ -2,6 +2,7 @@
 
 import type React from "react"
 import { createContext, useContext, useState, useEffect } from "react"
+import { SessionProvider } from "next-auth/react"
 
 interface AuthContextType {
   isAuthenticated: boolean
@@ -35,7 +36,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [isAuthenticated])
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, setIsAuthenticated, loading }}>{children}</AuthContext.Provider>
+    <SessionProvider>
+      <AuthContext.Provider value={{ isAuthenticated, setIsAuthenticated, loading }}>{children}</AuthContext.Provider>
+    </SessionProvider>
   )
 }
 

@@ -1,29 +1,11 @@
-"use client"
-
-import { useState, useEffect } from "react"
+import { PartnersCarouselClient } from "@/app/partners-carousel-client"
+import { allPartners, type Partner } from "@/lib/partners-data"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import Image from "next/image"
 import Link from "next/link"
-import { Star } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Card } from "@/components/ui/card"
-import { allPartners, type Partner } from "@/lib/partners-data"
-import { loadContent, type PageContent } from "@/lib/content-store"
+import { ExternalLink } from "lucide-react"
 
 export default function PartnersPage() {
-  const [content, setContent] = useState<PageContent | null>(null)
-
-  useEffect(() => {
-    const fetchContent = async () => {
-      const fetchedContent = await loadContent()
-      setContent(fetchedContent)
-    }
-    fetchContent()
-  }, [])
-
-  if (!content) {
-    return <div className="flex justify-center items-center min-h-screen">Laddar innehåll...</div>
-  }
-
   const partnersByTier: Record<string, Partner[]> = allPartners.reduce(
     (acc, partner) => {
       if (!acc[partner.tier]) {
@@ -38,71 +20,74 @@ export default function PartnersPage() {
   const tierOrder = ["Diamantpartner", "Platinapartner", "Guldpartner", "Silverpartner", "Bronspartner"]
 
   return (
-    <div className="container mx-auto px-4 py-8 pt-24">
-      <h1 className="text-4xl font-bold text-green-700 mb-4 text-center">{content.partnersPage.title}</h1>
-      <p className="text-center text-gray-700 mb-12 max-w-2xl mx-auto">{content.partnersPage.description}</p>
+    <div className="container mx-auto px-4 py-8 md:py-12">
+      <h1 className="text-4xl font-bold text-center text-green-700 mb-8">Våra Partners</h1>
+
+      <section className="mb-12">
+        <h2 className="text-3xl font-bold text-gray-800 mb-6 text-center">Huvudpartners</h2>
+        <div className="flex justify-center mb-8">
+          <PartnersCarouselClient />
+        </div>
+        <p className="text-center text-gray-600 max-w-2xl mx-auto">
+          Vi är oerhört tacksamma för det ovärderliga stöd vi får från alla våra partners. Deras engagemang gör det
+          möjligt för oss att fortsätta utveckla fotbollen i Härnösand och erbjuda en meningsfull verksamhet för alla
+          åldrar.
+        </p>
+      </section>
 
       {tierOrder.map(
         (tierName) =>
           partnersByTier[tierName] && (
-            <section key={tierName} className="mb-12">
-              <h2 className="text-3xl font-bold text-orange-500 mb-6 text-center">{tierName}</h2>
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
-                {partnersByTier[tierName].map((partner) => {
-                  const isDiamant = partner.tier === "Diamantpartner"
-                  const isHighcon = partner.id === "highcon"
-                  return (
-                    <div key={partner.id} className="relative group w-full h-36">
-                      <Card
-                        className={`p-4 shadow-lg rounded-lg flex flex-col items-center justify-center h-full w-full text-center
-                          ${isDiamant ? "border-2 border-yellow-500" : "bg-white/80"}
-                        `}
-                      >
-                        {isDiamant && (
-                          <Star className="absolute top-1 right-1 w-5 h-5 text-yellow-500 fill-yellow-500" />
-                        )}
-                        <div className={`relative w-full mb-2 ${isHighcon ? "h-24" : "h-20"}`}>
-                          <Image
-                            src={partner.src || "/placeholder.svg"}
-                            alt={partner.alt}
-                            fill
-                            unoptimized
-                            className="object-contain transition-transform duration-300 group-hover:scale-105"
-                          />
-                        </div>
-                        <h4 className={`text-sm font-semibold ${isDiamant ? "text-gray-900" : "text-gray-800"}`}>
-                          {partner.alt}
-                        </h4>
-                        {partner.linkUrl && (
-                          <div className="absolute inset-0 bg-black bg-opacity-70 flex items-center justify-center rounded-lg transition-opacity duration-300 opacity-0 group-hover:opacity-100">
-                            <Button
-                              onClick={() => window.open(partner.linkUrl, "_blank")}
-                              className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-md"
-                            >
-                              Gå till
-                            </Button>
-                          </div>
-                        )}
-                      </Card>
-                    </div>
-                  )
-                })}
+            <section key={tierName} className="mb-10">
+              <h2 className="text-3xl font-bold text-green-600 mb-6 border-b pb-2">{tierName}</h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                {partnersByTier[tierName].map((partner) => (
+                  <Card key={partner.id} className="shadow-md hover:shadow-lg transition-shadow flex flex-col">
+                    <CardHeader className="flex-row items-center space-x-4 space-y-0 pb-2">
+                      <Image
+                        src={partner.src || "/placeholder.svg"}
+                        alt={partner.alt}
+                        width={60}
+                        height={60}
+                        className="object-contain"
+                      />
+                      <CardTitle className="text-xl font-semibold text-gray-800">{partner.name}</CardTitle>
+                    </CardHeader>
+                    <CardContent className="flex-grow flex flex-col justify-between">
+                      <p className="text-gray-600 text-sm mb-4">
+                        {partner.tier} sedan {new Date().getFullYear() - 3}
+                      </p>
+                      {partner.linkUrl && (
+                        <Link
+                          href={partner.linkUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-2 text-orange-500 hover:text-orange-600 transition-colors font-medium"
+                        >
+                          Besök hemsida
+                          <ExternalLink className="w-4 h-4" />
+                        </Link>
+                      )}
+                    </CardContent>
+                  </Card>
+                ))}
               </div>
             </section>
           ),
       )}
 
       <section className="bg-green-700 text-white p-8 rounded-lg shadow-lg text-center mt-12">
-        <h2 className="text-3xl font-bold mb-4">{content.partnersPage.callToActionTitle}</h2>
-        <p className="text-lg mb-8">{content.partnersPage.callToActionDescription}</p>
-        <div className="flex flex-col sm:flex-row justify-center gap-4">
-          <Link
-            href={content.partnersPage.callToActionLink}
-            className="bg-orange-500 hover:bg-orange-600 text-white px-8 py-3 rounded-md"
-          >
-            {content.partnersPage.callToActionLinkText}
-          </Link>
-        </div>
+        <h2 className="text-3xl font-bold mb-4">Bli en del av vårt team!</h2>
+        <p className="text-lg mb-8">
+          Är ditt företag intresserat av att stödja Härnösands FF och samtidigt få värdefull exponering? Kontakta oss
+          för att diskutera partnerskapsmöjligheter.
+        </p>
+        <Link
+          href="/kontakt"
+          className="bg-orange-500 hover:bg-orange-600 text-white px-8 py-3 rounded-md text-lg font-medium transition-colors"
+        >
+          Kontakta oss om partnerskap
+        </Link>
       </section>
     </div>
   )

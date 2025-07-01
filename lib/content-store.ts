@@ -9,17 +9,21 @@ export interface PageContent {
   sections: string[]
   hero: {
     title: string
+    titleTextColorClass: string // New: Text color for title
+    titleFontSizeClass: string // New: Font size for title
     description: string
+    descriptionTextColorClass: string // New: Text color for description
+    descriptionFontSizeClass: string // New: Font size for description
     imageUrl: string
     button1Text: string
     button1Link: string
-    button1BgClass: string // New field for button 1 background color
-    button1TextClass: string // New field for button 1 text color
+    button1BgClass: string
+    button1TextClass: string
     button2Text: string
     button2Link: string
-    button2BgClass: string // New field for button 2 background color
-    button2TextClass: string // New field for button 2 text color
-    overlayColorClass: string // New field for hero overlay color
+    button2BgClass: string
+    button2TextClass: string
+    overlayColorClass: string
   }
   stats: {
     totalTeams: number
@@ -77,18 +81,22 @@ export const defaultContent: PageContent = {
   sections: ["hero", "stats", "aboutClub", "partnersCarousel"],
   hero: {
     title: "Välkommen till Härnösands FF",
+    titleTextColorClass: "text-white", // Default
+    titleFontSizeClass: "text-6xl", // Default
     description:
       "Härnösands FF är en fotbollsklubb med en rik historia och en stark gemenskap. Vi strävar efter att utveckla både spelare och människor, från ungdom till elit.",
+    descriptionTextColorClass: "text-white", // Default
+    descriptionFontSizeClass: "text-xl", // Default
     imageUrl: "https://az316141.cdn.laget.se/2317159/11348130.jpg",
     button1Text: "Våra lag",
     button1Link: "/lag",
-    button1BgClass: "bg-green-600", // Default button 1 background
-    button1TextClass: "text-white", // Default button 1 text
+    button1BgClass: "bg-green-600",
+    button1TextClass: "text-white",
     button2Text: "Kalender",
     button2Link: "/kalender",
-    button2BgClass: "bg-white", // Default button 2 background
-    button2TextClass: "text-gray-800", // Default button 2 text
-    overlayColorClass: "from-black/70", // Default overlay color
+    button2BgClass: "bg-white",
+    button2TextClass: "text-gray-800",
+    overlayColorClass: "from-black/70",
   },
   stats: {
     totalTeams: 15,
@@ -97,7 +105,7 @@ export const defaultContent: PageContent = {
     historyYears: "1900-tal",
   },
   aboutClub: {
-    title: "Om Härnösands HF", // Updated title here
+    title: "Om Härnösands HF",
     paragraph1:
       "Härnösands FF grundades med en vision om att skapa en inkluderande och framgångsrik fotbollsmiljö. Sedan dess har vi vuxit till en av regionens mest respekterade klubbar, känd för vår starka gemenskap och engagemang för ungdomsfotboll.",
     paragraph2:

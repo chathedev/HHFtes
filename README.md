@@ -1,30 +1,96 @@
-# HHF
+# Härnösands FF Website
 
-*Automatically synced with your [v0.dev](https://v0.dev) deployments*
+This is the official website for Härnösands FF, built with Next.js and designed to be easily editable through a custom editor interface.
 
-[![Deployed on Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-black?style=for-the-badge&logo=vercel)](https://vercel.com/challe-ws-projects/v0-hhf)
-[![Built with v0](https://img.shields.io/badge/Built%20with-v0.dev-black?style=for-the-badge)](https://v0.dev/chat/projects/boGcJCfXMAI)
+## Features
 
-## Overview
+- **Dynamic Content Editing**: Easily update text, images, and links directly on the page through an intuitive editor.
+- **Section Customization**: Modify colors, font sizes, and other properties for various sections like Hero, Stats, About Club, Partners Carousel, and Upcoming Events.
+- **Responsive Design**: Optimized for various screen sizes, from mobile to desktop.
+- **API Integration**: Fetches news and calendar events from external APIs.
+- **Authentication**: Secure login for administrators to access the editor.
 
-This repository will stay in sync with your deployed chats on [v0.dev](https://v0.dev).
-Any changes you make to your deployed app will be automatically pushed to this repository from [v0.dev](https://v0.dev).
+## Getting Started
 
-## Deployment
+### Prerequisites
 
-Your project is live at:
+- Node.js (v18 or later)
+- npm or Yarn
 
-**[https://vercel.com/challe-ws-projects/v0-hhf](https://vercel.com/challe-ws-projects/v0-hhf)**
+### Installation
 
-## Build your app
+1.  Clone the repository:
+    \`\`\`bash
+    git clone https://github.com/your-username/harnosand-ff-website.git
+    cd harnosand-ff-website
+    \`\`\`
+2.  Install dependencies:
+    \`\`\`bash
+    npm install
+    # or
+    yarn install
+    \`\`\`
 
-Continue building your app on:
+### Environment Variables
 
-**[https://v0.dev/chat/projects/boGcJCfXMAI](https://v0.dev/chat/projects/boGcJCfXMAI)**
+Create a `.env.local` file in the root directory and add the following:
 
-## How It Works
+\`\`\`env
+# Example:
+# NEXT_PUBLIC_API_BASE_URL=http://localhost:3000/api
+# AUTH_SECRET=your_auth_secret_here
+\`\`\`
 
-1. Create and modify your project using [v0.dev](https://v0.dev)
-2. Deploy your chats from the v0 interface
-3. Changes are automatically pushed to this repository
-4. Vercel deploys the latest version from this repository
+### Running the Development Server
+
+\`\`\`bash
+npm run dev
+# or
+yarn dev
+\`\`\`
+
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+
+### Building for Production
+
+\`\`\`bash
+npm run build
+# or
+yarn build
+\`\`\`
+
+### Running the Production Server
+
+\`\`\`bash
+npm start
+# or
+yarn start
+\`\`\`
+
+## Project Structure
+
+-   `app/`: Next.js App Router pages and API routes.
+    -   `api/`: API routes for news and calendar events.
+    -   `editor/`: The custom editor page.
+    -   `actions/`: Server Actions for content saving and authentication.
+-   `components/`: Reusable React components.
+    -   `sections/`: Components for different sections of the homepage (Hero, Stats, About Club, etc.).
+    -   `ui/`: Shadcn UI components.
+-   `lib/`: Utility functions and data.
+    -   `content-store.ts`: Manages the page content state and persistence.
+    -   `partners-data.ts`: Data for partners.
+    -   `utils.ts`: General utility functions.
+-   `public/`: Static assets like images.
+-   `styles/`: Global CSS styles.
+
+## Editor Usage
+
+Navigate to `/editor` to access the content editor.
+- Click on any text, button, or image to open the right-side panel and modify its properties.
+- Use the "Spara ändringar" (Save Changes) button to persist your modifications.
+- Use the "Återställ" (Reset) button to revert to default content.
+
+## Contributing
+
+Feel free to contribute by opening issues or submitting pull requests.
+\`\`\`

@@ -13,7 +13,7 @@ import PartnersCarouselSection from "@/components/sections/partners-carousel-sec
 import UpcomingEventsSection from "@/components/upcoming-events-section"
 import { saveEditorContentServer } from "@/app/actions/editor-content"
 import { useToast } from "@/components/ui/use-toast"
-import { Loader2, Save, XCircle } from "lucide-react" // Removed GripVertical and dnd imports
+import { Loader2, Save, XCircle } from "lucide-react"
 import { Sheet, SheetContent } from "@/components/ui/sheet"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { cn } from "@/lib/utils"
@@ -26,8 +26,10 @@ export default function EditorPage() {
   const [isColorSheetOpen, setIsColorSheetOpen] = useState(false)
   const [currentColorTarget, setCurrentColorTarget] = useState<{
     section: keyof PageContent
-    field: string
-    value: string
+    fieldBg: string // Field for background class
+    fieldTxt: string // Field for text class
+    currentBgValue: string
+    currentTxtValue: string
   } | null>(null)
   const { toast } = useToast()
 
@@ -113,16 +115,37 @@ export default function EditorPage() {
     })
   }
 
-  const openColorPicker = useCallback((section: keyof PageContent, field: string, currentValue: string) => {
-    setCurrentColorTarget({ section, field, value: currentValue })
-    setIsColorSheetOpen(true)
-  }, [])
+  const openColorPicker = useCallback(
+    (
+      section: keyof PageContent,
+      fieldBg: string,
+      fieldTxt: string,
+      currentBgValue: string,
+      currentTxtValue: string,
+    ) => {
+      setCurrentColorTarget({ section, fieldBg, fieldTxt, currentBgValue, currentTxtValue })
+      setIsColorSheetOpen(true)
+    },
+    [],
+  )
 
   const handleColorChange = useCallback(
-    (newValue: string) => {
+    (selectedBgClass: string) => {
       if (currentColorTarget) {
-        handleContentChange(currentColorTarget.section, currentColorTarget.field, newValue)
-        setCurrentColorTarget((prev) => (prev ? { ...prev, value: newValue } : null))
+        const selectedOption = colorOptions.find((option) => option.bgClass === selectedBgClass)
+        if (selectedOption) {
+          handleContentChange(currentColorTarget.section, currentColorTarget.fieldBg, selectedOption.bgClass)
+          handleContentChange(currentColorTarget.section, currentColorTarget.fieldTxt, selectedOption.textClass)
+          setCurrentColorTarget((prev) =>
+            prev
+              ? {
+                  ...prev,
+                  currentBgValue: selectedOption.bgClass,
+                  currentTxtValue: selectedOption.textClass,
+                }
+              : null,
+          )
+        }
       }
     },
     [currentColorTarget, handleContentChange],
@@ -260,10 +283,11 @@ export default function EditorPage() {
           {currentColorTarget && (
             <div className="mb-4">
               <p className="text-sm text-gray-600 mb-2">
-                Redigerar: <span className="font-semibold">{currentColorTarget.field}</span>
+                Redigerar: <span className="font-semibold">{currentColorTarget.fieldBg.replace("BgClass", "")}</span>{" "}
+                (Bakgrund & Text)
               </p>
               <RadioGroup
-                value={currentColorTarget.value}
+                value={currentColorTarget.currentBgValue}
                 onValueChange={handleColorChange}
                 className="flex flex-col space-y-2"
               >

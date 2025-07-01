@@ -28,7 +28,13 @@ interface HeroSectionProps {
   isEditing?: boolean
   onContentChange?: (field: keyof PageContent["hero"], value: string | number) => void
   availablePages: { name: string; path: string }[]
-  openColorPicker: (section: keyof PageContent, field: string, currentValue: string) => void
+  openColorPicker: (
+    section: keyof PageContent,
+    fieldBg: string,
+    fieldTxt: string,
+    currentBgValue: string,
+    currentTxtValue: string,
+  ) => void
 }
 
 export default function HeroSection({
@@ -75,6 +81,27 @@ export default function HeroSection({
     { name: "Primär Blå", value: "from-blue-700/70" },
   ]
 
+  const textColorOptions = [
+    { name: "Vit", value: "text-white" },
+    { name: "Svart", value: "text-gray-900" },
+    { name: "Grå", value: "text-gray-600" },
+    { name: "Grön Primär", value: "text-green-600" },
+    { name: "Orange Primär", value: "text-orange-500" },
+  ]
+
+  const fontSizeOptions = [
+    { name: "Liten (text-4xl)", value: "text-4xl" },
+    { name: "Medium (text-5xl)", value: "text-5xl" },
+    { name: "Stor (text-6xl)", value: "text-6xl" },
+    { name: "Extra Stor (text-7xl)", value: "text-7xl" },
+  ]
+
+  const descriptionFontSizeOptions = [
+    { name: "Liten (text-lg)", value: "text-lg" },
+    { name: "Medium (text-xl)", value: "text-xl" },
+    { name: "Stor (text-2xl)", value: "text-2xl" },
+  ]
+
   return (
     <section className="relative h-[800px] w-full overflow-hidden">
       <Image
@@ -95,7 +122,11 @@ export default function HeroSection({
       <div className="relative z-10 flex h-full items-center justify-center p-8 md:p-12 text-center">
         <div className="max-w-3xl text-white">
           <h1
-            className="text-4xl font-bold leading-tight md:text-6xl outline-none focus:ring-2 focus:ring-white rounded px-1"
+            className={cn(
+              "font-bold leading-tight outline-none focus:ring-2 focus:ring-white rounded px-1",
+              content.titleFontSizeClass,
+              content.titleTextColorClass,
+            )}
             contentEditable={isEditing}
             suppressContentEditableWarning={true}
             onBlur={(e) => handleTextChange("title", e)}
@@ -103,7 +134,11 @@ export default function HeroSection({
             {content.title}
           </h1>
           <p
-            className="mt-4 text-lg md:text-xl outline-none focus:ring-2 focus:ring-white rounded px-1"
+            className={cn(
+              "mt-4 outline-none focus:ring-2 focus:ring-white rounded px-1",
+              content.descriptionFontSizeClass,
+              content.descriptionTextColorClass,
+            )}
             contentEditable={isEditing}
             suppressContentEditableWarning={true}
             onBlur={(e) => handleTextChange("description", e)}
@@ -137,7 +172,13 @@ export default function HeroSection({
                   className="ml-2 h-6 w-6 text-current hover:bg-white/20"
                   onClick={(e) => {
                     e.preventDefault()
-                    openColorPicker("hero", "button1BgClass", content.button1BgClass)
+                    openColorPicker(
+                      "hero",
+                      "button1BgClass",
+                      "button1TextClass",
+                      content.button1BgClass,
+                      content.button1TextClass,
+                    )
                   }}
                 >
                   <Palette className="h-4 w-4" />
@@ -171,7 +212,13 @@ export default function HeroSection({
                   className="ml-2 h-6 w-6 text-current hover:bg-white/20"
                   onClick={(e) => {
                     e.preventDefault()
-                    openColorPicker("hero", "button2BgClass", content.button2BgClass)
+                    openColorPicker(
+                      "hero",
+                      "button2BgClass",
+                      "button2TextClass",
+                      content.button2BgClass,
+                      content.button2TextClass,
+                    )
                   }}
                 >
                   <Palette className="h-4 w-4" />
@@ -217,6 +264,41 @@ export default function HeroSection({
                 />
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
+                <Label className="text-right">Rubrik Färg</Label>
+                <RadioGroup
+                  value={tempContent.titleTextColorClass}
+                  onValueChange={(value) => handleTempContentChange("titleTextColorClass", value)}
+                  className="flex flex-col space-y-1 col-span-3"
+                >
+                  {textColorOptions.map((option) => (
+                    <div key={option.value} className="flex items-center space-x-2">
+                      <RadioGroupItem value={option.value} id={`title-text-${option.value}`} />
+                      <Label htmlFor={`title-text-${option.value}`} className={option.value}>
+                        {option.name}
+                      </Label>
+                    </div>
+                  ))}
+                </RadioGroup>
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label className="text-right">Rubrik Storlek</Label>
+                <Select
+                  value={tempContent.titleFontSizeClass}
+                  onValueChange={(value) => handleTempContentChange("titleFontSizeClass", value)}
+                >
+                  <SelectTrigger className="col-span-3">
+                    <SelectValue placeholder="Välj storlek" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {fontSizeOptions.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="description-dialog" className="text-right">
                   Beskrivning
                 </Label>
@@ -226,6 +308,41 @@ export default function HeroSection({
                   onChange={(e) => handleTempContentChange("description", e.target.value)}
                   className="col-span-3"
                 />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label className="text-right">Beskrivning Färg</Label>
+                <RadioGroup
+                  value={tempContent.descriptionTextColorClass}
+                  onValueChange={(value) => handleTempContentChange("descriptionTextColorClass", value)}
+                  className="flex flex-col space-y-1 col-span-3"
+                >
+                  {textColorOptions.map((option) => (
+                    <div key={option.value} className="flex items-center space-x-2">
+                      <RadioGroupItem value={option.value} id={`desc-text-${option.value}`} />
+                      <Label htmlFor={`desc-text-${option.value}`} className={option.value}>
+                        {option.name}
+                      </Label>
+                    </div>
+                  ))}
+                </RadioGroup>
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label className="text-right">Beskrivning Storlek</Label>
+                <Select
+                  value={tempContent.descriptionFontSizeClass}
+                  onValueChange={(value) => handleTempContentChange("descriptionFontSizeClass", value)}
+                >
+                  <SelectTrigger className="col-span-3">
+                    <SelectValue placeholder="Välj storlek" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {descriptionFontSizeOptions.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="imageUrl-dialog" className="text-right">

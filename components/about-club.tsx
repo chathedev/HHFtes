@@ -20,11 +20,8 @@ export default function AboutClub({ content, isEditing = false, onContentChange,
     }
   }
 
-  const handleLinkChange = (field: keyof PageContent["aboutClub"], value: string) => {
-    if (onContentChange) {
-      onContentChange(field, value)
-    }
-  }
+  // Note: Link changes are handled by the dialog in HeroSection, not direct editing here.
+  // If you want to make these links editable directly, you'd need a similar mechanism.
 
   return (
     <section className="w-full py-12 md:py-24 lg:py-32">

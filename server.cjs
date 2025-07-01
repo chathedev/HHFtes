@@ -4,6 +4,9 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
+import { createServer } from 'http';
+import { parse } from 'url';
+import next from 'next';
 
 // Polyfill for __dirname in ESM
 const __filename = fileURLToPath(import.meta.url);
@@ -20,12 +23,16 @@ const GITHUB_OWNER = process.env.GITHUB_OWNER;
 const GITHUB_REPO  = process.env.GITHUB_REPO;
 const CONTENT_PATH = 'content.json'; // Use root path to your content.json in the repo
 
-const app = express();
-const PORT = process.env.PORT || 3001; // Default to 3001 if PORT is not set
+const dev = process.env.NODE_ENV !== 'production';
+const hostname = 'localhost';
+const port = process.env.PORT || 3000;
+const expressApp = express();
+const nextApp = next({ dev, hostname, port });
+const handle = nextApp.getRequestHandler();
 
 // ---- Middleware ----
-app.use(cors({ origin: ['https://hhf.wby.se', 'http://localhost:3000', process.env.FRONTEND_URL].filter(Boolean) }));
-app.use(express.json());
+expressApp.use(cors({ origin: ['https://hhf.wby.se', 'http://localhost:3000', process.env.FRONTEND_URL].filter(Boolean) }));
+expressApp.use(express.json());
 
 // Enkel autentiserings-middleware
 function authenticate(req, res, next) {
@@ -107,12 +114,12 @@ async function commitToGitHub(message, buffer) {
 // ---- Endpoints ----
 
 // GET: Hämta allt innehåll
-app.get('/api/content', (req, res) => {
+expressApp.get('/api/content', (req, res) => {
   res.json(currentContent);
 });
 
 // POST: Skriv över allt innehåll
-app.post('/api/content', authenticate, async (req, res) => {
+expressApp.post('/api/content', authenticate, async (req, res) => {
   const newContent = req.body;
   if (typeof newContent !== 'object' || Array.isArray(newContent)) {
     return res.status(400).json({ message: 'Ogiltigt innehåll' });
@@ -153,7 +160,7 @@ app.post('/api/content', authenticate, async (req, res) => {
 });
 
 // PATCH: Uppdatera en enskild sektion
-app.patch('/api/content/:section', authenticate, async (req, res) => {
+expressApp.patch('/api/content/:section', authenticate, async (req, res) => {
   const section = req.params.section;
   const update  = req.body;
 
@@ -193,11 +200,11 @@ app.patch('/api/content/:section', authenticate, async (req, res) => {
 });
 
 // DnD-ordering: GET och POST för sections
-app.get('/api/sections', (req, res) => {
+expressApp.get('/api/sections', (req, res) => {
   res.json(currentContent.sections || []);
 });
 
-app.post('/api/sections', authenticate, async (req, res) => {
+expressApp.post('/api/sections', authenticate, async (req, res) => {
   const { order } = req.body;
   if (!Array.isArray(order)) {
     return res.status(400).json({ message: 'Ogiltig order-format' });
@@ -217,6 +224,32 @@ app.post('/api/sections', authenticate, async (req, res) => {
   }
 });
 
-app.listen(PORT, () => {
-  console.log(`🚀 Backend server running on http://localhost:${PORT}`);
+nextApp.prepare().then(() => {
+  createServer(async (req, res) => {
+    try {
+      // Be sure to pass `true` as the second argument to `url.parse`.
+      // This tells it to parse the query portion of the URL.
+      const parsedUrl = parse(req.url, true);
+      const { pathname, query } = parsedUrl;
+
+      if (pathname === '/a') {
+        await nextApp.render(req, res, '/a', query);
+      } else if (pathname === '/b') {
+        await nextApp.render(req, res, '/b', query);
+      } else {
+        await handle(req, res, parsedUrl);
+      }
+    } catch (err) {
+      console.error('Error occurred handling', req.url, err);
+      res.statusCode = 500;
+      res.end('internal server error');
+    }
+  })
+    .once('error', (err) => {
+      console.error(err);
+      process.exit(1);
+    })
+    .listen(port, () => {
+      console.log(`> Ready on http://${hostname}:${port}`);
+    });
 });

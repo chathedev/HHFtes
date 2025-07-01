@@ -1,100 +1,85 @@
-"use client"
-
-import { Calendar, Trophy, Zap, MapPin, Clock } from "lucide-react"
-import { useEffect, useState } from "react"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import Image from "next/image"
+import { CalendarDays, Clock, MapPin } from "lucide-react"
 
 interface Match {
   id: string
-  title: string
   date: string
   time: string
-  opponent: string
+  homeTeam: string
+  awayTeam: string
   location: string
-  isHome: boolean
+  homeLogo: string
+  awayLogo: string
+  homeScore?: number
+  awayScore?: number
+  league: string
 }
 
-export default function MatchCards() {
-  const [upcomingMatches, setUpcomingMatches] = useState<Match[]>([])
-  const [loading, setLoading] = useState(true)
+interface MatchCardProps {
+  match: Match
+}
 
-  useEffect(() => {
-    const fetchMatches = async () => {
-      try {
-        const response = await fetch("/api/matches")
-        const matches = await response.json()
-        setUpcomingMatches(matches)
-      } catch (error) {
-        console.error("Error fetching matches:", error)
-      } finally {
-        setLoading(false)
-      }
-    }
+export function MatchCard({ match }: MatchCardProps) {
+  const matchDate = new Date(match.date)
+  const formattedDate = matchDate.toLocaleDateString("sv-SE", {
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+  })
 
-    fetchMatches()
-  }, [])
-
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString)
-    return date.toLocaleDateString("sv-SE", {
-      weekday: "short",
-      day: "numeric",
-      month: "short",
-    })
-  }
+  const isPastMatch = match.homeScore !== undefined && match.awayScore !== undefined
 
   return (
-    <section className="py-16">
-      <div className="container mx-auto px-4">
-        <div className="grid md:grid-cols-3 gap-6">
-          {/* Kommande Matcher */}
-          <div className="bg-white rounded-lg shadow-lg overflow-hidden">
-            <div className="p-6 flex flex-col items-center text-center">
-              <Calendar className="w-12 h-12 text-orange-500 mb-4" />
-              <h3 className="text-xl font-bold text-orange-500 mb-4">KOMMANDE MATCHER</h3>
-
-              {loading ? (
-                <p className="text-gray-600 text-sm">Laddar matcher...</p>
-              ) : upcomingMatches.length > 0 ? (
-                <div className="space-y-3 w-full">
-                  {upcomingMatches.map((match) => (
-                    <div key={match.id} className="border-l-4 border-orange-500 pl-3 text-left">
-                      <div className="font-semibold text-sm text-gray-800">{match.opponent}</div>
-                      <div className="flex items-center text-xs text-gray-600 mt-1">
-                        <Clock className="w-3 h-3 mr-1" />
-                        {formatDate(match.date)} {match.time}
-                      </div>
-                      <div className="flex items-center text-xs text-gray-600">
-                        <MapPin className="w-3 h-3 mr-1" />
-                        {match.isHome ? "Hemma" : "Borta"}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-gray-600 text-sm">Inga kommande matcher hittades</p>
-              )}
-            </div>
+    <Card className="shadow-md hover:shadow-lg transition-shadow flex flex-col">
+      <CardHeader className="pb-2">
+        <CardTitle className="text-lg font-semibold text-center mb-2">{match.league}</CardTitle>
+        <div className="flex items-center justify-around text-center">
+          <div className="flex flex-col items-center">
+            <Image
+              src={match.homeLogo || "/placeholder.svg"}
+              alt={`${match.homeTeam} logo`}
+              width={60}
+              height={60}
+              className="object-contain mb-1"
+            />
+            <span className="text-md font-medium">{match.homeTeam}</span>
           </div>
-
-          {/* Handbollsligan Dam */}
-          <div className="bg-white rounded-lg shadow-lg overflow-hidden">
-            <div className="p-6 flex flex-col items-center text-center">
-              <Trophy className="w-12 h-12 text-green-600 mb-4" />
-              <h3 className="text-xl font-bold text-green-600 mb-2">HANDBOLLSLIGAN DAM</h3>
-              <p className="text-gray-600 text-sm">Följ vårt A-lag Dam i Handbollsligan</p>
-            </div>
+          <div className="text-2xl font-bold mx-4">
+            {isPastMatch ? (
+              <span className="text-green-600">
+                {match.homeScore} - {match.awayScore}
+              </span>
+            ) : (
+              <span className="text-gray-500">vs</span>
+            )}
           </div>
-
-          {/* Svenska Cupen */}
-          <div className="bg-white rounded-lg shadow-lg overflow-hidden">
-            <div className="p-6 flex flex-col items-center text-center">
-              <Zap className="w-12 h-12 text-orange-500 mb-4" />
-              <h3 className="text-xl font-bold text-orange-500 mb-2">SVENSKA CUPEN 25/26</h3>
-              <p className="text-gray-600 text-sm">Följ vårt A-lag herr i Svenska Cupen</p>
-            </div>
+          <div className="flex flex-col items-center">
+            <Image
+              src={match.awayLogo || "/placeholder.svg"}
+              alt={`${match.awayTeam} logo`}
+              width={60}
+              height={60}
+              className="object-contain mb-1"
+            />
+            <span className="text-md font-medium">{match.awayTeam}</span>
           </div>
         </div>
-      </div>
-    </section>
+      </CardHeader>
+      <CardContent className="pt-2 text-gray-700 text-sm space-y-1">
+        <div className="flex items-center gap-2">
+          <CalendarDays className="w-4 h-4 text-orange-500" />
+          <span>{formattedDate}</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <Clock className="w-4 h-4 text-orange-500" />
+          <span>{match.time}</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <MapPin className="w-4 h-4 text-orange-500" />
+          <span>{match.location}</span>
+        </div>
+      </CardContent>
+    </Card>
   )
 }
