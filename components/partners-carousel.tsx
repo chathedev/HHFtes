@@ -2,7 +2,7 @@
 
 import Image from "next/image"
 import Link from "next/link"
-import type { Partner } from "@/lib/content-types" // Changed import path
+import type { Partner } from "@/lib/content-types"
 import { Star, Plus, Minus } from "lucide-react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -20,7 +20,8 @@ export default function PartnersCarousel({ partners }: PartnersCarouselProps) {
     setOpenTier((prevOpenTier) => (prevOpenTier === tierName ? null : tierName))
   }
 
-  const partnersForDisplay = partners.filter((p) => p.visibleInCarousel)
+  // Ensure partners is an array before filtering
+  const partnersForDisplay = Array.isArray(partners) ? partners.filter((p) => p.visibleInCarousel) : []
 
   const partnersByTier: Record<string, Partner[]> = partnersForDisplay.reduce(
     (acc, partner) => {
@@ -43,7 +44,7 @@ export default function PartnersCarousel({ partners }: PartnersCarouselProps) {
         </h2>
         <p className="text-center text-gray-600 mb-12 max-w-2xl mx-auto">
           Vi är stolta över att samarbeta med lokala företag och organisationer som stödjer vår verksamhet och hjälper
-          oss att utveckla handbollen i Härnösand.
+          us to develop handball in Härnösand.
         </p>
 
         {tierOrder.map(
@@ -68,7 +69,7 @@ export default function PartnersCarousel({ partners }: PartnersCarouselProps) {
                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
                       {partnersByTier[tierName].map((partner) => {
                         const isDiamant = partner.tier === "Diamantpartner"
-                        const isHighcon = partner.id === "highcon"
+                        const isHighcon = partner.id === "highcon" // Assuming 'highcon' is a specific ID for special styling
                         return (
                           <div
                             key={partner.id}

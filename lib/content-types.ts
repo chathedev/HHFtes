@@ -44,7 +44,7 @@ export interface Partner {
   linkUrl?: string
   /** Extra copy shown on partner cards (keep short) */
   benefits: string[]
-  /** Show inside the homepage carousel? */
+  /** Should this partner be visible in the homepage carousel? */
   visibleInCarousel: boolean
 }
 

@@ -1,24 +1,37 @@
-"use client"
-
 export const dynamic = "force-dynamic"
 
-import Link from "next/link"
 import Image from "next/image"
-import { ChevronLeft, Star, Plus, Minus } from "lucide-react"
+import Link from "next/link"
+import { Star } from "lucide-react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { allPartners, type Partner } from "@/lib/partners-data"
-import { useState } from "react"
+import { defaultContent } from "@/lib/default-content"
+import type { Partner, SiteContent } from "@/lib/content-types"
 
-export default function PartnersPage() {
-  const [openTier, setOpenTier] = useState<string | null>("Diamantpartner") // State to manage open tier
-  const [hoveredCardId, setHoveredCardId] = useState<string | null>(null) // State to manage hovered card
+const BACKEND_API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL || "https://api.nuredo.se"
 
-  const handleToggle = (tierName: string) => {
-    setOpenTier((prevOpenTier) => (prevOpenTier === tierName ? null : tierName))
+async function getDynamicContent(): Promise<SiteContent> {
+  try {
+    const res = await fetch(`${BACKEND_API_URL}/api/content`, { cache: "no-store" })
+    if (!res.ok) {
+      console.error(`Failed to fetch content from backend: ${res.statusText}`)
+      return defaultContent // Fallback to default content
+    }
+    const data = await res.json()
+    // Merge fetched content with default to ensure all fields exist
+    return { ...defaultContent, ...data, partners: data.partners || defaultContent.partners }
+  } catch (error) {
+    console.error("Error fetching dynamic content:", error)
+    return defaultContent // Fallback to default content on error
   }
+}
 
-  const partnersByTier: Record<string, Partner[]> = allPartners.reduce(
+interface PartnersPageContentProps {
+  partners: Partner[]
+}
+
+function PartnersPageContent({ partners }: PartnersPageContentProps) {
+  const partnersByTier: Record<string, Partner[]> = partners.reduce(
     (acc, partner) => {
       if (!acc[partner.tier]) {
         acc[partner.tier] = []
@@ -32,116 +45,82 @@ export default function PartnersPage() {
   const tierOrder = ["Diamantpartner", "Platinapartner", "Guldpartner", "Silverpartner", "Bronspartner"]
 
   return (
-    <div className="flex flex-col min-h-screen bg-white">
-      <main className="flex-1 py-8 px-4 md:px-6 lg:px-8 max-w-7xl mx-auto w-full">
-        <Link href="/" className="inline-flex items-center text-green-700 hover:underline mb-8">
-          <ChevronLeft className="w-4 h-4 mr-2" />
-          Tillbaka till startsidan
-        </Link>
+    <div className="container mx-auto px-4 py-12">
+      <h1 className="text-5xl font-extrabold text-center mb-4 text-gray-900">
+        Våra <span className="text-orange-500">Partners</span>
+      </h1>
+      <p className="text-center text-gray-600 mb-12 max-w-3xl mx-auto text-lg">
+        Vi är djupt tacksamma för det ovärderliga stöd vi får från våra partners. Deras engagemang är avgörande för att
+        vi ska kunna fortsätta utveckla handbollen i Härnösand och erbjuda en meningsfull fritidsaktivitet för alla
+        åldrar.
+      </p>
 
-        <h1 className="text-5xl font-bold text-green-700 mb-4 text-center">Våra Partners</h1>
-        <p className="text-xl text-gray-700 mb-12 text-center max-w-3xl mx-auto">
-          Vi är stolta över att samarbeta med lokala företag och organisationer som stödjer vår verksamhet och hjälper
-          oss att utveckla handbollen och föreningen i Härnösand.
+      {tierOrder.map(
+        (tierName) =>
+          partnersByTier[tierName] && (
+            <section key={tierName} className="mb-12">
+              <h2 className="text-4xl font-bold text-green-700 mb-8 text-center">{tierName}</h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-8">
+                {partnersByTier[tierName].map((partner) => {
+                  const isDiamant = partner.tier === "Diamantpartner"
+                  return (
+                    <Card
+                      key={partner.id}
+                      className={`p-6 shadow-lg rounded-lg flex flex-col items-center text-center transition-all duration-300 hover:shadow-xl
+                        ${isDiamant ? "border-4 border-yellow-500 bg-yellow-50" : "bg-white"}
+                      `}
+                    >
+                      {isDiamant && <Star className="w-8 h-8 text-yellow-500 fill-yellow-500 mb-4" />}
+                      <div className="relative w-full h-24 mb-4">
+                        <Image
+                          src={partner.src || "/placeholder.svg"}
+                          alt={partner.alt}
+                          fill
+                          unoptimized
+                          className="object-contain"
+                        />
+                      </div>
+                      <h3 className="text-xl font-semibold text-gray-900 mb-2">{partner.alt}</h3>
+                      {partner.benefits && partner.benefits.length > 0 && (
+                        <ul className="text-sm text-gray-600 list-disc list-inside mb-4">
+                          {partner.benefits.map((benefit, index) => (
+                            <li key={index}>{benefit}</li>
+                          ))}
+                        </ul>
+                      )}
+                      {partner.linkUrl && (
+                        <Button asChild className="mt-auto bg-orange-500 hover:bg-orange-600 text-white">
+                          <Link href={partner.linkUrl} target="_blank" rel="noopener noreferrer">
+                            Besök hemsida
+                          </Link>
+                        </Button>
+                      )}
+                    </Card>
+                  )
+                })}
+              </div>
+            </section>
+          ),
+      )}
+
+      <section className="bg-green-700 text-white p-10 rounded-lg shadow-xl text-center mt-16">
+        <h2 className="text-4xl font-bold mb-4">Bli en del av Härnösands HF-familjen!</h2>
+        <p className="text-xl mb-8">
+          Är ditt företag intresserat av att stödja lokal idrott och synas tillsammans med oss? Vi erbjuder olika
+          partnerskapspaket som kan anpassas efter era behov.
         </p>
-
-        {tierOrder.map(
-          (tierName) =>
-            partnersByTier[tierName] && (
-              <section key={tierName} className="mb-8 border-b border-gray-200 pb-4">
-                <div
-                  className="flex justify-between items-center mb-4 cursor-pointer"
-                  onClick={() => handleToggle(tierName)}
-                >
-                  <h2 className="text-3xl font-bold text-orange-500">{tierName}</h2>
-                  <Button variant="ghost" size="icon" aria-expanded={openTier === tierName}>
-                    {openTier === tierName ? (
-                      <Minus className="w-6 h-6 text-green-700" />
-                    ) : (
-                      <Plus className="w-6 h-6 text-green-700" />
-                    )}
-                  </Button>
-                </div>
-                {openTier === tierName && (
-                  <div className="flex justify-center animate-fade-in">
-                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
-                      {partnersByTier[tierName].map((partner, index) => {
-                        const isDiamant = partner.tier === "Diamantpartner"
-                        const isHighcon = partner.id === "highcon"
-                        const content = (
-                          <Card
-                            key={index}
-                            className={`relative p-4 shadow-lg rounded-lg flex flex-col items-center justify-center h-full w-full text-center
-                            ${isDiamant ? "border-2 border-yellow-500" : "bg-white/80"}
-                          `}
-                          >
-                            {isDiamant && (
-                              <Star className="absolute top-1 right-1 w-5 h-5 text-yellow-500 fill-yellow-500" />
-                            )}
-                            <div className={`relative w-full mb-2 ${isHighcon ? "h-32" : "h-24"}`}>
-                              <Image
-                                src={partner.src || "/placeholder.svg"}
-                                alt={partner.alt}
-                                fill
-                                unoptimized
-                                className="object-contain transition-transform duration-300 hover:scale-105"
-                              />
-                            </div>
-                            <h3 className={`text-sm font-semibold ${isDiamant ? "text-gray-900" : "text-gray-800"}`}>
-                              {partner.alt}
-                            </h3>
-                            {partner.benefits.length > 0 && (
-                              <p className={`text-xs mt-1 ${isDiamant ? "text-gray-700" : "text-gray-500"}`}>
-                                {partner.benefits[0]}
-                              </p>
-                            )}
-
-                            {/* Hover Overlay */}
-                            {hoveredCardId === partner.id && partner.linkUrl && (
-                              <div className="absolute inset-0 bg-black bg-opacity-70 flex items-center justify-center rounded-lg transition-opacity duration-300 opacity-0 group-hover:opacity-100">
-                                <Button
-                                  onClick={() => window.open(partner.linkUrl, "_blank")}
-                                  className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-md"
-                                >
-                                  Gå till
-                                </Button>
-                              </div>
-                            )}
-                          </Card>
-                        )
-                        return (
-                          <div
-                            key={partner.id}
-                            className="relative group w-full h-36"
-                            onMouseEnter={() => setHoveredCardId(partner.id)}
-                            onMouseLeave={() => setHoveredCardId(null)}
-                            title={partner.linkUrl ? "Besök sponsor" : undefined}
-                          >
-                            {content}
-                          </div>
-                        )
-                      })}
-                    </div>
-                  </div>
-                )}
-              </section>
-            ),
-        )}
-
-        <section className="bg-green-700 text-white p-8 rounded-lg shadow-lg text-center mt-12">
-          <h2 className="text-3xl font-bold mb-4">Vill du stödja Härnösands HF?</h2>
-          <p className="text-lg mb-8">
-            Vi välkomnar nya partners som vill stödja vår verksamhet och bidra till utvecklingen av handbollen i
-            regionen.
-          </p>
-          <div className="flex flex-col sm:flex-row justify-center gap-4">
-            <Button asChild className="bg-orange-500 hover:bg-orange-600 text-white px-8 py-3 rounded-md">
-              <Link href="/kontakt">Kontakta oss</Link>
-            </Button>
-            {/* Removed "Mer information" link */}
-          </div>
-        </section>
-      </main>
+        <Link
+          href="/kontakt"
+          className="bg-orange-500 hover:bg-orange-600 text-white px-10 py-4 rounded-full text-lg font-semibold shadow-lg transition-transform transform hover:scale-105"
+        >
+          Kontakta oss för mer information
+        </Link>
+      </section>
     </div>
   )
+}
+
+export default async function PartnersPage() {
+  const content = await getDynamicContent()
+  return <PartnersPageContent partners={content.partners} />
 }
