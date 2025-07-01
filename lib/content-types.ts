@@ -1,57 +1,62 @@
-// lib/content-types.ts
+/**
+ * Central place for all editable-content typings
+ * ───────────────────────────────────────────────
+ * You can extend these interfaces later from the
+ * editor if you need more fields.
+ */
+
+/* ----------  HERO  ---------- */
 export interface HeroContent {
-  imageUrl: string
-  title: string
-  description: string
-  button1Text: string
-  button1Link: string
-  button2Text: string
-  button2Link: string
+  headline: string
+  subheadline: string
+  ctaText: string
+  ctaLink: string
+  backgroundImage: string
+}
+
+/* ----------  STATS  ---------- */
+export interface StatItem {
+  label: string
+  value: string
 }
 
 export interface StatsContent {
-  totalTeams: number
-  aTeams: number
-  youthTeams: number
-  yearsHistory: string
+  stats: StatItem[]
 }
 
+/* ----------  ABOUT THE CLUB  ---------- */
 export interface AboutClubContent {
   title: string
-  paragraph1: string
-  paragraph2: string
-  passionText: string
-  developmentText: string
-  communityText: string
-  button1Text: string
-  button1Link: string
-  button2Text: string
-  button2Link: string
-  imageSrc: string
-  imageAlt: string
-  statNumber: number
-  statLabel: string
+  body: string
+  image: string
 }
 
+/* ----------  PARTNERS  ---------- */
 export interface Partner {
-  /** A unique, URL-safe id (used as React key, etc.) */
   id: string
-  /** Sponsorship tier – e.g. “Diamantpartner”, “Guldpartner” … */
-  tier: string
-  /** Public URL (or pathname inside /public) of the partner logo */
-  src: string
-  /** Accessible alt text (also rendered as the partner name in UI) */
+  /** Company name or short label shown under the logo */
   alt: string
-  /** Optional link to the partner’s website */
+  /** Public URL (or local path) to the logo */
+  src: string
+  /** “Diamantpartner”, “Platinapartner”, “Guldpartner”, “Silverpartner”, “Bronspartner” */
+  tier: string
+  /** Where to send visitors on click (optional) */
   linkUrl?: string
-  /** Should this partner be visible in the carousel? */
-  visibleInCarousel?: boolean
+  /** Extra copy shown on partner cards (keep short) */
+  benefits: string[]
+  /** Show inside the homepage carousel? */
+  visibleInCarousel: boolean
 }
 
-export interface FullContent {
+/* ----------  COMPLETE SITE CONTENT  ---------- */
+export interface SiteContent {
   hero: HeroContent
   stats: StatsContent
   aboutClub: AboutClubContent
   partners: Partner[]
-  sections: string[] // To store the order of sections
+  /**
+   * Order of the home-page sections –
+   * e.g. ["hero","stats","aboutClub","partnersCarousel"]
+   */
+  sections: string[]
 }
