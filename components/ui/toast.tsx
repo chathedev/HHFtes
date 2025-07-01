@@ -4,7 +4,7 @@ import * as React from "react"
 import type { ToastProps, ToastActionElement } from "@radix-ui/react-toast"
 import { cva } from "class-variance-authority"
 import { X } from "lucide-react"
-import { ToastPrimitives } from "@radix-ui/react-toast"
+import * as ToastPrimitives from "@radix-ui/react-toast"
 
 import { cn } from "@/lib/utils"
 
@@ -121,6 +121,7 @@ export {
   ToastPrimitives,
   ToastProvider,
   ToastViewport,
+  type Toast,
   type Toast,
   ToastTitle,
   ToastDescription,
