@@ -1,25 +1,24 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import * as React from "react"
 
 const MOBILE_BREAKPOINT = 768
 
-export function useMobile() {
-  const [isMobile, setIsMobile] = useState(false)
+export function useIsMobile() {
+  const [isMobile, setIsMobile] = React.useState<boolean | undefined>(undefined)
 
-  useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < MOBILE_BREAKPOINT) // Tailwind's 'md' breakpoint
+  React.useEffect(() => {
+    const mql = window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT - 1}px)`)
+    const onChange = () => {
+      setIsMobile(window.innerWidth < MOBILE_BREAKPOINT)
     }
-
-    checkMobile() // Check on initial render
-
-    window.addEventListener("resize", checkMobile) // Add event listener for window resize
-
-    return () => {
-      window.removeEventListener("resize", checkMobile) // Clean up on component unmount
-    }
+    mql.addEventListener("change", onChange)
+    setIsMobile(window.innerWidth < MOBILE_BREAKPOINT)
+    return () => mql.removeEventListener("change", onChange)
   }, [])
 
-  return isMobile
+  return !!isMobile
 }
+
+// 👇  Add to the end of the file
+export const useMobile = useIsMobile

@@ -138,3 +138,5 @@ export {
   ToastViewport,
   Toaster, // 👈  required named export
 }
+
+export { Toaster } from "./toaster"

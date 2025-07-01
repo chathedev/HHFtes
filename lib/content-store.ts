@@ -1,5 +1,8 @@
 import type { ReadonlyURLSearchParams } from "next/navigation"
 
+/* ------------------------------------------------------------------
+   ✨ 1. Types
+-------------------------------------------------------------------*/
 export interface FAQItem {
   question: string
   answer: string
@@ -8,21 +11,25 @@ export interface FAQItem {
 export interface PageContent {
   sections: string[]
   hero: {
+    /* visual & copy */
     title: string
-    titleTextColorClass: string // New: Text color for title
-    titleFontSizeClass: string // New: Font size for title
+    titleTextColorClass: string
+    titleFontSizeClass: string
     description: string
-    descriptionTextColorClass: string // New: Text color for description
-    descriptionFontSizeClass: string // New: Font size for description
+    descriptionTextColorClass: string
+    descriptionFontSizeClass: string
     imageUrl: string
+    /* cta button 1 */
     button1Text: string
     button1Link: string
     button1BgClass: string
     button1TextClass: string
+    /* cta button 2 */
     button2Text: string
     button2Link: string
     button2BgClass: string
     button2TextClass: string
+    /* backdrop overlay */
     overlayColorClass: string
   }
   stats: {
@@ -77,16 +84,19 @@ export interface PageContent {
   }
 }
 
+/* ------------------------------------------------------------------
+   ✨ 2. Default initial content
+-------------------------------------------------------------------*/
 export const defaultContent: PageContent = {
   sections: ["hero", "stats", "aboutClub", "partnersCarousel"],
   hero: {
     title: "Välkommen till Härnösands FF",
-    titleTextColorClass: "text-white", // Default
-    titleFontSizeClass: "text-6xl", // Default
+    titleTextColorClass: "text-white",
+    titleFontSizeClass: "text-6xl",
     description:
       "Härnösands FF är en fotbollsklubb med en rik historia och en stark gemenskap. Vi strävar efter att utveckla både spelare och människor, från ungdom till elit.",
-    descriptionTextColorClass: "text-white", // Default
-    descriptionFontSizeClass: "text-xl", // Default
+    descriptionTextColorClass: "text-white",
+    descriptionFontSizeClass: "text-xl",
     imageUrl: "https://az316141.cdn.laget.se/2317159/11348130.jpg",
     button1Text: "Våra lag",
     button1Link: "/lag",
@@ -105,7 +115,7 @@ export const defaultContent: PageContent = {
     historyYears: "1900-tal",
   },
   aboutClub: {
-    title: "Om Härnösands HF",
+    title: "Om Härnösands FF",
     paragraph1:
       "Härnösands FF grundades med en vision om att skapa en inkluderande och framgångsrik fotbollsmiljö. Sedan dess har vi vuxit till en av regionens mest respekterade klubbar, känd för vår starka gemenskap och engagemang för ungdomsfotboll.",
     paragraph2:
@@ -145,11 +155,11 @@ export const defaultContent: PageContent = {
     faqItems: [
       {
         question: "Hur blir jag medlem?",
-        answer: "Du kan bli medlem genom att fylla i vårt online-formulär under sektionen 'Bli medlem'.",
+        answer: "Du kan bli medlem genom att fylla i vårt online-formulär under sektionen ”Bli medlem”.",
       },
       {
         question: "Var hittar jag matchschemat?",
-        answer: "Matchschemat för alla lag finns tillgängligt på 'Matcher'-sidan.",
+        answer: "Matchschemat för alla lag finns tillgängligt på ”Matcher”-sidan.",
       },
       {
         question: "Kan jag provträna med ett lag?",
@@ -160,17 +170,48 @@ export const defaultContent: PageContent = {
   partnersPage: {
     title: "Våra Partners",
     description:
-      "Härnösands FF är djupt tacksamma för det ovärderliga stöd vi får från våra partners. Deras engagemang är avgörande för vår förmåga att bedriva verksamheten, utveckla våra spelare och bidra positivt till lokalsamhället. Tillsammans skapar vi framgång på och utanför planen.",
+      "Härnösands FF är djupt tacksamma för det ovärderliga stöd vi får från våra partners. Deras engagemang är avgörande för vår förmåga att bedriva verksamheten, utveckla våra spelare och bidra positivt till lokalsamhället.",
     callToActionTitle: "Bli en del av vårt vinnande lag – Bli Partner!",
     callToActionDescription:
-      "Är ditt företag intresserat av att synas tillsammans med Härnösands FF och stödja en levande idrottsförening? Vi erbjuder skräddarsydda partnerskap som ger exponering och möjlighet att associeras med positiva värden som gemenskap, hälsa och framgång. Kontakta oss för att utforska hur vi kan samarbeta.",
+      "Är ditt företag intresserat av att synas tillsammans med Härnösands FF och stödja en levande idrottsförening? Vi erbjuder skräddarsydda partnerskap med exponering och tydliga värden.",
     callToActionLinkText: "Kontakta oss om partnerskap",
     callToActionLink: "/kontakt",
   },
 }
 
 /* ------------------------------------------------------------------
-   Load content from backend and merge with defaults
+   ✨ 3. Utility – deep merge (used by loadContent & elsewhere)
+-------------------------------------------------------------------*/
+export function deepMerge<T extends object>(target: T, source: Partial<T>): T {
+  const output = { ...target } as T
+
+  if (target && typeof target === "object" && source && typeof source === "object") {
+    for (const key of Object.keys(source)) {
+      const targetVal = target[key as keyof T]
+      const srcVal = source[key as keyof T]
+
+      if (Array.isArray(targetVal) && Array.isArray(srcVal)) {
+        output[key as keyof T] = srcVal as T[keyof T] // overwrite arrays
+      } else if (
+        targetVal &&
+        typeof targetVal === "object" &&
+        srcVal &&
+        typeof srcVal === "object" &&
+        !Array.isArray(targetVal) &&
+        !Array.isArray(srcVal)
+      ) {
+        output[key as keyof T] = deepMerge(targetVal as object, srcVal as object) as T[keyof T]
+      } else {
+        output[key as keyof T] = srcVal as T[keyof T]
+      }
+    }
+  }
+
+  return output
+}
+
+/* ------------------------------------------------------------------
+   ✨ 4. Load content from API (fallback → defaults)
 -------------------------------------------------------------------*/
 export async function loadContent(): Promise<PageContent> {
   try {
@@ -189,49 +230,23 @@ export async function loadContent(): Promise<PageContent> {
     console.error("[loadContent] Backend fetch failed:", err)
   }
 
-  // Fallback to defaults if anything goes wrong
-  return defaultContent
+  return structuredClone(defaultContent)
 }
 
-// Helper function for deep merging objects (used internally by loadContentFromLocalStorage and server actions)
-// This is kept here because it's used by the defaultContent logic and might be useful if content structure changes.
-export function deepMerge<T extends object>(target: T, source: Partial<T>): T {
-  const output = { ...target } as T
-
-  if (target && typeof target === "object" && source && typeof source === "object") {
-    Object.keys(source).forEach((key) => {
-      if (Object.prototype.hasOwnProperty.call(source, key)) {
-        const targetValue = target[key as keyof T]
-        const sourceValue = source[key as keyof T]
-
-        if (Array.isArray(targetValue) && Array.isArray(sourceValue)) {
-          // For arrays, replace completely rather than merging elements
-          output[key as keyof T] = sourceValue as T[keyof T]
-        } else if (
-          typeof targetValue === "object" &&
-          targetValue !== null &&
-          typeof sourceValue === "object" &&
-          sourceValue !== null &&
-          !Array.isArray(targetValue) &&
-          !Array.isArray(sourceValue) // Ensure it's not an array before deep merging
-        ) {
-          output[key as keyof T] = deepMerge(targetValue as object, sourceValue as object) as T[keyof T]
-        } else {
-          output[key as keyof T] = sourceValue as T[keyof T]
-        }
-      }
-    })
-  }
-  return output
+/* ------------------------------------------------------------------
+   ✨ 5. Convenience – reset to defaults (used by editor “Återställ”)
+-------------------------------------------------------------------*/
+export function resetContent(): PageContent {
+  return structuredClone(defaultContent)
 }
 
-export function getBaseUrl(searchParams?: ReadonlyURLSearchParams) {
-  const url = process.env.NEXT_PUBLIC_VERCEL_URL
+/* ------------------------------------------------------------------
+   ✨ 6. Utility – build absolute base URL
+-------------------------------------------------------------------*/
+export function getBaseUrl(searchParams?: ReadonlyURLSearchParams): string {
+  const base = process.env.NEXT_PUBLIC_VERCEL_URL
     ? `https://${process.env.NEXT_PUBLIC_VERCEL_URL}`
     : "http://localhost:3000"
 
-  if (searchParams) {
-    return `${url}?${searchParams.toString()}`
-  }
-  return url
+  return searchParams ? `${base}?${searchParams.toString()}` : base
 }
