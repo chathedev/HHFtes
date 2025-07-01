@@ -56,7 +56,6 @@ export interface PageContent {
     boardTitle: string
     boardDescription: string
     boardContact: string
-    faqTitle: string
     faqItems: FAQItem[]
   }
   partnersPage: {
@@ -66,28 +65,6 @@ export interface PageContent {
     callToActionDescription: string
     callToActionLinkText: string
     callToActionLink: string
-  }
-  theme: {
-    primaryColor: string
-    secondaryColor: string
-    backgroundColor: string
-    foregroundColor: string
-    cardColor: string
-    cardForegroundColor: string
-    popoverColor: string
-    popoverForegroundColor: string
-    primaryForegroundColor: string
-    secondaryForegroundColor: string
-    mutedColor: string
-    mutedForegroundColor: string
-    accentColor: string
-    accentForegroundColor: string
-    destructiveColor: string
-    destructiveForegroundColor: string
-    borderColor: string
-    inputColor: string
-    ringColor: string
-    borderRadius: string
   }
 }
 
@@ -147,7 +124,6 @@ export const defaultContent: PageContent = {
     boardTitle: "Styrelsen",
     boardDescription: "Kontakta styrelsen för ärenden som rör klubbens ledning och strategi.",
     boardContact: "styrelsen@harnosandsff.se",
-    faqTitle: "Vanliga frågor",
     faqItems: [
       {
         question: "Hur blir jag medlem?",
@@ -172,28 +148,6 @@ export const defaultContent: PageContent = {
       "Är ditt företag intresserat av att synas tillsammans med Härnösands FF och stödja en levande idrottsförening? Vi erbjuder skräddarsydda partnerskap som ger exponering och möjlighet att associeras med positiva värden som gemenskap, hälsa och framgång. Kontakta oss för att utforska hur vi kan samarbeta.",
     callToActionLinkText: "Kontakta oss om partnerskap",
     callToActionLink: "/kontakt",
-  },
-  theme: {
-    primaryColor: "217.2 91.2% 59.8%", // blue
-    secondaryColor: "240 4.8% 95.9%", // gray
-    backgroundColor: "0 0% 100%", // white
-    foregroundColor: "240 10% 3.9%", // black
-    cardColor: "0 0% 100%",
-    cardForegroundColor: "240 10% 3.9%",
-    popoverColor: "0 0% 100%",
-    popoverForegroundColor: "240 10% 3.9%",
-    primaryForegroundColor: "0 0% 98%",
-    secondaryForegroundColor: "240 5.9% 10%",
-    mutedColor: "240 4.8% 95.9%",
-    mutedForegroundColor: "240 3.8% 46.1%",
-    accentColor: "240 4.8% 95.9%",
-    accentForegroundColor: "240 5.9% 10%",
-    destructiveColor: "0 84.2% 60.2%",
-    destructiveForegroundColor: "0 0% 98%",
-    borderColor: "214.3 31.8% 91.4%",
-    inputColor: "214.3 31.8% 91.4%",
-    ringColor: "217.2 91.2% 59.8%",
-    borderRadius: "0.5rem",
   },
 }
 

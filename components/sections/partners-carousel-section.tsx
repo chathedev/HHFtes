@@ -139,19 +139,9 @@ export default function PartnersCarouselSection({
 
                               {/* Hover Overlay */}
                               {hoveredCardId === partner.id && partner.linkUrl && (
-                                <div
-                                  className={`absolute inset-0 bg-black bg-opacity-70 flex items-center justify-center rounded-lg transition-opacity duration-300
-                                    ${hoveredCardId === partner.id ? "opacity-100" : "opacity-0 group-hover:opacity-100"}
-                                  `}
-                                >
+                                <div className="absolute inset-0 bg-black bg-opacity-70 flex items-center justify-center rounded-lg transition-opacity duration-300 opacity-0 group-hover:opacity-100">
                                   <Button
-                                    onClick={(e) => {
-                                      if (isEditing) {
-                                        e.preventDefault()
-                                      } else {
-                                        window.open(partner.linkUrl, "_blank")
-                                      }
-                                    }}
+                                    onClick={() => window.open(partner.linkUrl, "_blank")}
                                     className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-md"
                                   >
                                     Gå till
@@ -188,11 +178,8 @@ export default function PartnersCarouselSection({
           </p>
           <div className="flex flex-col sm:flex-row justify-center gap-4">
             <Link
-              href={isEditing ? "#" : content.callToActionLink}
+              href={content.callToActionLink}
               className="bg-orange-500 hover:bg-orange-600 text-white px-8 py-3 rounded-md"
-              onClick={(e) => {
-                if (isEditing) e.preventDefault()
-              }}
             >
               <span
                 contentEditable={isEditing}
