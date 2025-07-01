@@ -1,11 +1,10 @@
 "use client"
 
 import type React from "react"
+
 import Image from "next/image"
 import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
-import { Users, Trophy, CalendarDays } from "lucide-react"
+import { Heart, TrendingUp, Users } from "lucide-react"
 import type { PageContent } from "@/lib/content-store"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
@@ -28,6 +27,15 @@ export default function AboutClubSection({
     }
   }
 
+  const handleNumberChange = (field: keyof PageContent["aboutClub"], e: React.ChangeEvent<HTMLDivElement>) => {
+    if (onContentChange) {
+      const value = Number.parseInt(e.currentTarget.innerText, 10)
+      if (!isNaN(value)) {
+        onContentChange(field, value)
+      }
+    }
+  }
+
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (onContentChange) {
       onContentChange("imageSrc", e.target.value)
@@ -40,119 +48,92 @@ export default function AboutClubSection({
     }
   }
 
-  const handleNumberChange = (field: keyof PageContent["aboutClub"], e: React.ChangeEvent<HTMLInputElement>) => {
-    if (onContentChange) {
-      onContentChange(field, Number.parseInt(e.target.value) || 0)
-    }
-  }
-
   return (
-    <section className="py-12 md:py-20 bg-gray-50">
+    <section className="py-16">
       <div className="container mx-auto px-4">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
-          <div className="relative h-64 md:h-96 lg:h-[500px] rounded-lg overflow-hidden shadow-lg">
-            <Image
-              src={content.imageSrc || "/placeholder.svg"} // No placeholder fallback here
-              alt="Härnösands FF lagbild"
-              fill
-              className="object-cover object-center"
-              onContextMenu={(e) => e.preventDefault()}
-              onDragStart={(e) => e.preventDefault()}
-            />
-            {isEditing && (
-              <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-                <span className="text-white text-lg font-bold">Redigera bild</span>
-              </div>
-            )}
-          </div>
-          <div className="space-y-6">
+        <div className="grid md:grid-cols-2 gap-12 items-center">
+          <div>
             <h2
-              className="text-3xl md:text-4xl font-bold text-gray-900 outline-none focus:ring-2 focus:ring-blue-500 rounded px-1"
+              className="text-4xl font-bold text-green-600 mb-2 outline-none focus:ring-2 focus:ring-green-300 rounded px-1"
               contentEditable={isEditing}
               suppressContentEditableWarning={true}
               onBlur={(e) => handleTextChange("title", e)}
             >
               {content.title}
             </h2>
+
             <p
-              className="text-gray-700 text-lg leading-relaxed outline-none focus:ring-2 focus:ring-blue-500 rounded px-1"
+              className="text-gray-700 mb-6 outline-none focus:ring-2 focus:ring-gray-300 rounded px-1"
               contentEditable={isEditing}
               suppressContentEditableWarning={true}
-              onBlur={(e) => handleTextChange("description", e)}
+              onBlur={(e) => handleTextChange("paragraph1", e)}
             >
-              {content.description}
+              {content.paragraph1}
             </p>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <Card className="text-center p-4 shadow-sm">
-                <CardContent className="flex flex-col items-center justify-center p-0">
-                  <Users className="h-8 w-8 text-green-600 mb-2" />
-                  <div className="text-3xl font-bold text-gray-900">
-                    {isEditing ? (
-                      <input
-                        type="number"
-                        value={content.totalTeamsCallout}
-                        onChange={(e) => handleNumberChange("totalTeamsCallout", e)}
-                        className="w-20 text-center border p-1 rounded outline-none focus:ring-2 focus:ring-green-300"
-                      />
-                    ) : (
-                      content.totalTeamsCallout
-                    )}
-                  </div>
-                  <p className="text-sm text-gray-600">Lag</p>
-                </CardContent>
-              </Card>
-              <Card className="text-center p-4 shadow-sm">
-                <CardContent className="flex flex-col items-center justify-center p-0">
-                  <Trophy className="h-8 w-8 text-orange-500 mb-2" />
-                  <div className="text-3xl font-bold text-gray-900">
-                    {isEditing ? (
-                      <input
-                        type="number"
-                        value={content.totalMembersCallout}
-                        onChange={(e) => handleNumberChange("totalMembersCallout", e)}
-                        className="w-20 text-center border p-1 rounded outline-none focus:ring-2 focus:ring-orange-300"
-                      />
-                    ) : (
-                      content.totalMembersCallout
-                    )}
-                  </div>
-                  <p className="text-sm text-gray-600">Medlemmar</p>
-                </CardContent>
-              </Card>
-              <Card className="text-center p-4 shadow-sm">
-                <CardContent className="flex flex-col items-center justify-center p-0">
-                  <CalendarDays className="h-8 w-8 text-blue-600 mb-2" />
-                  <div className="text-3xl font-bold text-gray-900">
-                    {isEditing ? (
-                      <input
-                        type="number"
-                        value={content.totalYearsCallout}
-                        onChange={(e) => handleNumberChange("totalYearsCallout", e)}
-                        className="w-20 text-center border p-1 rounded outline-none focus:ring-2 focus:ring-blue-300"
-                      />
-                    ) : (
-                      content.totalYearsCallout
-                    )}
-                  </div>
-                  <p className="text-sm text-gray-600">År i drift</p>
-                </CardContent>
-              </Card>
+
+            <p
+              className="text-gray-700 mb-8 outline-none focus:ring-2 focus:ring-gray-300 rounded px-1"
+              contentEditable={isEditing}
+              suppressContentEditableWarning={true}
+              onBlur={(e) => handleTextChange("paragraph2", e)}
+            >
+              {content.paragraph2}
+            </p>
+
+            <div className="grid grid-cols-3 gap-4 mb-8">
+              <div className="border border-gray-200 rounded-lg p-4 text-center">
+                <Heart className="w-8 h-8 text-green-600 mx-auto mb-2" />
+                <h4 className="font-medium mb-1">Passion</h4>
+                <p
+                  className="text-xs text-gray-600 outline-none focus:ring-2 focus:ring-gray-300 rounded px-1"
+                  contentEditable={isEditing}
+                  suppressContentEditableWarning={true}
+                  onBlur={(e) => handleTextChange("passionText", e)}
+                >
+                  {content.passionText}
+                </p>
+              </div>
+
+              <div className="border border-gray-200 rounded-lg p-4 text-center">
+                <TrendingUp className="w-8 h-8 text-orange-500 mx-auto mb-2" />
+                <h4 className="font-medium mb-1">Utveckling</h4>
+                <p
+                  className="text-xs text-gray-600 outline-none focus:ring-2 focus:ring-gray-300 rounded px-1"
+                  contentEditable={isEditing}
+                  suppressContentEditableWarning={true}
+                  onBlur={(e) => handleTextChange("developmentText", e)}
+                >
+                  {content.developmentText}
+                </p>
+              </div>
+
+              <div className="border border-gray-200 rounded-lg p-4 text-center">
+                <Users className="w-8 h-8 text-green-600 mx-auto mb-2" />
+                <h4 className="font-medium mb-1">Gemenskap</h4>
+                <p
+                  className="text-xs text-gray-600 outline-none focus:ring-2 focus:ring-gray-300 rounded px-1"
+                  contentEditable={isEditing}
+                  suppressContentEditableWarning={true}
+                  onBlur={(e) => handleTextChange("communityText", e)}
+                >
+                  {content.communityText}
+                </p>
+              </div>
             </div>
-            <div className="mt-6">
+
+            <div className="flex flex-wrap gap-4">
               {isEditing ? (
-                <div className="flex items-center gap-2">
-                  <Button asChild className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-md font-medium">
-                    <span
-                      contentEditable={isEditing}
-                      suppressContentEditableWarning={true}
-                      onBlur={(e) => handleTextChange("linkText", e)}
-                      className="outline-none focus:ring-2 focus:ring-white rounded px-1"
-                    >
-                      {content.linkText}
-                    </span>
-                  </Button>
-                  <Select value={content.linkHref} onValueChange={(value) => handleLinkChange("linkHref", value)}>
-                    <SelectTrigger className="w-[150px] h-auto p-1 text-sm bg-white text-gray-800 outline-none focus:ring-2 focus:ring-blue-300">
+                <div className="bg-orange-500 text-white px-6 py-2 rounded-md font-medium flex items-center gap-2">
+                  <span
+                    contentEditable={isEditing}
+                    suppressContentEditableWarning={true}
+                    onBlur={(e) => handleTextChange("button1Text", e)}
+                    className="outline-none focus:ring-2 focus:ring-white rounded px-1"
+                  >
+                    {content.button1Text}
+                  </span>
+                  <Select value={content.button1Link} onValueChange={(value) => handleLinkChange("button1Link", value)}>
+                    <SelectTrigger className="w-[120px] h-auto p-1 text-xs bg-white text-gray-800 outline-none focus:ring-2 focus:ring-orange-300">
                       <SelectValue placeholder="Välj sida" />
                     </SelectTrigger>
                     <SelectContent>
@@ -166,33 +147,99 @@ export default function AboutClubSection({
                 </div>
               ) : (
                 <Link
-                  href={content.linkHref}
-                  className="inline-flex items-center justify-center rounded-md bg-blue-600 px-6 py-3 text-base font-medium text-white shadow transition-colors hover:bg-blue-700"
+                  href={content.button1Link}
+                  className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-2 rounded-md font-medium transition-colors"
                 >
-                  {content.linkText}
+                  {content.button1Text}
+                </Link>
+              )}
+              {isEditing ? (
+                <div className="bg-white border border-gray-300 text-gray-800 px-6 py-2 rounded-md font-medium flex items-center gap-2">
+                  <span
+                    contentEditable={isEditing}
+                    suppressContentEditableWarning={true}
+                    onBlur={(e) => handleTextChange("button2Text", e)}
+                    className="outline-none focus:ring-2 focus:ring-white rounded px-1"
+                  >
+                    {content.button2Text}
+                  </span>
+                  <Select value={content.button2Link} onValueChange={(value) => handleLinkChange("button2Link", value)}>
+                    <SelectTrigger className="w-[120px] h-auto p-1 text-xs bg-white text-gray-800 outline-none focus:ring-2 focus:ring-gray-300">
+                      <SelectValue placeholder="Välj sida" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {availablePages.map((page) => (
+                        <SelectItem key={page.path} value={page.path}>
+                          {page.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              ) : (
+                <Link
+                  href={content.button2Link}
+                  className="bg-white border border-gray-300 hover:bg-gray-100 text-gray-800 px-6 py-2 rounded-md font-medium transition-colors"
+                >
+                  {content.button2Text}
                 </Link>
               )}
             </div>
           </div>
-        </div>
-        {isEditing && (
-          <div className="mt-8 flex justify-center">
-            <div className="bg-white p-4 rounded-lg shadow-lg flex gap-2 items-center">
-              <label htmlFor="about-image-url" className="sr-only">
-                Om Bild URL
-              </label>
-              <input
-                id="about-image-url"
-                type="text"
-                value={content.imageSrc}
-                onChange={handleImageChange}
-                placeholder="Om Bild URL"
-                className="border p-2 rounded w-80 text-gray-800 outline-none focus:ring-2 focus:ring-blue-500"
+
+          <div className="relative">
+            <div className="relative h-[400px] rounded-lg overflow-hidden shadow-xl">
+              <Image
+                src={content.imageSrc || "/placeholder.svg"} // No placeholder fallback here
+                alt={content.imageAlt}
+                fill
+                className="object-cover"
+                onContextMenu={(e) => e.preventDefault()}
+                onDragStart={(e) => e.preventDefault()}
               />
+              {isEditing && (
+                <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                  <span className="text-white text-lg font-bold">Redigera bild</span>
+                </div>
+              )}
+            </div>
+
+            <div className="absolute -top-4 -right-4 bg-orange-500 text-white rounded-lg p-4 shadow-lg">
+              <div
+                className="text-3xl font-bold outline-none focus:ring-2 focus:ring-white rounded px-1"
+                contentEditable={isEditing}
+                suppressContentEditableWarning={true}
+                onBlur={(e) => handleNumberChange("totalTeamsCallout", e)}
+              >
+                {content.totalTeamsCallout}
+              </div>
+              <div
+                className="text-sm outline-none focus:ring-2 focus:ring-white rounded px-1"
+                contentEditable={isEditing}
+                suppressContentEditableWarning={true}
+                onBlur={(e) => handleTextChange("totalTeamsCalloutText", e)}
+              >
+                {content.totalTeamsCalloutText}
+              </div>
             </div>
           </div>
-        )}
+        </div>
       </div>
+      {isEditing && (
+        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-30 bg-white p-4 rounded-lg shadow-lg flex gap-2 items-center">
+          <label htmlFor="about-image-url" className="sr-only">
+            Bild URL
+          </label>
+          <input
+            id="about-image-url"
+            type="text"
+            value={content.imageSrc}
+            onChange={handleImageChange}
+            placeholder="Bild URL"
+            className="border p-2 rounded w-80 text-gray-800 outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+      )}
     </section>
   )
 }

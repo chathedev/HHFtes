@@ -4,7 +4,6 @@ import type React from "react"
 
 import Image from "next/image"
 import Link from "next/link"
-import { ArrowRight } from "lucide-react"
 import type { PageContent } from "@/lib/content-store"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
@@ -54,7 +53,7 @@ export default function HeroSection({ content, isEditing = false, onContentChang
       <div className="relative z-10 flex h-full items-end p-8 md:p-12">
         <div className="max-w-3xl text-white">
           <h1
-            className="text-4xl font-bold leading-tight md:text-6xl lg:text-7xl outline-none focus:ring-2 focus:ring-white rounded px-1"
+            className="text-4xl font-bold leading-tight md:text-6xl outline-none focus:ring-2 focus:ring-white rounded px-1"
             contentEditable={isEditing}
             suppressContentEditableWarning={true}
             onBlur={(e) => handleTextChange("title", e)}
@@ -62,14 +61,14 @@ export default function HeroSection({ content, isEditing = false, onContentChang
             {content.title}
           </h1>
           <p
-            className="mt-4 text-lg md:text-xl lg:text-2xl outline-none focus:ring-2 focus:ring-white rounded px-1"
+            className="mt-4 text-lg md:text-xl outline-none focus:ring-2 focus:ring-white rounded px-1"
             contentEditable={isEditing}
             suppressContentEditableWarning={true}
             onBlur={(e) => handleTextChange("description", e)}
           >
             {content.description}
           </p>
-          <div className="mt-8 flex flex-col sm:flex-row flex-wrap gap-4">
+          <div className="mt-8 flex flex-wrap gap-4">
             {isEditing ? (
               <div className="flex items-center gap-2 bg-green-600 text-white px-6 py-3 rounded-md font-medium">
                 <span
@@ -92,7 +91,6 @@ export default function HeroSection({ content, isEditing = false, onContentChang
                     ))}
                   </SelectContent>
                 </Select>
-                <ArrowRight className="ml-1 h-5 w-5" />
               </div>
             ) : (
               <Link
@@ -100,7 +98,6 @@ export default function HeroSection({ content, isEditing = false, onContentChang
                 className="inline-flex items-center justify-center rounded-md bg-green-600 px-6 py-3 text-base font-medium text-white shadow transition-colors hover:bg-green-700"
               >
                 {content.button1Text}
-                <ArrowRight className="ml-2 h-5 w-5" />
               </Link>
             )}
 
