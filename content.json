@@ -1,0 +1,87 @@
+{
+  "sections": [
+    "hero",
+    "stats",
+    "upcomingEvents",
+    "aboutClub",
+    "partnersCarousel"
+  ],
+  "hero": {
+    "title": "Härnösands Handbollsföreningen",
+    "description": "Din lokala handbollsklubb i Härnösand. Gemenskap, glädje och utveckling för alla åldrar.",
+    "imageUrl": "https://az316141.cdn.laget.se/2317159/11348130.jpg",
+    "button1Text": "Våra Lag",
+    "button1Link": "/lag",
+    "button2Text": "Bli Medlem",
+    "button2Link": "/kontakt"
+  },
+  "stats": {
+    "totalTeams": 15,
+    "aTeams": 2,
+    "youthTeams": 13,
+    "historyYears": "40+"
+  },
+  "aboutClub": {
+    "title": "Om Härnösands HF",
+    "paragraph1": "Härnösands Handbollsförening grundades med en vision om att skapa en levande och inkluderande handbollsmiljö i Härnösand. Vi strävar efter att erbjuda en plats där alla, oavsett ålder eller erfarenhet, kan utvecklas som handbollsspelare och som individer.",
+    "paragraph2": "Vår förening bygger på starka värderingar som gemenskap, respekt och idrottsglädje. Vi är stolta över vår historia och ser fram emot att fortsätta växa och bidra till handbollens framtid i regionen.",
+    "passionText": "Engagemang för sporten",
+    "developmentText": "Fokus på individuell tillväxt",
+    "communityText": "Stark laganda och vänskap",
+    "button1Text": "Läs Mer",
+    "button1Link": "/om-oss",
+    "button2Text": "Kontakta Oss",
+    "button2Link": "/kontakt",
+    "imageSrc": "https://i.ibb.co/Zt8gppK/491897759-17872413642339702-3719173158843008539-n.jpg",
+    "imageAlt": "Handbollsträning",
+    "totalTeamsCallout": 15,
+    "totalTeamsCalloutText": "Aktiva lag"
+  },
+  "partnersCarousel": {
+    "title": "Våra",
+    "description": "Vi är oerhört tacksamma för det stöd vi får från våra partners. Deras bidrag är avgörande för vår verksamhet och hjälper oss att fortsätta utveckla handbollen i Härnösand.",
+    "callToActionTitle": "Bli en del av vårt team!",
+    "callToActionDescription": "Är ditt företag intresserat av att stödja Härnösands HF och synas tillsammans med oss?",
+    "callToActionLinkText": "Bli Partner",
+    "callToActionLink": "/kontakt"
+  },
+  "kontaktPage": {
+    "emailTitle": "E-post",
+    "emailDescription": "För allmänna frågor och information.",
+    "emailAddress": "info@harnosandsff.se",
+    "addressTitle": "Besöksadress",
+    "addressDescription": "Välkommen att besöka oss på vår anläggning.",
+    "addressLocation": "Härnösands Arena, Arenavägen 1, 871 40 Härnösand",
+    "boardTitle": "Styrelsen",
+    "boardDescription": "Kontakta styrelsen för ärenden som rör klubbens ledning och strategi.",
+    "boardContact": "styrelsen@harnosandsff.se",
+    "faqItems": [
+      {
+        "question": "Hur blir jag medlem?",
+        "answer": "Du kan bli medlem genom att fylla i vårt online-formulär under sektionen 'Bli medlem'."
+      },
+      {
+        "question": "Var hittar jag matchschemat?",
+        "answer": "Matchschemat för alla lag finns tillgängligt på 'Matcher'-sidan."
+      },
+      {
+        "question": "Kan jag provträna med ett lag?",
+        "answer": "Ja, kontakta respektive lags tränare för att arrangera en provträning."
+      }
+    ],
+    "title": "Kontakta Oss",
+    "description": "Har du frågor, funderingar eller vill du komma i kontakt med oss? Fyll i formuläret nedan eller använd våra kontaktuppgifter.",
+    "address": "Arenavägen 10, 871 40 Härnösand",
+    "phone": "070-123 45 67",
+    "email": "info@harnosandshf.se",
+    "mapEmbedUrl": "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2000.0000000000002!2d17.9333333!3d62.6333333!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zNjLCjMzhJzAwLjAiTiAxN8KwNTYnNTkuOSJF!5e0!3m2!1sen!2sse!4v1678901234567!5m2!1sen!2sse"
+  },
+  "partnersPage": {
+    "title": "Våra Partners",
+    "description": "Vi är stolta över att samarbeta med en rad fantastiska partners som delar vår passion för handboll och stöder vår förening. Deras engagemang är avgörande för vår framgång och utveckling.",
+    "callToActionTitle": "Vill du också bli partner?",
+    "callToActionDescription": "Vi söker ständigt nya samarbeten som kan bidra till vår förenings framtid. Kontakta oss för att diskutera hur ditt företag kan bli en del av Härnösands HF-familjen.",
+    "callToActionLinkText": "Kontakta oss om partnerskap",
+    "callToActionLink": "/kontakt"
+  }
+}
