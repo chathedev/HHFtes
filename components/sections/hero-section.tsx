@@ -37,7 +37,7 @@ export default function HeroSection({ content, isEditing = false, onContentChang
     <section className="relative w-full h-screen flex items-center justify-center overflow-hidden">
       <div className="absolute inset-0 z-0">
         <Image
-          src={content.imageUrl || " https://az316141.cdn.laget.se/2317159/11348130.jpg"} // Removed placeholder fallback
+          src={content.imageUrl || "/placeholder.svg"} // No placeholder fallback here
           alt="Härnösands FF Team"
           fill
           quality={90}
@@ -77,6 +77,7 @@ export default function HeroSection({ content, isEditing = false, onContentChang
                   contentEditable={isEditing}
                   suppressContentEditableWarning={true}
                   onBlur={(e) => handleTextChange("button1Text", e)}
+                  className="outline-none focus:ring-2 focus:ring-white rounded px-1"
                 >
                   {content.button1Text}
                 </span>
@@ -84,7 +85,7 @@ export default function HeroSection({ content, isEditing = false, onContentChang
                   type="text"
                   value={content.button1Link}
                   onChange={(e) => handleLinkChange("button1Link", e)}
-                  className="ml-2 p-1 text-xs text-gray-800 bg-white rounded w-24"
+                  className="ml-2 p-1 text-xs text-gray-800 bg-white rounded w-24 outline-none focus:ring-2 focus:ring-orange-300"
                   placeholder="Länk"
                   onClick={(e) => e.stopPropagation()} // Prevent button click
                 />
@@ -104,6 +105,7 @@ export default function HeroSection({ content, isEditing = false, onContentChang
                   contentEditable={isEditing}
                   suppressContentEditableWarning={true}
                   onBlur={(e) => handleTextChange("button2Text", e)}
+                  className="outline-none focus:ring-2 focus:ring-white rounded px-1"
                 >
                   {content.button2Text}
                 </span>
@@ -111,7 +113,7 @@ export default function HeroSection({ content, isEditing = false, onContentChang
                   type="text"
                   value={content.button2Link}
                   onChange={(e) => handleLinkChange("button2Link", e)}
-                  className="ml-2 p-1 text-xs text-gray-800 bg-white rounded w-24"
+                  className="ml-2 p-1 text-xs text-gray-800 bg-white rounded w-24 outline-none focus:ring-2 focus:ring-green-300"
                   placeholder="Länk"
                   onClick={(e) => e.stopPropagation()} // Prevent button click
                 />
@@ -135,7 +137,7 @@ export default function HeroSection({ content, isEditing = false, onContentChang
             value={content.imageUrl}
             onChange={handleImageChange}
             placeholder="Bild URL"
-            className="border p-2 rounded w-80 text-gray-800"
+            className="border p-2 rounded w-80 text-gray-800 outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
       )}

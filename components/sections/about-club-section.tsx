@@ -51,6 +51,7 @@ export default function AboutClubSection({ content, isEditing = false, onContent
               contentEditable={isEditing}
               suppressContentEditableWarning={true}
               onBlur={(e) => handleTextChange("title", e)}
+              className="outline-none focus:ring-2 focus:ring-green-300 rounded px-1"
             >
               {content.title}
             </h2>
@@ -60,6 +61,7 @@ export default function AboutClubSection({ content, isEditing = false, onContent
               contentEditable={isEditing}
               suppressContentEditableWarning={true}
               onBlur={(e) => handleTextChange("paragraph1", e)}
+              className="outline-none focus:ring-2 focus:ring-gray-300 rounded px-1"
             >
               {content.paragraph1}
             </p>
@@ -69,6 +71,7 @@ export default function AboutClubSection({ content, isEditing = false, onContent
               contentEditable={isEditing}
               suppressContentEditableWarning={true}
               onBlur={(e) => handleTextChange("paragraph2", e)}
+              className="outline-none focus:ring-2 focus:ring-gray-300 rounded px-1"
             >
               {content.paragraph2}
             </p>
@@ -82,6 +85,7 @@ export default function AboutClubSection({ content, isEditing = false, onContent
                   contentEditable={isEditing}
                   suppressContentEditableWarning={true}
                   onBlur={(e) => handleTextChange("passionText", e)}
+                  className="outline-none focus:ring-2 focus:ring-gray-300 rounded px-1"
                 >
                   {content.passionText}
                 </p>
@@ -95,6 +99,7 @@ export default function AboutClubSection({ content, isEditing = false, onContent
                   contentEditable={isEditing}
                   suppressContentEditableWarning={true}
                   onBlur={(e) => handleTextChange("developmentText", e)}
+                  className="outline-none focus:ring-2 focus:ring-gray-300 rounded px-1"
                 >
                   {content.developmentText}
                 </p>
@@ -108,6 +113,7 @@ export default function AboutClubSection({ content, isEditing = false, onContent
                   contentEditable={isEditing}
                   suppressContentEditableWarning={true}
                   onBlur={(e) => handleTextChange("communityText", e)}
+                  className="outline-none focus:ring-2 focus:ring-gray-300 rounded px-1"
                 >
                   {content.communityText}
                 </p>
@@ -121,6 +127,7 @@ export default function AboutClubSection({ content, isEditing = false, onContent
                     contentEditable={isEditing}
                     suppressContentEditableWarning={true}
                     onBlur={(e) => handleTextChange("button1Text", e)}
+                    className="outline-none focus:ring-2 focus:ring-white rounded px-1"
                   >
                     {content.button1Text}
                   </span>
@@ -128,7 +135,7 @@ export default function AboutClubSection({ content, isEditing = false, onContent
                     type="text"
                     value={content.button1Link}
                     onChange={(e) => handleLinkChange("button1Link", e)}
-                    className="p-1 text-xs text-gray-800 bg-white rounded w-24"
+                    className="p-1 text-xs text-gray-800 bg-white rounded w-24 outline-none focus:ring-2 focus:ring-orange-300"
                     placeholder="Länk"
                     onClick={(e) => e.stopPropagation()} // Prevent div click
                   />
@@ -147,6 +154,7 @@ export default function AboutClubSection({ content, isEditing = false, onContent
                     contentEditable={isEditing}
                     suppressContentEditableWarning={true}
                     onBlur={(e) => handleTextChange("button2Text", e)}
+                    className="outline-none focus:ring-2 focus:ring-white rounded px-1"
                   >
                     {content.button2Text}
                   </span>
@@ -154,7 +162,7 @@ export default function AboutClubSection({ content, isEditing = false, onContent
                     type="text"
                     value={content.button2Link}
                     onChange={(e) => handleLinkChange("button2Link", e)}
-                    className="p-1 text-xs text-gray-800 bg-white rounded w-24"
+                    className="p-1 text-xs text-gray-800 bg-white rounded w-24 outline-none focus:ring-2 focus:ring-gray-300"
                     placeholder="Länk"
                     onClick={(e) => e.stopPropagation()} // Prevent div click
                   />
@@ -173,7 +181,7 @@ export default function AboutClubSection({ content, isEditing = false, onContent
           <div className="relative">
             <div className="relative h-[400px] rounded-lg overflow-hidden shadow-xl">
               <Image
-                src={content.imageSrc || "https://i.ibb.co/Zt8gppK/491897759-17872413642339702-3719173158843008539-n.jpg"} // Removed placeholder fallback
+                src={content.imageSrc || "/placeholder.svg"} // No placeholder fallback here
                 alt={content.imageAlt}
                 fill
                 className="object-cover"
@@ -193,6 +201,7 @@ export default function AboutClubSection({ content, isEditing = false, onContent
                 contentEditable={isEditing}
                 suppressContentEditableWarning={true}
                 onBlur={(e) => handleNumberChange("totalTeamsCallout", e)}
+                className="outline-none focus:ring-2 focus:ring-white rounded px-1"
               >
                 {content.totalTeamsCallout}
               </div>
@@ -201,6 +210,7 @@ export default function AboutClubSection({ content, isEditing = false, onContent
                 contentEditable={isEditing}
                 suppressContentEditableWarning={true}
                 onBlur={(e) => handleTextChange("totalTeamsCalloutText", e)}
+                className="outline-none focus:ring-2 focus:ring-white rounded px-1"
               >
                 {content.totalTeamsCalloutText}
               </div>
@@ -219,7 +229,7 @@ export default function AboutClubSection({ content, isEditing = false, onContent
             value={content.imageSrc}
             onChange={handleImageChange}
             placeholder="Bild URL"
-            className="border p-2 rounded w-80 text-gray-800"
+            className="border p-2 rounded w-80 text-gray-800 outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
       )}
