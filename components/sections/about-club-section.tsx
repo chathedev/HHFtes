@@ -6,8 +6,6 @@ import Image from "next/image"
 import Link from "next/link"
 import { Heart, TrendingUp, Users } from "lucide-react"
 import type { PageContent } from "@/lib/content-store"
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
 
 interface AboutClubSectionProps {
   content: PageContent["aboutClub"]
@@ -16,8 +14,6 @@ interface AboutClubSectionProps {
 }
 
 export default function AboutClubSection({ content, isEditing = false, onContentChange }: AboutClubSectionProps) {
-  const [showImageInput, setShowImageInput] = useState(false)
-
   const handleTextChange = (field: keyof PageContent["aboutClub"], e: React.ChangeEvent<HTMLDivElement>) => {
     if (onContentChange) {
       onContentChange(field, e.currentTarget.innerText)
@@ -119,57 +115,65 @@ export default function AboutClubSection({ content, isEditing = false, onContent
             </div>
 
             <div className="flex flex-wrap gap-4">
-              <Link
-                href={content.button1Link}
-                className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-2 rounded-md font-medium transition-colors"
-              >
-                <span
-                  contentEditable={isEditing}
-                  suppressContentEditableWarning={true}
-                  onBlur={(e) => handleTextChange("button1Text", e)}
-                >
-                  {content.button1Text}
-                </span>
-                {isEditing && (
+              {isEditing ? (
+                <div className="bg-orange-500 text-white px-6 py-2 rounded-md font-medium flex items-center gap-2">
+                  <span
+                    contentEditable={isEditing}
+                    suppressContentEditableWarning={true}
+                    onBlur={(e) => handleTextChange("button1Text", e)}
+                  >
+                    {content.button1Text}
+                  </span>
                   <input
                     type="text"
                     value={content.button1Link}
                     onChange={(e) => handleLinkChange("button1Link", e)}
-                    className="ml-2 p-1 text-xs text-gray-800 bg-white rounded"
+                    className="p-1 text-xs text-gray-800 bg-white rounded w-24"
                     placeholder="Länk"
-                    onClick={(e) => e.stopPropagation()} // Prevent link click
+                    onClick={(e) => e.stopPropagation()} // Prevent div click
                   />
-                )}
-              </Link>
-              <Link
-                href={content.button2Link}
-                className="bg-white border border-gray-300 hover:bg-gray-100 text-gray-800 px-6 py-2 rounded-md font-medium transition-colors"
-              >
-                <span
-                  contentEditable={isEditing}
-                  suppressContentEditableWarning={true}
-                  onBlur={(e) => handleTextChange("button2Text", e)}
+                </div>
+              ) : (
+                <Link
+                  href={content.button1Link}
+                  className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-2 rounded-md font-medium transition-colors"
                 >
-                  {content.button2Text}
-                </span>
-                {isEditing && (
+                  {content.button1Text}
+                </Link>
+              )}
+              {isEditing ? (
+                <div className="bg-white border border-gray-300 text-gray-800 px-6 py-2 rounded-md font-medium flex items-center gap-2">
+                  <span
+                    contentEditable={isEditing}
+                    suppressContentEditableWarning={true}
+                    onBlur={(e) => handleTextChange("button2Text", e)}
+                  >
+                    {content.button2Text}
+                  </span>
                   <input
                     type="text"
                     value={content.button2Link}
                     onChange={(e) => handleLinkChange("button2Link", e)}
-                    className="ml-2 p-1 text-xs text-gray-800 bg-white rounded"
+                    className="p-1 text-xs text-gray-800 bg-white rounded w-24"
                     placeholder="Länk"
-                    onClick={(e) => e.stopPropagation()} // Prevent link click
+                    onClick={(e) => e.stopPropagation()} // Prevent div click
                   />
-                )}
-              </Link>
+                </div>
+              ) : (
+                <Link
+                  href={content.button2Link}
+                  className="bg-white border border-gray-300 hover:bg-gray-100 text-gray-800 px-6 py-2 rounded-md font-medium transition-colors"
+                >
+                  {content.button2Text}
+                </Link>
+              )}
             </div>
           </div>
 
           <div className="relative">
             <div className="relative h-[400px] rounded-lg overflow-hidden shadow-xl">
               <Image
-                src={content.imageSrc || "/placeholder.svg?height=400&width=600&text=About Club Image"}
+                src={content.imageSrc || "/placeholder.svg"} // Removed placeholder fallback
                 alt={content.imageAlt}
                 fill
                 className="object-cover"
@@ -177,11 +181,8 @@ export default function AboutClubSection({ content, isEditing = false, onContent
                 onDragStart={(e) => e.preventDefault()}
               />
               {isEditing && (
-                <div
-                  className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity duration-300 cursor-pointer"
-                  onClick={() => setShowImageInput(true)}
-                >
-                  <span className="text-white text-lg font-bold">Ändra bild</span>
+                <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                  <span className="text-white text-lg font-bold">Redigera bild</span>
                 </div>
               )}
             </div>
@@ -207,16 +208,19 @@ export default function AboutClubSection({ content, isEditing = false, onContent
           </div>
         </div>
       </div>
-      {isEditing && showImageInput && (
-        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-30 bg-white p-4 rounded-lg shadow-lg flex gap-2">
+      {isEditing && (
+        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-30 bg-white p-4 rounded-lg shadow-lg flex gap-2 items-center">
+          <label htmlFor="about-image-url" className="sr-only">
+            Bild URL
+          </label>
           <input
+            id="about-image-url"
             type="text"
             value={content.imageSrc}
             onChange={handleImageChange}
             placeholder="Bild URL"
-            className="border p-2 rounded w-80"
+            className="border p-2 rounded w-80 text-gray-800"
           />
-          <Button onClick={() => setShowImageInput(false)}>Stäng</Button>
         </div>
       )}
     </section>
