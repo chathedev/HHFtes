@@ -36,7 +36,7 @@ export default function HeroSection({ content, isEditing = false, onContentChang
   return (
     <section className="relative h-[800px] w-full overflow-hidden">
       <Image
-        src={content.imageUrl || "/placeholder.svg"} // No placeholder fallback here
+        src={content.imageUrl || "/placeholder.svg"}
         alt="Härnösands FF fotbollsplan"
         fill
         className="object-cover object-center"
@@ -50,7 +50,7 @@ export default function HeroSection({ content, isEditing = false, onContentChang
         </div>
       )}
       <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
-      <div className="relative z-10 flex h-full items-end p-8 md:p-12">
+      <div className="relative z-10 flex h-full items-center justify-center p-8 md:p-12 text-center">
         <div className="max-w-3xl text-white">
           <h1
             className="text-4xl font-bold leading-tight md:text-6xl outline-none focus:ring-2 focus:ring-white rounded px-1"
@@ -68,7 +68,7 @@ export default function HeroSection({ content, isEditing = false, onContentChang
           >
             {content.description}
           </p>
-          <div className="mt-8 flex flex-wrap gap-4">
+          <div className="mt-8 flex flex-wrap gap-4 justify-center">
             {isEditing ? (
               <div className="flex items-center gap-2 bg-green-600 text-white px-6 py-3 rounded-md font-medium">
                 <span

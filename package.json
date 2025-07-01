@@ -9,6 +9,7 @@
     "start": "next start"
   },
   "dependencies": {
+    "@hello-pangea/dnd": "latest",
     "@hookform/resolvers": "^3.9.1",
     "@octokit/rest": "latest",
     "@radix-ui/react-accordion": "latest",
