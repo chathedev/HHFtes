@@ -1,6 +1,7 @@
 "use client"
 
 import dynamic from "next/dynamic"
+import type { Partner } from "@/lib/content-types" // Import Partner type
 
 /**
  * Wrapper that lazy-loads the real PartnersCarousel on the client
@@ -11,6 +12,10 @@ const PartnersCarousel = dynamic(() => import("@/components/partners-carousel"),
   loading: () => <div className="py-16 bg-gray-50 text-center text-gray-600">Laddar partners…</div>,
 })
 
-export default function PartnersCarouselClient() {
-  return <PartnersCarousel />
+interface PartnersCarouselClientProps {
+  partners: Partner[]
+}
+
+export default function PartnersCarouselClient({ partners }: PartnersCarouselClientProps) {
+  return <PartnersCarousel partners={partners} />
 }

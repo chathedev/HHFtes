@@ -2,21 +2,25 @@
 
 import Image from "next/image"
 import Link from "next/link"
-import { allPartners, type Partner } from "@/lib/partners-data"
+import type { Partner } from "@/lib/content-types" // Changed import path
 import { Star, Plus, Minus } from "lucide-react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { useState } from "react"
 
-export default function PartnersCarousel() {
-  const [openTier, setOpenTier] = useState<string | null>("Diamantpartner") // Default to Diamantpartner open
-  const [hoveredCardId, setHoveredCardId] = useState<string | null>(null) // State to manage hovered card
+interface PartnersCarouselProps {
+  partners: Partner[]
+}
+
+export default function PartnersCarousel({ partners }: PartnersCarouselProps) {
+  const [openTier, setOpenTier] = useState<string | null>("Diamantpartner")
+  const [hoveredCardId, setHoveredCardId] = useState<string | null>(null)
 
   const handleToggle = (tierName: string) => {
     setOpenTier((prevOpenTier) => (prevOpenTier === tierName ? null : tierName))
   }
 
-  const partnersForDisplay = allPartners.filter((p) => p.visibleInCarousel)
+  const partnersForDisplay = partners.filter((p) => p.visibleInCarousel)
 
   const partnersByTier: Record<string, Partner[]> = partnersForDisplay.reduce(
     (acc, partner) => {
@@ -125,7 +129,6 @@ export default function PartnersCarousel() {
             <Link href="/kontakt" className="bg-orange-500 hover:bg-orange-600 text-white px-8 py-3 rounded-md">
               Kontakta oss
             </Link>
-            {/* Removed "Mer information" link */}
           </div>
         </section>
       </div>
