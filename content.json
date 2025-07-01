@@ -8,11 +8,11 @@
   ],
   "hero": {
     "title": "Laget före allt",
-    "description": "Din lokala handbollsklubb i Härnösand. Gemenskap, glädje och utveckling för alla åldrar.",
+    "description": "Gemenskap, glädje och utveckling.",
     "imageUrl": "https://az316141.cdn.laget.se/2317159/11348130.jpg",
     "button1Text": "Våra Lag",
     "button1Link": "/lag",
-    "button2Text": "Bli Medlem",
+    "button2Text": "Börja Träna",
     "button2Link": "/kontakt"
   },
   "stats": {
