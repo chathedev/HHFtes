@@ -6,6 +6,7 @@ import Header from "@/components/header"
 import Footer from "@/components/footer"
 import { AuthProvider } from "@/components/auth-provider" // Import AuthProvider
 import { Toaster } from "@/components/ui/toaster" // Import Toaster
+import { headers } from "next/headers" // Import headers to check pathname
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -21,16 +22,18 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode
 }>) {
+  const headerList = headers()
+  const pathname = headerList.get("x-pathname") || "/"
+  const isEditor = pathname === "/editor"
+
   return (
     <html lang="sv">
       <body className={`${inter.className} bg-white`}>
         <AuthProvider>
-          {" "}
-          {/* Wrap with AuthProvider */}
-          <Header />
+          <Header isEditor={isEditor} /> {/* Pass isEditor prop to Header */}
           <main>{children}</main>
           <Footer />
-          <Toaster /> {/* Add Toaster for toasts */}
+          <Toaster />
         </AuthProvider>
       </body>
     </html>

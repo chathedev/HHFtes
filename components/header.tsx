@@ -6,13 +6,17 @@ import { useState, useEffect } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { Menu, X } from "lucide-react"
-import { usePathname } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation" // Import useRouter
 
-function Header() {
+interface HeaderProps {
+  isEditor?: boolean
+}
+
+function Header({ isEditor = false }: HeaderProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
   const pathname = usePathname()
-  const isEditorMode = pathname === "/editor"
+  const router = useRouter() // Initialize useRouter
 
   useEffect(() => {
     const handleScroll = () => {
@@ -37,10 +41,13 @@ function Header() {
     { name: "Kontakt", href: "/kontakt" },
   ]
 
-  const handleLinkClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
-    if (isEditorMode) {
-      e.preventDefault()
-      // Optionally, show a toast or message that navigation is disabled in editor mode
+  const handleLinkClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
+    if (isEditor) {
+      e.preventDefault() // Prevent navigation if in editor mode
+      // Optionally, show a toast or message that navigation is disabled
+      // toast({ title: "Navigation in editor mode is disabled." });
+    } else {
+      router.push(href) // Use router.push for normal navigation
     }
   }
 
@@ -48,7 +55,7 @@ function Header() {
     <header
       className={`fixed top-0 left-0 w-full z-50 text-white shadow-lg transition-all duration-300
   ${
-    pathname === "/"
+    pathname === "/" && !isEditor
       ? scrolled
         ? "bg-black/90 backdrop-blur-md"
         : "bg-transparent backdrop-blur-none"
@@ -57,11 +64,7 @@ function Header() {
 `}
     >
       <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-        <Link
-          href="/"
-          className={`flex items-center gap-3 ${isEditorMode ? "pointer-events-none" : ""}`}
-          onClick={handleLinkClick}
-        >
+        <Link href="/" className="flex items-center gap-3" onClick={(e) => handleLinkClick(e, "/")}>
           <div className="relative w-12 h-12">
             <Image src="/logo.png" alt="Härnösands HF Logo" fill className="object-contain" priority />
           </div>
@@ -86,15 +89,15 @@ function Header() {
               key={link.href}
               href={link.href}
               className={`relative text-lg font-medium py-2 group transition-colors duration-300
-                ${pathname === link.href ? "text-orange-500" : "text-white hover:text-gray-300"}
-                ${isEditorMode ? "pointer-events-none cursor-default" : ""}
+                ${pathname === link.href && !isEditor ? "text-orange-500" : "text-white hover:text-gray-300"}
+                ${isEditor ? "pointer-events-none opacity-70" : ""}
               `}
-              onClick={handleLinkClick}
+              onClick={(e) => handleLinkClick(e, link.href)}
             >
               {link.name}
               <span
                 className={`absolute bottom-0 left-0 h-[3px] bg-orange-500 transition-all duration-300 ease-out
-                  ${pathname === link.href ? "w-full" : "w-0 group-hover:w-full"}
+                  ${pathname === link.href && !isEditor ? "w-full" : "w-0 group-hover:w-full"}
                 `}
               />
             </Link>
@@ -110,11 +113,11 @@ function Header() {
               key={link.href}
               href={link.href}
               className={`relative text-lg font-medium py-2
-                ${pathname === link.href ? "text-orange-500" : "text-white hover:text-gray-300"}
-                ${isEditorMode ? "pointer-events-none cursor-default" : ""}
+                ${pathname === link.href && !isEditor ? "text-orange-500" : "text-white hover:text-gray-300"}
+                ${isEditor ? "pointer-events-none opacity-70" : ""}
               `}
               onClick={(e) => {
-                handleLinkClick(e)
+                handleLinkClick(e, link.href)
                 setIsMenuOpen(false) // Close menu on link click
               }}
             >
