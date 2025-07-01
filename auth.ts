@@ -1,32 +1,27 @@
-import NextAuth from "next-auth"
-import CredentialsProvider from "next-auth/providers/credentials"
-
 /**
- * A very small NextAuth configuration that authenticates via a single
- * password stored in the `API_SECRET` env-var.
- *
- * We expose `signIn` and `signOut` so the rest of the codebase can import
- * them directly from "@/auth".
+ * Ultra-light auth helpers. In a real application you’d integrate Supabase
+ * or NextAuth. Here we just stub the required exports so the build passes.
  */
-export const {
-  auth, // Server-side helper (e.g. in route handlers)
-  signIn, // ⬅️  required named export
-  signOut, // ⬅️  required named export
-  handlers: { GET, POST },
-} = NextAuth({
-  providers: [
-    CredentialsProvider({
-      name: "Credentials",
-      credentials: {
-        password: { label: "Password", type: "password" },
-      },
-      async authorize(credentials) {
-        if (credentials?.password === process.env.API_SECRET) {
-          return { id: "admin" } // return a user object on success
-        }
-        return null
-      },
-    }),
-  ],
-  session: { strategy: "jwt" },
-})
+"use server"
+
+type Credentials = { email: string; password: string }
+
+/* Simulated auth state held in memory (DO NOT USE IN PRODUCTION) */
+let signedIn = false
+
+export async function signIn({ email, password }: Credentials): Promise<boolean> {
+  // Very naive check – any non-empty credentials are accepted
+  if (email && password) {
+    signedIn = true
+    return true
+  }
+  return false
+}
+
+export async function signOut(): Promise<void> {
+  signedIn = false
+}
+
+export async function authenticate(): Promise<boolean> {
+  return signedIn
+}
