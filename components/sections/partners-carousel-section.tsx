@@ -14,7 +14,7 @@ interface SelectedElementData {
   type: "text" | "number" | "link" | "image" | "button" | "color" | "font-size" | "select"
   label: string
   currentValue: string | number
-  contentPath?: string
+  contentPath: string
   additionalFields?: {
     field: string
     label: string
@@ -28,6 +28,7 @@ interface PartnersCarouselSectionProps {
   content: PageContent["partnersCarousel"]
   isEditing?: boolean
   onElementSelect: (data: SelectedElementData) => void
+  handleInlineEdit: (path: string, newValue: string) => void
   availablePages?: { name: string; path: string }[]
 }
 
@@ -35,20 +36,9 @@ export default function PartnersCarouselSection({
   content,
   isEditing = false,
   onElementSelect,
+  handleInlineEdit,
   availablePages,
 }: PartnersCarouselSectionProps): ReactElement {
-  const handleTextClick = (field: keyof PageContent["partnersCarousel"], label: string) => {
-    if (isEditing) {
-      onElementSelect({
-        sectionKey: "partnersCarousel",
-        elementId: field,
-        type: "text",
-        label: label,
-        currentValue: content[field] as string,
-      })
-    }
-  }
-
   const handleButtonClick = () => {
     if (isEditing) {
       onElementSelect({
@@ -57,6 +47,7 @@ export default function PartnersCarouselSection({
         type: "button",
         label: "Länktext",
         currentValue: content.callToActionLinkText,
+        contentPath: "partnersCarousel.callToActionLinkText",
         additionalFields: [
           {
             field: "callToActionLink",
@@ -64,6 +55,7 @@ export default function PartnersCarouselSection({
             type: "select",
             currentValue: content.callToActionLink,
             options: availablePages || [],
+            contentPath: "partnersCarousel.callToActionLink",
           },
         ],
       })
@@ -77,18 +69,22 @@ export default function PartnersCarouselSection({
           <h2
             className={cn(
               "text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl",
-              isEditing && "cursor-pointer group hover:outline hover:outline-2 hover:outline-gray-300 rounded px-1",
+              isEditing && "cursor-text group hover:outline hover:outline-2 hover:outline-gray-300 rounded px-1",
             )}
-            onClick={() => handleTextClick("title", "Titel")}
+            contentEditable={isEditing}
+            suppressContentEditableWarning={true}
+            onBlur={(e) => handleInlineEdit("partnersCarousel.title", e.currentTarget.innerText)}
           >
             {content.title}
           </h2>
           <p
             className={cn(
-              "mx-auto max-w-[700px] text-gray-500 md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed dark:text-gray-400",
-              isEditing && "cursor-pointer group hover:outline hover:outline-2 hover:outline-gray-300 rounded px-1",
+              "mx-auto max-w-[700px] text-gray-500 md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed",
+              isEditing && "cursor-text group hover:outline hover:outline-2 hover:outline-gray-300 rounded px-1",
             )}
-            onClick={() => handleTextClick("description", "Beskrivning")}
+            contentEditable={isEditing}
+            suppressContentEditableWarning={true}
+            onBlur={(e) => handleInlineEdit("partnersCarousel.description", e.currentTarget.innerText)}
           >
             {content.description}
           </p>
@@ -127,25 +123,29 @@ export default function PartnersCarouselSection({
           <h3
             className={cn(
               "text-2xl font-bold",
-              isEditing && "cursor-pointer group hover:outline hover:outline-2 hover:outline-gray-300 rounded px-1",
+              isEditing && "cursor-text group hover:outline hover:outline-2 hover:outline-gray-300 rounded px-1",
             )}
-            onClick={() => handleTextClick("callToActionTitle", "Call to Action Titel")}
+            contentEditable={isEditing}
+            suppressContentEditableWarning={true}
+            onBlur={(e) => handleInlineEdit("partnersCarousel.callToActionTitle", e.currentTarget.innerText)}
           >
             {content.callToActionTitle}
           </h3>
           <p
             className={cn(
-              "mx-auto max-w-[700px] text-gray-500 md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed dark:text-gray-400",
-              isEditing && "cursor-pointer group hover:outline hover:outline-2 hover:outline-gray-300 rounded px-1",
+              "mx-auto max-w-[700px] text-gray-500 md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed",
+              isEditing && "cursor-text group hover:outline hover:outline-2 hover:outline-gray-300 rounded px-1",
             )}
-            onClick={() => handleTextClick("callToActionDescription", "Call to Action Beskrivning")}
+            contentEditable={isEditing}
+            suppressContentEditableWarning={true}
+            onBlur={(e) => handleInlineEdit("partnersCarousel.callToActionDescription", e.currentTarget.innerText)}
           >
             {content.callToActionDescription}
           </p>
           <Link
             href={content.callToActionLink}
             className={cn(
-              "inline-flex h-10 items-center justify-center rounded-md bg-green-600 px-8 text-sm font-medium text-gray-50 shadow transition-colors hover:bg-green-700 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-green-950 disabled:pointer-events-none disabled:opacity-50 dark:bg-green-500 dark:text-gray-900 dark:hover:bg-green-600 dark:focus-visible:ring-green-300",
+              "inline-flex h-10 items-center justify-center rounded-md bg-green-600 px-8 text-sm font-medium text-gray-50 shadow transition-colors hover:bg-green-700 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-green-950 disabled:pointer-events-none disabled:opacity-50",
               isEditing && "cursor-pointer group hover:outline hover:outline-2 hover:outline-gray-300 rounded px-1",
             )}
             onClick={(e) => {
@@ -162,5 +162,3 @@ export default function PartnersCarouselSection({
     </section>
   )
 }
-
-export { default as PartnersCarouselSection } from "./partners-carousel-section"

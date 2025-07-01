@@ -38,6 +38,10 @@
   --sidebar-accent-foreground: 240 5.9% 10%;
   --sidebar-border: 220 13% 91%;
   --sidebar-ring: 217.2 91.2% 59.8%;
+
+  /* Custom colors for the theme */
+  --primary-green: #16a34a; /* green-600 */
+  --secondary-orange: #f97316; /* orange-500 */
 }
 
 .dark {

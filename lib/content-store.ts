@@ -12,25 +12,38 @@ export interface EventItem {
   location: string
 }
 
+export interface MatchItem {
+  id: string
+  date: string
+  time: string
+  homeTeam: string
+  awayTeam: string
+  homeLogo?: string
+  awayLogo?: string
+  location: string
+  league: string
+  result?: string
+}
+
 export interface PageContent {
   sections: string[]
   hero: {
     title: string
-    titleTextColorClass: string // New: Text color for title
-    titleFontSizeClass: string // New: Font size for title
+    titleColor: string // Changed to direct color string
+    titleFontSizeClass: string
     description: string
-    descriptionTextColorClass: string // New: Text color for description
-    descriptionFontSizeClass: string // New: Font size for description
+    descriptionColor: string // Changed to direct color string
+    descriptionFontSizeClass: string
     imageUrl: string
     button1Text: string
     button1Link: string
-    button1BgClass: string
-    button1TextClass: string
+    button1BgColor: string // Changed to direct color string
+    button1TextColor: string // Changed to direct color string
     button2Text: string
     button2Link: string
-    button2BgClass: string
-    button2TextClass: string
-    overlayColorClass: string
+    button2BgColor: string // Changed to direct color string
+    button2TextColor: string // Changed to direct color string
+    overlayColor: string // Changed to direct color string (e.g., rgba or hex with alpha)
   }
   stats: {
     totalTeams: number
@@ -82,63 +95,63 @@ export interface PageContent {
     callToActionLinkText: string
     callToActionLink: string
   }
-  upcomingEvents: EventItem[] // Added upcomingEvents to PageContent
+  upcomingEvents: EventItem[]
+  matches: MatchItem[] // Added matches to PageContent
 }
 
 export const defaultContent: PageContent = {
-  sections: ["hero", "stats", "aboutClub", "partnersCarousel"],
+  sections: ["hero", "stats", "aboutClub", "partnersCarousel", "upcomingEvents", "matches"],
   hero: {
-    title: "Välkommen till Härnösands FF",
-    titleTextColorClass: "text-white", // Default
-    titleFontSizeClass: "text-6xl", // Default
-    description:
-      "Härnösands FF är en fotbollsklubb med en rik historia och en stark gemenskap. Vi strävar efter att utveckla både spelare och människor, från ungdom till elit.",
-    descriptionTextColorClass: "text-white", // Default
-    descriptionFontSizeClass: "text-xl", // Default
+    title: "LAGET FÖRE ALLT",
+    titleColor: "#FFFFFF", // White
+    titleFontSizeClass: "text-6xl md:text-8xl",
+    description: "Härnösands HF - En förening med stolthet, gemenskap och passion för sporten.",
+    descriptionColor: "#FFFFFF", // White
+    descriptionFontSizeClass: "text-xl md:text-2xl",
     imageUrl: "https://az316141.cdn.laget.se/2317159/11348130.jpg",
-    button1Text: "Våra lag",
+    button1Text: "Våra 23 Lag",
     button1Link: "/lag",
-    button1BgClass: "bg-green-600",
-    button1TextClass: "text-white",
-    button2Text: "Kalender",
-    button2Link: "/kalender",
-    button2BgClass: "bg-white",
-    button2TextClass: "text-gray-800",
-    overlayColorClass: "from-black/70",
+    button1BgColor: "#F97316", // Orange-500
+    button1TextColor: "#FFFFFF", // White
+    button2Text: "Senaste Nytt",
+    button2Link: "/nyheter",
+    button2BgColor: "#16A34A", // Green-700
+    button2TextColor: "#FFFFFF", // White
+    overlayColor: "rgba(0, 0, 0, 0.6)", // Black with 60% opacity
   },
   stats: {
-    totalTeams: 15,
+    totalTeams: 23,
     aTeams: 2,
-    youthTeams: 13,
-    historyYears: "1900-tal",
+    youthTeams: 21,
+    historyYears: "50+",
   },
   aboutClub: {
-    title: "Om Härnösands HF",
+    title: "Härnösands HF",
     paragraph1:
       "Härnösands FF grundades med en vision om att skapa en inkluderande och framgångsrik fotbollsmiljö. Sedan dess har vi vuxit till en av regionens mest respekterade klubbar, känd för vår starka gemenskap och engagemang för ungdomsfotboll.",
     paragraph2:
       "Vi tror på att fotboll är mer än bara ett spel – det är en plattform för personlig utveckling, lagarbete och att bygga livslånga vänskaper. Våra tränare och ledare är dedikerade till att inspirera och vägleda varje spelare att nå sin fulla potential, både på och utanför planen.",
-    passionText: "Passion för fotboll",
-    developmentText: "Utveckling för alla",
-    communityText: "Stark gemenskap",
-    button1Text: "Bli medlem",
-    button1Link: "/bli-medlem",
-    button2Text: "Kontakta oss",
+    passionText: "Vi brinner för handboll",
+    developmentText: "Alla kan bli bättre",
+    communityText: "Tillsammans är vi starka",
+    button1Text: "Visa Lag",
+    button1Link: "/lag",
+    button2Text: "Kontakta Oss",
     button2Link: "/kontakt",
     imageSrc: "https://i.ibb.co/Zt8gppK/491897759-17872413642339702-3719173158843008539-n.jpg",
     imageAlt: "Härnösands FF lag i en ring",
     totalTeamsCallout: 23,
-    totalTeamsCalloutText: "Aktiva lag",
+    totalTeamsCalloutText: "lag totalt",
   },
   partnersCarousel: {
     title: "Våra Partners",
     description:
       "Vi är stolta över våra samarbeten med lokala företag och organisationer som delar vår passion för fotboll och samhällsengagemang. Tillsammans bygger vi en starkare framtid för Härnösands FF.",
-    callToActionTitle: "Bli Partner",
+    callToActionTitle: "Vill du stödja Härnösands HF?",
     callToActionDescription:
-      "Är ditt företag intresserat av att stödja Härnösands FF och bidra till vår fortsatta framgång? Kontakta oss för att diskutera olika partnerskapsmöjligheter.",
-    callToActionLinkText: "Läs mer om partnerskap",
-    callToActionLink: "/partners",
+      "Vi välkomnar nya partners som vill stödja vår verksamhet och bidra till utvecklingen av handbollen i regionen.",
+    callToActionLinkText: "Kontakta Oss",
+    callToActionLink: "/kontakt",
   },
   kontaktPage: {
     emailTitle: "E-post",
@@ -193,6 +206,44 @@ export const defaultContent: PageContent = {
       time: "10:00",
       title: "Ungdomscup: Härnösand Cup",
       location: "Härnösands Arena",
+    },
+  ],
+  matches: [
+    {
+      id: "match-1",
+      date: "2024-07-15",
+      time: "19:00",
+      homeTeam: "Härnösands HF",
+      awayTeam: "Sundsvall HK",
+      homeLogo: "/placeholder-logo.png",
+      awayLogo: "/placeholder-logo.png",
+      location: "Härnösands Arena",
+      league: "Herrar Div 1",
+      result: "28 - 25",
+    },
+    {
+      id: "match-2",
+      date: "2024-07-20",
+      time: "16:00",
+      homeTeam: "Örnsköldsvik HK",
+      awayTeam: "Härnösands HF",
+      homeLogo: "/placeholder-logo.png",
+      awayLogo: "/placeholder-logo.png",
+      location: "Skyttis Arena",
+      league: "Damer Div 2",
+      result: "18 - 22",
+    },
+    {
+      id: "match-3",
+      date: "2024-07-25",
+      time: "10:00",
+      homeTeam: "Härnösands HF U16",
+      awayTeam: "Timrå HK U16",
+      homeLogo: "/placeholder-logo.png",
+      awayLogo: "/placeholder-logo.png",
+      location: "Härnösands Arena",
+      league: "Pojkar U16",
+      result: "15 - 15",
     },
   ],
 }

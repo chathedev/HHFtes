@@ -1,13 +1,9 @@
 "use client"
-
-import { cn } from "@/lib/utils"
-
 import { useState, useEffect, useCallback } from "react"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
 import { Save, RotateCcw, X } from "lucide-react"
@@ -21,16 +17,16 @@ import UpcomingEventsSection from "@/components/upcoming-events-section"
 import { useMobile } from "@/hooks/use-mobile"
 import { useToast } from "@/hooks/use-toast"
 
-// Define SelectedElementData interface here or in a shared types file
+// Define SelectedElementData interface for sidebar-editable elements
 interface SelectedElementData {
   sectionKey: keyof PageContent
-  elementId: string // Unique ID for the element within the section (e.g., "heroTitle", "aboutClubImage")
-  type: "text" | "number" | "link" | "image" | "button" | "color" | "font-size" | "select" // Type of element being edited
+  elementId: string // Unique ID for the element within the section (e.g., "heroImage", "button1Link")
+  type: "link" | "image" | "button" | "color" | "font-size" | "select" | "text" | "number" // Type of element being edited
   label: string // Label for the input field in the sidebar
   currentValue: string | number // The current value of the primary field (e.g., text content, URL)
-  contentPath?: string // e.g., "hero.title", "aboutClub.imageSrc"
+  contentPath: string // Dot-separated path to the property in PageContent (e.g., "hero.imageUrl")
   additionalFields?: {
-    field: string
+    field: string // The actual field name in the content object (e.g., "imageAlt", "button1Link")
     label: string
     type: "text" | "select" | "color" | "font-size" | "number"
     currentValue: string | number
@@ -77,32 +73,59 @@ export default function EditorPage() {
     fetchContent()
   }, [toast])
 
+  // Function to update nested properties in pageContent state
+  const updateContentProperty = useCallback((path: string, value: string | number) => {
+    setPageContent((prevContent) => {
+      const newContent = { ...prevContent }
+      const pathParts = path.split(".")
+      let current: any = newContent
+
+      for (let i = 0; i < pathParts.length - 1; i++) {
+        const part = pathParts[i]
+        if (!current[part]) {
+          current[part] = {} // Create nested object if it doesn't exist
+        }
+        current = current[part]
+      }
+      current[pathParts[pathParts.length - 1]] = value
+      return newContent
+    })
+  }, [])
+
+  // Handle inline text/number editing (onBlur)
+  const handleInlineEdit = useCallback(
+    (path: string, newValue: string) => {
+      if (!isEditing) return
+      updateContentProperty(path, newValue)
+    },
+    [isEditing, updateContentProperty],
+  )
+
+  // Handle sidebar element selection
   const handleElementSelect = useCallback((data: SelectedElementData) => {
     setSelectedElementData(data)
     setIsRightSidebarOpen(true)
   }, [])
 
-  const handleElementUpdate = useCallback(
-    (field: string, value: string | number) => {
-      if (!selectedElementData) return
-
-      setPageContent((prevContent) => {
-        const newContent = { ...prevContent }
-        const section = newContent[selectedElementData.sectionKey] as any
-
-        if (section) {
-          // Update the primary field
-          if (selectedElementData.elementId === field) {
-            section[field] = value
-          } else {
-            // Update additional fields
-            section[field] = value
-          }
-        }
-        return newContent
-      })
+  // Handle updates from sidebar inputs
+  const handleSidebarUpdate = useCallback(
+    (fieldPath: string, newValue: string | number) => {
+      updateContentProperty(fieldPath, newValue)
+      // Also update the selectedElementData's currentValue if it's the primary field
+      if (selectedElementData && selectedElementData.contentPath === fieldPath) {
+        setSelectedElementData((prev) => (prev ? { ...prev, currentValue: newValue } : null))
+      } else if (selectedElementData && selectedElementData.additionalFields) {
+        // Update additional fields in selectedElementData
+        setSelectedElementData((prev) => {
+          if (!prev) return null
+          const updatedAdditionalFields = prev.additionalFields?.map((field) =>
+            field.contentPath === fieldPath ? { ...field, currentValue: newValue } : field,
+          )
+          return { ...prev, additionalFields: updatedAdditionalFields }
+        })
+      }
     },
-    [selectedElementData],
+    [selectedElementData, updateContentProperty],
   )
 
   const handleSave = async () => {
@@ -168,19 +191,34 @@ export default function EditorPage() {
           content={pageContent.hero}
           isEditing={isEditing}
           onElementSelect={handleElementSelect}
+          handleInlineEdit={handleInlineEdit}
           availablePages={availablePages}
         />
-        <StatsSection content={pageContent.stats} isEditing={isEditing} onElementSelect={handleElementSelect} />
-        <UpcomingEventsSection
-          content={pageContent.upcomingEvents} // Assuming upcomingEvents is part of PageContent now
+        <StatsSection
+          content={pageContent.stats}
           isEditing={isEditing}
           onElementSelect={handleElementSelect}
+          handleInlineEdit={handleInlineEdit}
         />
-        <AboutClubSection content={pageContent.aboutClub} isEditing={isEditing} onElementSelect={handleElementSelect} />
+        <UpcomingEventsSection
+          content={pageContent.upcomingEvents}
+          isEditing={isEditing}
+          onElementSelect={handleElementSelect}
+          handleInlineEdit={handleInlineEdit}
+        />
+        <AboutClubSection
+          content={pageContent.aboutClub}
+          isEditing={isEditing}
+          onElementSelect={handleElementSelect}
+          handleInlineEdit={handleInlineEdit}
+          availablePages={availablePages}
+        />
         <PartnersCarouselSection
           content={pageContent.partnersCarousel}
           isEditing={isEditing}
           onElementSelect={handleElementSelect}
+          handleInlineEdit={handleInlineEdit}
+          availablePages={availablePages}
         />
       </main>
 
@@ -194,47 +232,20 @@ export default function EditorPage() {
           <div className="grid gap-4 py-4">
             {selectedElementData && (
               <>
-                {/* Primary field input */}
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="main-input" className="text-right">
-                    {selectedElementData.label}
-                  </Label>
-                  {selectedElementData.type === "text" ||
-                  selectedElementData.type === "image" ||
-                  selectedElementData.type === "link" ||
-                  selectedElementData.type === "button" ? (
+                {/* Primary field input (for image URL, button link, etc.) */}
+                {(selectedElementData.type === "image" || selectedElementData.type === "link") && (
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="main-input" className="text-right">
+                      {selectedElementData.label}
+                    </Label>
                     <Input
                       id="main-input"
                       value={selectedElementData.currentValue as string}
-                      onChange={(e) => handleElementUpdate(selectedElementData.elementId, e.target.value)}
+                      onChange={(e) => handleSidebarUpdate(selectedElementData.contentPath, e.target.value)}
                       className="col-span-3"
                     />
-                  ) : selectedElementData.type === "number" ? (
-                    <Input
-                      id="main-input"
-                      type="number"
-                      value={selectedElementData.currentValue as number}
-                      onChange={(e) => handleElementUpdate(selectedElementData.elementId, Number(e.target.value))}
-                      className="col-span-3"
-                    />
-                  ) : selectedElementData.type === "select" && selectedElementData.additionalFields?.[0]?.options ? (
-                    <Select
-                      value={selectedElementData.currentValue as string}
-                      onValueChange={(value) => handleElementUpdate(selectedElementData.elementId, value)}
-                    >
-                      <SelectTrigger className="col-span-3">
-                        <SelectValue placeholder={`Välj ${selectedElementData.label.toLowerCase()}`} />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {selectedElementData.additionalFields[0].options.map((option) => (
-                          <SelectItem key={option.value} value={option.value}>
-                            {option.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  ) : null}
-                </div>
+                  </div>
+                )}
 
                 {/* Additional fields */}
                 {selectedElementData.additionalFields?.map((fieldData) => (
@@ -246,7 +257,7 @@ export default function EditorPage() {
                       <Input
                         id={fieldData.field}
                         value={fieldData.currentValue as string}
-                        onChange={(e) => handleElementUpdate(fieldData.field, e.target.value)}
+                        onChange={(e) => handleSidebarUpdate(fieldData.contentPath, e.target.value)}
                         className="col-span-3"
                       />
                     ) : fieldData.type === "number" ? (
@@ -254,31 +265,21 @@ export default function EditorPage() {
                         id={fieldData.field}
                         type="number"
                         value={fieldData.currentValue as number}
-                        onChange={(e) => handleElementUpdate(fieldData.field, Number(e.target.value))}
+                        onChange={(e) => handleSidebarUpdate(fieldData.contentPath, Number(e.target.value))}
                         className="col-span-3"
                       />
-                    ) : fieldData.type === "color" && fieldData.options ? (
-                      <RadioGroup
+                    ) : fieldData.type === "color" ? (
+                      <Input
+                        id={fieldData.field}
+                        type="color"
                         value={fieldData.currentValue as string}
-                        onValueChange={(value) => handleElementUpdate(fieldData.field, value)}
-                        className="flex flex-col space-y-1 col-span-3"
-                      >
-                        {fieldData.options.map((option) => (
-                          <div key={option.value} className="flex items-center space-x-2">
-                            <RadioGroupItem value={option.value} id={`${fieldData.field}-${option.value}`} />
-                            <Label htmlFor={`${fieldData.field}-${option.value}`} className={option.textClass}>
-                              {option.name}
-                              {option.bgClass && (
-                                <span className={cn("ml-2 w-4 h-4 inline-block rounded-full", option.bgClass)} />
-                              )}
-                            </Label>
-                          </div>
-                        ))}
-                      </RadioGroup>
+                        onChange={(e) => handleSidebarUpdate(fieldData.contentPath, e.target.value)}
+                        className="col-span-3 h-10 w-full"
+                      />
                     ) : fieldData.type === "font-size" && fieldData.options ? (
                       <Select
                         value={fieldData.currentValue as string}
-                        onValueChange={(value) => handleElementUpdate(fieldData.field, value)}
+                        onValueChange={(value) => handleSidebarUpdate(fieldData.contentPath, value)}
                       >
                         <SelectTrigger className="col-span-3">
                           <SelectValue placeholder={`Välj ${fieldData.label.toLowerCase()}`} />
@@ -294,7 +295,7 @@ export default function EditorPage() {
                     ) : fieldData.type === "select" && fieldData.options ? (
                       <Select
                         value={fieldData.currentValue as string}
-                        onValueChange={(value) => handleElementUpdate(fieldData.field, value)}
+                        onValueChange={(value) => handleSidebarUpdate(fieldData.contentPath, value)}
                       >
                         <SelectTrigger className="col-span-3">
                           <SelectValue placeholder={`Välj ${fieldData.label.toLowerCase()}`} />

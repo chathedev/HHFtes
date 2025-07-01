@@ -1,247 +1,126 @@
 export interface Partner {
   id: string
-  src: string
-  alt: string
-  width: number // Standardized width
-  height: number // Standardized height
+  name: string
+  logo: string // Path to the logo image
   tier: "Diamantpartner" | "Platinapartner" | "Guldpartner" | "Silverpartner" | "Bronspartner"
-  benefits: string[]
-  visibleInCarousel: boolean
-  linkUrl?: string
+  linkUrl?: string // Optional URL for the partner
+  visibleInCarousel?: boolean // Whether to show in the main carousel
 }
 
-export const allPartners: Partner[] = [
-  // Diamantpartners (Standardized size, premium decal)
+export const partners: Partner[] = [
   {
     id: "highcon",
-    src: "https://highcon.se/media/w5zbh52t/logotype.svg",
-    alt: "Highcon",
-    width: 150,
-    height: 75,
+    name: "Highcon",
+    logo: "/partners/highcon.png",
     tier: "Diamantpartner",
-    benefits: ["Huvudsponsor", "Logotyp på matchställ", "Exklusiva event"],
+    linkUrl: "https://www.highcon.se",
     visibleInCarousel: true,
-    linkUrl: "https://www.highcon.se", // Link: Yes
   },
   {
     id: "hsta",
-    src: "https://az729104.cdn.laget.se/11313578.jpg",
-    alt: "HSTA",
-    width: 150,
-    height: 75,
+    name: "HSTA",
+    logo: "/partners/hsta.png",
     tier: "Diamantpartner",
-    benefits: ["Huvudsponsor", "Logotyp på matchställ", "Exklusiva event"],
+    linkUrl: "https://www.hsta.se",
     visibleInCarousel: true,
-    linkUrl: "https://www.hsta.se", // Link: Yes
   },
   {
     id: "harnosands-platslageri",
-    src: "https://az729104.cdn.laget.se/11311616.png",
-    alt: "Härnösands Plåtslageri",
-    width: 150,
-    height: 75,
+    name: "Härnösands Plåtslageri",
+    logo: "/partners/harnosands-platslageri.png",
     tier: "Diamantpartner",
-    benefits: ["Huvudsponsor", "Logotyp på matchställ", "Exklusiva event"],
+    linkUrl: "https://www.harnosandsplatslageri.se",
     visibleInCarousel: true,
-    linkUrl: "https://www.harnosandsplatslageri.se", // Link: Yes
   },
   {
     id: "jasab",
-    src: "https://az729104.cdn.laget.se/11313577.jpg",
-    alt: "Jasab",
-    width: 150,
-    height: 75,
+    name: "Jasab",
+    logo: "/partners/jasab.png",
     tier: "Diamantpartner",
-    benefits: ["Huvudsponsor", "Logotyp på matchställ", "Exklusiva event"],
+    linkUrl: "https://www.jasab.se",
     visibleInCarousel: true,
-    linkUrl: "https://www.jasab.se", // Link: Yes
   },
   {
     id: "jj-bygg",
-    src: "https://az729104.cdn.laget.se/11314727.jpg",
-    alt: "JJ Bygg",
-    width: 150,
-    height: 75,
+    name: "JJ Bygg",
+    logo: "/partners/jj-bygg.png",
     tier: "Diamantpartner",
-    benefits: ["Huvudsponsor", "Logotyp på matchställ", "Exklusiva event"],
+    linkUrl: "https://www.jjbygg.se",
     visibleInCarousel: true,
-    linkUrl: "https://jjbygg.se", // Link: Yes
   },
   {
     id: "ohmy",
-    src: "https://az729104.cdn.laget.se/11313553.jpg",
-    alt: "Ohmy",
-    width: 150,
-    height: 75,
+    name: "Ohmy",
+    logo: "/partners/ohmy.png",
     tier: "Diamantpartner",
-    benefits: ["Huvudsponsor", "Logotyp på matchställ", "Exklusiva event"],
+    linkUrl: "https://www.ohmy.se",
     visibleInCarousel: true,
-    linkUrl: "https://ohmy.se", // Link: Yes
   },
   {
     id: "westerlinds",
-    src: "https://westerlinds.nu/wp-content/themes/westerlinds20/img/logo-new-full.svg",
-    alt: "Westerlinds",
-    width: 150,
-    height: 75,
+    name: "Westerlinds",
+    logo: "/partners/westerlinds.png",
     tier: "Diamantpartner",
-    benefits: ["Huvudsponsor", "Logotyp på matchställ", "Exklusiva event"],
+    linkUrl: "https://www.westerlinds.se",
     visibleInCarousel: true,
-    linkUrl: "https://westerlinds.nu", // Link: Yes
   },
   {
-    id: "sundfrakt", // Moved from Platinapartner
-    src: "https://az729104.cdn.laget.se/11313552.jpg",
-    alt: "Sundfrakt",
-    width: 150,
-    height: 75,
+    id: "sundfrakt",
+    name: "Sundfrakt",
+    logo: "/partners/sundfrakt.png",
     tier: "Diamantpartner",
-    benefits: ["Huvudsponsor", "Logotyp på matchställ", "Exklusiva event"],
+    linkUrl: "https://www.sundfrakt.se",
     visibleInCarousel: true,
-    linkUrl: "https://www.sundfrakt.se", // Link: Yes
   },
-
-  // Platinapartners
   {
-    id: "forsakringskonsult",
-    src: "https://az729104.cdn.laget.se/11308402.jpg",
-    alt: "Försäkringskonsult",
-    width: 150,
-    height: 75,
+    id: "mittmedia",
+    name: "Mittmedia",
+    logo: "/partners/mittmedia.png",
     tier: "Platinapartner",
-    benefits: ["Logotyp på hemsida", "Synlighet vid hemmamatcher"],
+    linkUrl: "https://www.mittmedia.se",
     visibleInCarousel: true,
-    linkUrl: "https://forsakringskonsult.se", // Link: Yes
-  },
-
-  // Guldpartners
-  {
-    id: "bargab",
-    src: "https://az729104.cdn.laget.se/11314769.png",
-    alt: "Bärgab",
-    width: 150,
-    height: 75,
-    tier: "Guldpartner",
-    benefits: ["Logotyp på hemsida", "Synlighet vid hemmamatcher"],
-    visibleInCarousel: true,
-    linkUrl: "https://www.bargab.se", // Link: Yes
   },
   {
-    id: "mekonomen",
-    src: "https://d3sjey3kqst1or.cloudfront.net/static/version1750738442/frontend/Mekonomen/Mek/sv_SE/images/main-logo.svg",
-    alt: "Mekonomen",
-    width: 150,
-    height: 75,
-    tier: "Guldpartner",
-    benefits: ["Logotyp på hemsida", "Synlighet vid hemmamatcher"],
+    id: "banken",
+    name: "Banken",
+    logo: "/partners/banken.png",
+    tier: "Platinapartner",
+    linkUrl: "https://www.banken.se",
     visibleInCarousel: true,
-    linkUrl: "https://www.mekonomen.se", // Link: Yes
   },
   {
-    id: "sca",
-    src: "https://az729104.cdn.laget.se/11314773.png",
-    alt: "SCA",
-    width: 150,
-    height: 75,
+    id: "ica-maxi",
+    name: "ICA Maxi",
+    logo: "/partners/ica-maxi.png",
     tier: "Guldpartner",
-    benefits: ["Logotyp på hemsida", "Synlighet vid hemmamatcher"],
+    linkUrl: "https://www.icamaxi.se",
     visibleInCarousel: true,
-    linkUrl: "https://www.sca.com", // Link: Yes
   },
-
-  // Silverpartners
   {
     id: "coop",
-    src: "https://az729104.cdn.laget.se/11314752.jfif",
-    alt: "Coop",
-    width: 150,
-    height: 75,
-    tier: "Silverpartner",
-    benefits: ["Logotyp på hemsida"],
-    visibleInCarousel: false,
-    linkUrl: undefined, // Link: No
+    name: "Coop",
+    logo: "/partners/coop.png",
+    tier: "Guldpartner",
+    linkUrl: "https://www.coop.se",
+    visibleInCarousel: true,
   },
   {
-    id: "ekebro-utveckling",
-    src: "https://files.builder.misssite.com/f6/e9/f6e9e4a2-6fbb-4f4c-9fb6-04e1845c8b52.png",
-    alt: "Ekebro Utveckling",
-    width: 150,
-    height: 75,
+    id: "lokal-bygg",
+    name: "Lokal Bygg",
+    logo: "/partners/lokal-bygg.png",
     tier: "Silverpartner",
-    benefits: ["Logotyp på hemsida"],
+    linkUrl: "https://www.lokalbygg.se",
     visibleInCarousel: true,
-    linkUrl: undefined, // Link: No
   },
   {
-    id: "harnosandshus",
-    src: "https://az729104.cdn.laget.se/11314757.png",
-    alt: "Härnösandshus",
-    width: 150,
-    height: 75,
-    tier: "Silverpartner",
-    benefits: ["Logotyp på hemsida"],
+    id: "sport-shop",
+    name: "Sport Shop",
+    logo: "/partners/sport-shop.png",
+    tier: "Bronspartner",
+    linkUrl: "https://www.sportshop.se",
     visibleInCarousel: true,
-    linkUrl: undefined, // Link: No
-  },
-  {
-    id: "j-sjolunds-varme",
-    src: "https://az729104.cdn.laget.se/11314761.png",
-    alt: "J Sjölunds Värme",
-    width: 150,
-    height: 75,
-    tier: "Silverpartner",
-    benefits: ["Logotyp på hemsida"],
-    visibleInCarousel: true,
-    linkUrl: undefined, // Link: No
-  },
-  {
-    id: "norrskydd",
-    src: "https://az729104.cdn.laget.se/11314763.jfif",
-    alt: "Norrskydd",
-    width: 150,
-    height: 75,
-    tier: "Silverpartner",
-    benefits: ["Logotyp på hemsida"],
-    visibleInCarousel: true,
-    linkUrl: undefined, // Link: No
-  },
-  {
-    id: "lansforsakringar",
-    src: "https://az729104.cdn.laget.se/11314767.png",
-    alt: "Länsförsäkringar",
-    width: 150,
-    height: 75,
-    tier: "Silverpartner",
-    benefits: ["Logotyp på hemsida"],
-    visibleInCarousel: true,
-    linkUrl: undefined, // Link: No
   },
 ]
 
-/**
- * Central list of club partners/sponsors used by the carousel
- * and elsewhere.
- * Extend freely by adding objects with `name`, `logo`, and optional `url`.
- */
-export const partners = [
-  ...allPartners,
-  {
-    name: "Intersport Härnösand",
-    logo: "/placeholder-logo.png",
-    url: "https://www.intersport.se/",
-  },
-  {
-    name: "Svenska Spel",
-    logo: "/placeholder-logo.png",
-    url: "https://svenskaspel.se/",
-  },
-  {
-    name: "Kommun Härnösand",
-    logo: "/placeholder-logo.png",
-    url: "https://harnosand.se/",
-  },
-] as const
-
-export type PartnerType = (typeof partners)[number]
-
-export default partners
+// Export allPartners for compatibility with existing code
+export const allPartners = partners
