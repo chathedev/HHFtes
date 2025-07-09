@@ -17,22 +17,22 @@ export default function Hero({ content }: HeroProps) {
         fill
         quality={90}
         priority
-        unoptimized
         className="object-cover z-0"
       />
-      <div className="absolute inset-0 bg-black/60 z-10" /> {/* Darker, full overlay */}
-      <div className="relative z-20 text-white text-center px-4 max-w-4xl mx-auto">
-        <h1 className="text-6xl md:text-8xl font-extrabold mb-4 leading-tight tracking-tight animate-fade-in-up">
+      {/* Enhanced overlay for better text contrast and visual depth */}
+      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/40 to-transparent z-10" />
+      <div className="relative z-20 text-white text-center px-4 max-w-5xl mx-auto">
+        <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-extrabold mb-4 leading-tight tracking-tight animate-fade-in-up text-shadow-outline">
           {content.title.split(" ")[0]}{" "}
-          <span className="text-green-500">{content.title.split(" ").slice(1).join(" ")}</span>
+          <span className="text-orange-400">{content.title.split(" ").slice(1).join(" ")}</span>
         </h1>
-        <p className="text-xl md:text-2xl mb-10 max-w-3xl mx-auto animate-fade-in-up delay-200">
+        <p className="text-lg sm:text-xl md:text-2xl mb-10 max-w-3xl mx-auto animate-fade-in-up delay-200 text-shadow-md">
           {content.description}
         </p>
         <div className="flex flex-col sm:flex-row justify-center gap-6 animate-fade-in-up delay-400">
           <Button
             asChild
-            className="bg-orange-500 hover:bg-orange-600 text-white px-10 py-4 rounded-md text-lg font-semibold shadow-lg transition-transform duration-300 hover:scale-105"
+            className="bg-orange-500 hover:bg-orange-600 text-white px-10 py-4 rounded-full text-lg font-semibold shadow-lg transition-transform duration-300 hover:scale-105 focus:outline-none focus:ring-4 focus:ring-orange-300"
           >
             <Link href={content.button1Link}>
               {content.button1Text}
@@ -41,7 +41,7 @@ export default function Hero({ content }: HeroProps) {
           </Button>
           <Button
             asChild
-            className="bg-green-700 hover:bg-green-800 text-white px-10 py-4 rounded-md text-lg font-semibold shadow-lg transition-transform duration-300 hover:scale-105"
+            className="bg-green-700 hover:bg-green-800 text-white px-10 py-4 rounded-full text-lg font-semibold shadow-lg transition-transform duration-300 hover:scale-105 focus:outline-none focus:ring-4 focus:ring-green-300"
           >
             <Link href={content.button2Link}>{content.button2Text}</Link>
           </Button>

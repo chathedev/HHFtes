@@ -6,11 +6,12 @@ import { Star } from "lucide-react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { defaultContent } from "@/lib/default-content"
-import type { Partner, SiteContent } from "@/lib/content-types"
+import type { FullContent, Partner } from "@/lib/content-types" // Changed SiteContent to FullContent
 
 const BACKEND_API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL || "https://api.nuredo.se"
 
-async function getDynamicContent(): Promise<SiteContent> {
+async function getDynamicContent(): Promise<FullContent> {
+  // Changed SiteContent to FullContent
   try {
     const res = await fetch(`${BACKEND_API_URL}/api/content`, { cache: "no-store" })
     if (!res.ok) {
@@ -76,7 +77,7 @@ function PartnersPageContent({ partners }: PartnersPageContentProps) {
                           src={partner.src || "/placeholder.svg"}
                           alt={partner.alt}
                           fill
-                          unoptimized
+                          // Removed unoptimized to allow Next.js image optimization
                           className="object-contain"
                         />
                       </div>

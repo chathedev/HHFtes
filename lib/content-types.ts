@@ -7,28 +7,39 @@
 
 /* ----------  HERO  ---------- */
 export interface HeroContent {
-  headline: string
-  subheadline: string
-  ctaText: string
-  ctaLink: string
-  backgroundImage: string
+  imageUrl: string
+  title: string
+  description: string
+  button1Text: string
+  button1Link: string
+  button2Text: string
+  button2Link: string
 }
 
 /* ----------  STATS  ---------- */
-export interface StatItem {
-  label: string
-  value: string
-}
-
 export interface StatsContent {
-  stats: StatItem[]
+  totalTeams: number
+  aTeams: number
+  youthTeams: number
+  yearsHistory: string
 }
 
 /* ----------  ABOUT THE CLUB  ---------- */
 export interface AboutClubContent {
   title: string
-  body: string
-  image: string
+  paragraph1: string
+  paragraph2: string
+  passionText: string
+  developmentText: string
+  communityText: string
+  button1Text: string
+  button1Link: string
+  button2Text: string
+  button2Link: string
+  imageSrc: string
+  imageAlt: string
+  statNumber: number
+  statLabel: string
 }
 
 /* ----------  PARTNERS  ---------- */
@@ -49,7 +60,8 @@ export interface Partner {
 }
 
 /* ----------  COMPLETE SITE CONTENT  ---------- */
-export interface SiteContent {
+export interface FullContent {
+  // Renamed from SiteContent for consistency
   hero: HeroContent
   stats: StatsContent
   aboutClub: AboutClubContent

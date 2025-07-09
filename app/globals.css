@@ -87,6 +87,17 @@ body {
   .text-balance {
     text-wrap: balance;
   }
+  /* Custom text shadow for readability */
+  .text-shadow-lg {
+    text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.7);
+  }
+  .text-shadow-md {
+    text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.6);
+  }
+  /* Text shadow with outline effect for hero title */
+  .text-shadow-outline {
+    text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000, 2px 2px 8px rgba(0, 0, 0, 0.7);
+  }
 }
 
 @layer base {
