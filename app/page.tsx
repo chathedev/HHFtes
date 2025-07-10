@@ -7,6 +7,7 @@ import UpcomingEvents from "@/components/upcoming-events"
 import type { FullContent } from "@/lib/content-types"
 import { defaultContent } from "@/lib/default-content"
 import A from "@/components/about-club"
+import { redirect } from "next/navigation"
 
 const BACKEND_API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL || "https://api.nuredo.se"
 
@@ -57,10 +58,13 @@ function DynamicHomeContent({ content }: DynamicHomeContentProps) {
   )
 }
 
-export default async function Home() {
-  const content = await getDynamicContent()
+export default function HomePage() {
+  // Temporarily redirect to the external website as requested
+  // This redirect happens server-side and will open in the same tab.
+  redirect("https://www.laget.se/HarnosandsHF")
 
-  return <DynamicHomeContent content={content} />
+  // This component will not be rendered due to the redirect
+  return null
 }
 
 export { DynamicHomeContent }
