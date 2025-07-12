@@ -1,6 +1,6 @@
 import Link from "next/link"
 import Image from "next/image"
-import { MapPin, Mail } from "lucide-react"
+import { MapPin, Mail, ExternalLink } from "lucide-react"
 
 function Footer() {
   return (
@@ -50,9 +50,6 @@ function Footer() {
               <Link href="/nyheter" className="text-gray-400 hover:text-white">
                 Nyheter
               </Link>
-              <Link href="/nyheter" className="text-gray-400 hover:text-white">
-                Nyheter
-              </Link>
               <Link href="/partners" className="text-gray-400 hover:text-white">
                 Partners
               </Link>
@@ -67,7 +64,21 @@ function Footer() {
         </div>
 
         <div className="border-t border-gray-800 mt-8 pt-8 flex flex-col md:flex-row justify-between items-center">
-          <div className="text-sm text-gray-500">© 2025 Härnösands HF. Alla rättigheter förbehållna.</div>
+          <div className="flex flex-col md:flex-row items-center gap-4">
+            <div className="text-sm text-gray-500">© 2025 Härnösands HF. Alla rättigheter förbehållna.</div>
+            <div className="flex items-center gap-2 group">
+              <span className="text-sm text-gray-500">Designad av</span>
+              <a
+                href="https://wby.se"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1 text-sm font-semibold text-blue-400 hover:text-blue-300 transition-all duration-300 group-hover:scale-105"
+              >
+                <span className="bg-gradient-to-r from-blue-400 to-blue-600 bg-clip-text text-transparent">WBY</span>
+                <ExternalLink className="w-3 h-3 opacity-70 group-hover:opacity-100 transition-opacity" />
+              </a>
+            </div>
+          </div>
           <div className="flex gap-4 mt-4 md:mt-0">
             <a href="#" className="text-gray-400 hover:text-white">
               <span className="sr-only">Facebook</span>
