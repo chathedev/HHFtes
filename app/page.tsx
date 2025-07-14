@@ -1,11 +1,5 @@
 export const dynamic = "force-dynamic"
-
-import Hero from "@/components/hero"
-import Stats from "@/components/stats"
-import UpcomingEvents from "@/components/upcoming-events"
-import AboutClub from "@/components/about-club"
-import PartnersCarouselClient from "./partners-carousel-client"
-import type { JSX } from "react"
+import { redirect } from "next/navigation"
 
 import type { FullContent } from "@/lib/content-types"
 import { defaultContent } from "@/lib/default-content"
@@ -38,22 +32,7 @@ async function getDynamicContent(): Promise<FullContent> {
 /* -------------------------------------------------------------------------- */
 /*                                PAGE LAYOUT                                */
 /* -------------------------------------------------------------------------- */
-export default async function HomePage() {
-  const content = await getDynamicContent()
-
-  const sectionComponents: Record<string, JSX.Element> = {
-    hero: <Hero content={content.hero} />,
-    stats: <Stats content={content.stats} />,
-    upcomingEvents: <UpcomingEvents />,
-    aboutClub: <AboutClub content={content.aboutClub} />,
-    partnersCarousel: <PartnersCarouselClient partners={content.partners} />,
-  }
-
-  return (
-    <>
-      {content.sections.map((key) => (
-        <div key={key}>{sectionComponents[key]}</div>
-      ))}
-    </>
-  )
+export default function HomePage() {
+  // Temporary redirect to laget.se
+  redirect("https://www.laget.se/HarnosandsHF")
 }
