@@ -1,8 +1,11 @@
-// app/editor/page.tsx
 "use client"
 
 import type React from "react"
-
+import { readFile } from "fs/promises"
+import path from "path"
+import { Puck } from "@measured/puck"
+import { puckConfig } from "@/components/puck-components"
+import type { Data } from "@measured/puck"
 import { useState, useEffect, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
@@ -13,7 +16,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { toast } from "@/hooks/use-toast"
 import type { FullContent, Partner } from "@/lib/content-types"
 import { defaultContent } from "@/lib/default-content"
-import { GripVertical, Trash2, PlusCircle, ExternalLink } from "lucide-react"
+import { GripVertical, Trash2, PlusCircle, ExternalLink } from 'lucide-react'
 import {
   DndContext,
   closestCenter,
@@ -415,211 +418,61 @@ const sectionEditors: { [key: string]: React.FC<EditableSectionProps> } = {
   ),
 }
 
-export default function EditorPage() {
-  const [content, setContent] = useState<FullContent | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [saving, setSaving] = useState(false)
-  const [sectionOrder, setSectionOrder] = useState<string[]>([])
-  const router = useRouter()
+// Client component to render Puck
+// This is necessary because Puck itself is a client-side library
+// and we want to fetch initial data on the server.
+async function PuckEditorClient({ initialData }: { initialData: Data }) {
+  "use client"
 
-  const sensors = useSensors(useSensor(PointerSensor), useSensor(KeyboardSensor))
-
-  const fetchContent = useCallback(async () => {
-    setLoading(true)
+  const onPublish = async (data: Data) => {
     try {
-      const res = await fetch(`${BACKEND_API_URL}/api/content`)
-      if (!res.ok) {
-        throw new Error(`Failed to fetch content: ${res.statusText}`)
-      }
-      const data: FullContent = await res.json()
-      setContent(data)
-      setSectionOrder(data.sections || defaultContent.sections) // Use fetched order or default
-    } catch (error: any) {
-      console.error("Error fetching content:", error)
-      toast({
-        title: "Error",
-        description: `Failed to load content: ${error.message}. Using default content.`,
-        variant: "destructive",
-      })
-      setContent(defaultContent)
-      setSectionOrder(defaultContent.sections)
-    } finally {
-      setLoading(false)
-    }
-  }, [])
-
-  useEffect(() => {
-    fetchContent()
-  }, [fetchContent])
-
-  const handleContentChange = useCallback((sectionKey: keyof FullContent, updatedSectionContent: any) => {
-    setContent((prevContent) => {
-      if (!prevContent) return null
-      return {
-        ...prevContent,
-        [sectionKey]: updatedSectionContent,
-      }
-    })
-  }, [])
-
-  const handleSave = async () => {
-    if (!content) return
-    setSaving(true)
-    try {
-      // Save main content
-      const contentResponse = await fetch(`${BACKEND_API_URL}/api/content`, {
-        method: "POST", // Or PATCH if your API supports partial updates for the whole content object
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${process.env.API_SECRET}`, // Pass API_SECRET for authentication
-        },
-        body: JSON.stringify(content),
-      })
-
-      if (!contentResponse.ok) {
-        const errorData = await contentResponse.json()
-        throw new Error(`Failed to save content: ${errorData.message || contentResponse.statusText}`)
-      }
-
-      // Save section order
-      const sectionsResponse = await fetch(`${BACKEND_API_URL}/api/sections`, {
+      const response = await fetch("/api/edit/commit", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${process.env.API_SECRET}`, // Pass API_SECRET
         },
-        body: JSON.stringify({ order: sectionOrder }),
+        body: JSON.stringify(data),
       })
 
-      if (!sectionsResponse.ok) {
-        const errorData = await sectionsResponse.json()
-        throw new Error(`Failed to save section order: ${errorData.message || sectionsResponse.statusText}`)
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.message || "Failed to publish content")
       }
 
-      // Trigger revalidation on the Next.js frontend
-      const revalidateResponse = await fetch(`/api/revalidate?secret=${process.env.REVALIDATE_SECRET}`)
-      if (!revalidateResponse.ok) {
-        console.warn("Failed to trigger revalidation on frontend.")
-      }
-
-      toast({
-        title: "Success",
-        description: "Content saved and site revalidated!",
-      })
+      alert("Content published successfully!")
+      // Optionally trigger revalidation for the public site if needed
+      // const revalidateResponse = await fetch(`/api/revalidate?secret=${process.env.REVALIDATE_SECRET}`);
+      // if (!revalidateResponse.ok) {
+      //   console.warn("Failed to trigger revalidation on frontend after Puck publish.");
+      // }
     } catch (error: any) {
-      console.error("Save error:", error)
-      toast({
-        title: "Error",
-        description: `Failed to save content: ${error.message}`,
-        variant: "destructive",
-      })
-    } finally {
-      setSaving(false)
+      console.error("Error publishing content:", error)
+      alert(`Error publishing content: ${error.message}`)
     }
-  }
-
-  const handleLogout = async () => {
-    try {
-      await fetch("/api/auth/logout", { method: "POST" })
-      router.push("/login")
-      toast({
-        title: "Logged out",
-        description: "You have been successfully logged out.",
-      })
-    } catch (error) {
-      console.error("Logout error:", error)
-      toast({
-        title: "Error",
-        description: "Failed to log out.",
-        variant: "destructive",
-      })
-    }
-  }
-
-  const handleDragEnd = (event: DragEndEvent) => {
-    const { active, over } = event
-    if (active.id !== over?.id) {
-      setSectionOrder((items) => {
-        const oldIndex = items.indexOf(active.id as string)
-        const newIndex = items.indexOf(over?.id as string)
-        const newItems = [...items]
-        const [movedItem] = newItems.splice(oldIndex, 1)
-        newItems.splice(newIndex, 0, movedItem)
-        return newItems
-      })
-    }
-  }
-
-  if (loading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-gray-100">
-        <p className="text-gray-600">Loading editor...</p>
-      </div>
-    )
-  }
-
-  if (!content) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-gray-100">
-        <p className="text-red-500">Error: Could not load content.</p>
-      </div>
-    )
   }
 
   return (
-    <div className="flex min-h-screen bg-gray-100">
-      {/* Editor Sidebar */}
-      <aside className="w-1/2 p-8 bg-white border-r border-gray-200 overflow-y-auto">
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold text-green-700">Site Editor</h1>
-          <Button
-            onClick={handleLogout}
-            variant="outline"
-            className="text-red-500 border-red-300 hover:bg-red-50 bg-transparent"
-          >
-            Logout
-          </Button>
-        </div>
-
-        <div className="mb-8 flex justify-end gap-4">
-          <Button onClick={handleSave} disabled={saving} className="bg-orange-500 hover:bg-orange-600">
-            {saving ? "Saving..." : "Save Changes"}
-          </Button>
-          <Button asChild variant="outline">
-            <a href="/" target="_blank" rel="noopener noreferrer">
-              View Live Site <ExternalLink className="ml-2 w-4 h-4" />
-            </a>
-          </Button>
-        </div>
-
-        <h2 className="text-2xl font-semibold text-gray-800 mb-4">Edit Sections</h2>
-        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-          <SortableContext items={sectionOrder} strategy={verticalListSortingStrategy}>
-            <div className="space-y-6">
-              {sectionOrder.map((sectionKey) => {
-                const EditorComponent = sectionEditors[sectionKey]
-                if (!EditorComponent) return null
-
-                return (
-                  <SortableItem key={sectionKey} id={sectionKey}>
-                    <EditorComponent
-                      sectionKey={sectionKey}
-                      content={content[sectionKey as keyof FullContent]}
-                      onContentChange={handleContentChange}
-                    />
-                  </SortableItem>
-                )
-              })}
-            </div>
-          </SortableContext>
-        </DndContext>
-      </aside>
-
-      {/* Live Preview */}
-      <main className="flex-1 p-4">
-        <h2 className="sr-only">Live Preview</h2>
-        <iframe src="/" title="Live Site Preview" className="w-full h-full border rounded-lg shadow-md" />
-      </main>
+    <div className="h-screen">
+      <Puck config={puckConfig} data={initialData} onPublish={onPublish} />
     </div>
   )
+}
+
+// Server Component to fetch initial data
+export default async function EditorPage() {
+  let initialData: Data = {
+    root: { props: { className: "max-w-6xl mx-auto py-12 px-4 sm:px-6 lg:px-8" } },
+    content: [],
+  }
+
+  try {
+    const filePath = path.join(process.cwd(), "content", "home.json")
+    const fileContent = await readFile(filePath, "utf-8")
+    initialData = JSON.parse(fileContent)
+  } catch (error) {
+    console.error("Error reading content/home.json:", error)
+    // Fallback to default empty data if file not found or error
+  }
+
+  return <PuckEditorClient initialData={initialData} />
 }

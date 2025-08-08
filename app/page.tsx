@@ -1,8 +1,12 @@
 export const dynamic = "force-dynamic"
-import { redirect } from "next/navigation"
 
 import type { FullContent } from "@/lib/content-types"
 import { defaultContent } from "@/lib/default-content"
+import Hero from "@/components/hero"
+import Stats from "@/components/stats"
+import UpcomingEvents from "@/components/upcoming-events"
+import AboutClub from "@/components/about-club"
+import PartnersCarouselClient from "@/app/partners-carousel-client" // Client component for carousel
 
 const BACKEND_API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL || "https://api.nuredo.se"
 
@@ -32,7 +36,23 @@ async function getDynamicContent(): Promise<FullContent> {
 /* -------------------------------------------------------------------------- */
 /*                                PAGE LAYOUT                                */
 /* -------------------------------------------------------------------------- */
-export default function HomePage() {
-  // Temporary redirect to laget.se
-  redirect("https://www.laget.se/HarnosandsHF")
+export default async function HomePage() {
+  const content = await getDynamicContent()
+
+  const sectionComponents: { [key: string]: JSX.Element } = {
+    hero: <Hero content={content.hero} />,
+    stats: <Stats content={content.stats} />,
+    upcomingEvents: <UpcomingEvents />, // UpcomingEvents fetches its own data
+    aboutClub: <AboutClub content={content.aboutClub} />,
+    partnersCarousel: <PartnersCarouselClient partners={content.partners} />,
+  }
+
+  return (
+    <div>
+      {content.sections.map((sectionKey) => {
+        const component = sectionComponents[sectionKey]
+        return component ? <div key={sectionKey}>{component}</div> : null
+      })}
+    </div>
+  )
 }

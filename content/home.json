@@ -1,0 +1,27 @@
+{
+  "root": {
+    "props": {
+      "className": "max-w-6xl mx-auto py-12 px-4 sm:px-6 lg:px-8"
+    }
+  },
+  "content": [
+    {
+      "type": "Hero",
+      "props": {
+        "imageUrl": "/placeholder.svg?height=800&width=1200",
+        "title": "Welcome to Härnösands HF",
+        "description": "Join our community and experience the passion of handball. We are dedicated to fostering talent, promoting teamwork, and building a strong community.",
+        "button1Text": "Explore Teams",
+        "button1Link": "/lag",
+        "button2Text": "View Calendar",
+        "button2Link": "/kalender"
+      }
+    },
+    {
+      "type": "RichText",
+      "props": {
+        "text": "<h2>About Our Club</h2><p>Härnösands HF is a vibrant handball club with a rich history of developing players and contributing to the local community. Our commitment to excellence on and off the court drives us forward.</p><p>We believe in the power of sport to unite people and create lasting memories. Join us and be part of something special!</p>"
+      }
+    }
+  ]
+}
