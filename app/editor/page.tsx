@@ -1,8 +1,9 @@
-// app/editor/page.tsx
 "use client"
 
 import type React from "react"
-
+import { cookies, draftMode, headers } from "next/headers"
+import { verifyCloudflareAccess } from "@/lib/security/verify-cloudflare-access"
+import { redirect } from "next/navigation"
 import { useState, useEffect, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
@@ -13,7 +14,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { toast } from "@/hooks/use-toast"
 import type { FullContent, Partner } from "@/lib/content-types"
 import { defaultContent } from "@/lib/default-content"
-import { GripVertical, Trash2, PlusCircle, ExternalLink } from "lucide-react"
+import { GripVertical, Trash2, PlusCircle, ExternalLink } from 'lucide-react'
 import {
   DndContext,
   closestCenter,
@@ -415,211 +416,65 @@ const sectionEditors: { [key: string]: React.FC<EditableSectionProps> } = {
   ),
 }
 
-export default function EditorPage() {
-  const [content, setContent] = useState<FullContent | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [saving, setSaving] = useState(false)
-  const [sectionOrder, setSectionOrder] = useState<string[]>([])
-  const router = useRouter()
+export const dynamic = "force-dynamic"
 
-  const sensors = useSensors(useSensor(PointerSensor), useSensor(KeyboardSensor))
+export default async function EditorGate() {
+  // Double-check Cloudflare Access here (middleware also enforces this).
+  const hdrs = await headers()
+  const cfJwt = hdrs.get("CF-Access-Jwt-Assertion") || ""
 
-  const fetchContent = useCallback(async () => {
-    setLoading(true)
-    try {
-      const res = await fetch(`${BACKEND_API_URL}/api/content`)
-      if (!res.ok) {
-        throw new Error(`Failed to fetch content: ${res.statusText}`)
-      }
-      const data: FullContent = await res.json()
-      setContent(data)
-      setSectionOrder(data.sections || defaultContent.sections) // Use fetched order or default
-    } catch (error: any) {
-      console.error("Error fetching content:", error)
-      toast({
-        title: "Error",
-        description: `Failed to load content: ${error.message}. Using default content.`,
-        variant: "destructive",
-      })
-      setContent(defaultContent)
-      setSectionOrder(defaultContent.sections)
-    } finally {
-      setLoading(false)
-    }
-  }, [])
-
-  useEffect(() => {
-    fetchContent()
-  }, [fetchContent])
-
-  const handleContentChange = useCallback((sectionKey: keyof FullContent, updatedSectionContent: any) => {
-    setContent((prevContent) => {
-      if (!prevContent) return null
-      return {
-        ...prevContent,
-        [sectionKey]: updatedSectionContent,
-      }
-    })
-  }, [])
-
-  const handleSave = async () => {
-    if (!content) return
-    setSaving(true)
-    try {
-      // Save main content
-      const contentResponse = await fetch(`${BACKEND_API_URL}/api/content`, {
-        method: "POST", // Or PATCH if your API supports partial updates for the whole content object
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${process.env.API_SECRET}`, // Pass API_SECRET for authentication
-        },
-        body: JSON.stringify(content),
-      })
-
-      if (!contentResponse.ok) {
-        const errorData = await contentResponse.json()
-        throw new Error(`Failed to save content: ${errorData.message || contentResponse.statusText}`)
-      }
-
-      // Save section order
-      const sectionsResponse = await fetch(`${BACKEND_API_URL}/api/sections`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${process.env.API_SECRET}`, // Pass API_SECRET
-        },
-        body: JSON.stringify({ order: sectionOrder }),
-      })
-
-      if (!sectionsResponse.ok) {
-        const errorData = await sectionsResponse.json()
-        throw new Error(`Failed to save section order: ${errorData.message || sectionsResponse.statusText}`)
-      }
-
-      // Trigger revalidation on the Next.js frontend
-      const revalidateResponse = await fetch(`/api/revalidate?secret=${process.env.REVALIDATE_SECRET}`)
-      if (!revalidateResponse.ok) {
-        console.warn("Failed to trigger revalidation on frontend.")
-      }
-
-      toast({
-        title: "Success",
-        description: "Content saved and site revalidated!",
-      })
-    } catch (error: any) {
-      console.error("Save error:", error)
-      toast({
-        title: "Error",
-        description: `Failed to save content: ${error.message}`,
-        variant: "destructive",
-      })
-    } finally {
-      setSaving(false)
-    }
-  }
-
-  const handleLogout = async () => {
-    try {
-      await fetch("/api/auth/logout", { method: "POST" })
-      router.push("/login")
-      toast({
-        title: "Logged out",
-        description: "You have been successfully logged out.",
-      })
-    } catch (error) {
-      console.error("Logout error:", error)
-      toast({
-        title: "Error",
-        description: "Failed to log out.",
-        variant: "destructive",
-      })
-    }
-  }
-
-  const handleDragEnd = (event: DragEndEvent) => {
-    const { active, over } = event
-    if (active.id !== over?.id) {
-      setSectionOrder((items) => {
-        const oldIndex = items.indexOf(active.id as string)
-        const newIndex = items.indexOf(over?.id as string)
-        const newItems = [...items]
-        const [movedItem] = newItems.splice(oldIndex, 1)
-        newItems.splice(newIndex, 0, movedItem)
-        return newItems
-      })
-    }
-  }
-
-  if (loading) {
+  const verified = await verifyCloudflareAccess(cfJwt)
+  if (!verified) {
+    // If this page is hit without a valid CF token, reject.
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gray-100">
-        <p className="text-gray-600">Loading editor...</p>
-      </div>
+      <main className="min-h-[60vh] flex items-center justify-center p-8">
+        <div className="max-w-xl text-center">
+          <h1 className="text-2xl font-semibold">401 – Åtkomst nekad</h1>
+          <p className="text-muted-foreground mt-2">
+            Cloudflare Access-token saknas eller är ogiltigt.
+          </p>
+        </div>
+      </main>
     )
   }
 
-  if (!content) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-gray-100">
-        <p className="text-red-500">Error: Could not load content.</p>
-      </div>
-    )
-  }
+  // Enable edit mode for 60 minutes.
+  const c = await cookies()
+  c.set({
+    name: "edit",
+    value: "1",
+    httpOnly: true,
+    sameSite: "strict",
+    secure: true,
+    path: "/",
+    maxAge: 60 * 60,
+  })
+
+  // Enable Next.js draft mode so editors see changes immediately.
+  ;(await draftMode()).enable()
 
   return (
-    <div className="flex min-h-screen bg-gray-100">
-      {/* Editor Sidebar */}
-      <aside className="w-1/2 p-8 bg-white border-r border-gray-200 overflow-y-auto">
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold text-green-700">Site Editor</h1>
-          <Button
-            onClick={handleLogout}
-            variant="outline"
-            className="text-red-500 border-red-300 hover:bg-red-50 bg-transparent"
+    <main className="min-h-[60vh] flex items-center justify-center p-8">
+      <div className="max-w-xl text-center">
+        <h1 className="text-3xl font-semibold">Redigeringsläge aktiverat ✅</h1>
+        <p className="text-muted-foreground mt-3">
+          Du kan nu redigera innehåll direkt på webbplatsen.
+          Denna flik kan stängas. Besök sidan du vill uppdatera och använd “Edit”-knappen.
+        </p>
+
+        <div className="mt-6">
+          <a
+            href="/"
+            className="inline-block rounded-full bg-black text-white px-6 py-2 text-sm hover:opacity-90"
           >
-            Logout
-          </Button>
+            Gå till startsidan
+          </a>
         </div>
 
-        <div className="mb-8 flex justify-end gap-4">
-          <Button onClick={handleSave} disabled={saving} className="bg-orange-500 hover:bg-orange-600">
-            {saving ? "Saving..." : "Save Changes"}
-          </Button>
-          <Button asChild variant="outline">
-            <a href="/" target="_blank" rel="noopener noreferrer">
-              View Live Site <ExternalLink className="ml-2 w-4 h-4" />
-            </a>
-          </Button>
-        </div>
-
-        <h2 className="text-2xl font-semibold text-gray-800 mb-4">Edit Sections</h2>
-        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-          <SortableContext items={sectionOrder} strategy={verticalListSortingStrategy}>
-            <div className="space-y-6">
-              {sectionOrder.map((sectionKey) => {
-                const EditorComponent = sectionEditors[sectionKey]
-                if (!EditorComponent) return null
-
-                return (
-                  <SortableItem key={sectionKey} id={sectionKey}>
-                    <EditorComponent
-                      sectionKey={sectionKey}
-                      content={content[sectionKey as keyof FullContent]}
-                      onContentChange={handleContentChange}
-                    />
-                  </SortableItem>
-                )
-              })}
-            </div>
-          </SortableContext>
-        </DndContext>
-      </aside>
-
-      {/* Live Preview */}
-      <main className="flex-1 p-4">
-        <h2 className="sr-only">Live Preview</h2>
-        <iframe src="/" title="Live Site Preview" className="w-full h-full border rounded-lg shadow-md" />
-      </main>
-    </div>
+        <p className="text-xs text-muted-foreground mt-6">
+          Tip: Redigeringsläget upphör automatiskt om 60 minuter eller när du rensar kakan “edit”.
+        </p>
+      </div>
+    </main>
   )
 }
