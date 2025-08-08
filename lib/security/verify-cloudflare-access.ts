@@ -6,7 +6,7 @@ export async function verifyCloudflareAccess(token: string): Promise<boolean> {
     return false
   }
 
-  const ISSUER = `https://${process.env.CF_TEAM_DOMAIN}`
+  const ISSUER = `https://${process.env.CF_TEAM_DOMAIN}.cloudflareaccess.com`
   const JWKS_URL = `${ISSUER}/cdn-cgi/access/certs`
 
   try {
@@ -16,7 +16,9 @@ export async function verifyCloudflareAccess(token: string): Promise<boolean> {
       audience: process.env.CF_ACCESS_AUD, // jose's audience option handles string or array
     })
 
-    // Additional checks if needed, though jose handles issuer and audience
+    // The `audience` option in `jwtVerify` already handles both string and array
+    // comparison against the provided `CF_ACCESS_AUD`.
+    // If `jwtVerify` completes without throwing, it means issuer, audience, and signature are valid.
     return true
   } catch (error) {
     console.error("JWT verification failed:", error)

@@ -1,31 +1,16 @@
-import { cookies, draftMode, headers } from "next/headers"
+import { cookies, draftMode } from "next/headers"
 import { verifyCloudflareAccess } from "@/lib/security/verify-cloudflare-access"
 import { redirect } from "next/navigation"
 
 export default async function EditorPage() {
-  const cfAccessJwtAssertion = headers().get("cf-access-jwt-assertion")
-  const cfAuthorizationCookie = cookies().get("CF_Authorization")?.value
+  const token = cookies().get("CF_Authorization")?.value || headers().get("cf-access-jwt-assertion")
 
-  let token: string | undefined
-
-  if (cfAccessJwtAssertion) {
-    token = cfAccessJwtAssertion
-  } else if (cfAuthorizationCookie) {
-    token = cfAuthorizationCookie
+  if (!token || !(await verifyCloudflareAccess(token))) {
+    // Redirect to login or show an error if not authorized
+    redirect("/login?error=unauthorized")
   }
 
-  if (!token) {
-    redirect("/login?error=no_cf_token")
-  }
-
-  const isValid = await verifyCloudflareAccess(token)
-
-  if (!isValid) {
-    redirect("/login?error=invalid_cf_token")
-  }
-
-  // If verification is successful, enable draft mode and set the edit cookie
-  draftMode().enable()
+  // Set the "edit" cookie for the entire domain, including subdomains
   cookies().set({
     name: "edit",
     value: "1",
@@ -33,9 +18,11 @@ export default async function EditorPage() {
     secure: true,
     sameSite: "strict",
     path: "/",
-    domain: ".harnosandshf.se", // Set domain for apex and www
+    domain: ".harnosandshf.se", // Set domain for cross-subdomain access
     maxAge: 3600, // 1 hour
   })
+
+  draftMode().enable()
 
   return <p>Edit mode enabled. You can close this tab.</p>
 }
