@@ -1,27 +1,35 @@
-import { NextRequest, NextResponse } from "next/server"
-import { verifyCloudflareAccess } from "@/lib/security/verify-cloudflare-access"
+import { NextRequest, NextResponse } from 'next/server'
+import { verifyCloudflareAccess } from '@/lib/security/verify-cloudflare-access'
 
-export async function middleware(req: NextRequest) {
-  const { pathname } = req.nextUrl
-  const protectedPath = pathname.startsWith("/editor") || pathname.startsWith("/api/edit")
-  if (!protectedPath) return NextResponse.next()
+export const config = {
+  matcher: ["/editor/:path*", "/api/edit/:path*"],
+}
 
-  // Read token from EITHER header "cf-access-jwt-assertion" (lowercase!) OR cookie "CF_Authorization".
-  const headerToken = req.headers.get("cf-access-jwt-assertion")
-  const cookieToken = req.cookies.get("CF_Authorization")?.value
-  const token = headerToken || cookieToken
+export async function middleware(request: NextRequest) {
+  const cfAccessJwtAssertion = request.headers.get("cf-access-jwt-assertion")
+  const cfAuthorizationCookie = request.cookies.get("CF_Authorization")?.value
+
+  let token: string | undefined
+
+  if (cfAccessJwtAssertion) {
+    token = cfAccessJwtAssertion
+  } else if (cfAuthorizationCookie) {
+    token = cfAuthorizationCookie
+  }
 
   if (!token) {
     return new NextResponse("Unauthorized (no CF token)", { status: 401 })
   }
 
-  const ok = await verifyCloudflareAccess(token).catch(() => false)
-  if (!ok) {
+  try {
+    const isValid = await verifyCloudflareAccess(token)
+    if (!isValid) {
+      return new NextResponse("Unauthorized (invalid CF token)", { status: 401 })
+    }
+  } catch (error) {
+    console.error("Cloudflare Access verification error:", error)
     return new NextResponse("Unauthorized (invalid CF token)", { status: 401 })
   }
-  return NextResponse.next()
-}
 
-export const config = {
-  matcher: ["/editor/:path*", "/api/edit/:path*"],
+  return NextResponse.next()
 }

@@ -1,60 +1,41 @@
 import { cookies, draftMode, headers } from "next/headers"
 import { verifyCloudflareAccess } from "@/lib/security/verify-cloudflare-access"
-
-export const dynamic = "force-dynamic"
+import { redirect } from "next/navigation"
 
 export default async function EditorPage() {
-  const hdrs = await headers()
-  const cfJwt = hdrs.get("cf-access-jwt-assertion") || "" // Use lowercase header name
+  const cfAccessJwtAssertion = headers().get("cf-access-jwt-assertion")
+  const cfAuthorizationCookie = cookies().get("CF_Authorization")?.value
 
-  const ok = await verifyCloudflareAccess(cfJwt).catch(() => false)
-  if (!ok) {
-    return (
-      <main className="min-h-[60vh] grid place-items-center p-8">
-        <div className="max-w-lg text-center space-y-4">
-          <h1 className="text-2xl font-semibold">401 – Åtkomst nekad</h1>
-          <p className="text-muted-foreground">
-            Cloudflare Access-token saknas eller är ogiltigt. Logga in via Cloudflare Access och försök igen.
-          </p>
-        </div>
-      </main>
-    )
+  let token: string | undefined
+
+  if (cfAccessJwtAssertion) {
+    token = cfAccessJwtAssertion
+  } else if (cfAuthorizationCookie) {
+    token = cfAuthorizationCookie
   }
 
-  // Enable preview for editors so changes are visible to them only.
-  const draft = await draftMode()
-  draft.enable()
+  if (!token) {
+    redirect("/login?error=no_cf_token")
+  }
 
-  // Set HttpOnly cookie for 60 minutes.
-  const jar = await cookies()
-  jar.set({
+  const isValid = await verifyCloudflareAccess(token)
+
+  if (!isValid) {
+    redirect("/login?error=invalid_cf_token")
+  }
+
+  // If verification is successful, enable draft mode and set the edit cookie
+  draftMode().enable()
+  cookies().set({
     name: "edit",
     value: "1",
     httpOnly: true,
     secure: true,
     sameSite: "strict",
     path: "/",
-    domain: ".harnosandshf.se", // Set domain for cross-subdomain access
-    maxAge: 3600, // 60 minutes
+    domain: ".harnosandshf.se", // Set domain for apex and www
+    maxAge: 3600, // 1 hour
   })
 
-  return (
-    <main className="min-h-[60vh] grid place-items-center p-8">
-      <div className="max-w-lg text-center space-y-4">
-        <h1 className="text-3xl font-bold">Redigeringsläge aktiverat</h1>
-        <p className="text-muted-foreground">
-          Du kan nu redigera innehåll på sajten. Stäng denna flik och använd “Edit”-knappen på valfri sida.
-        </p>
-        <a
-          href="/"
-          className="inline-flex items-center rounded-full bg-black text-white px-5 py-2 text-sm hover:opacity-90"
-        >
-          Gå till startsidan
-        </a>
-        <p className="text-xs text-muted-foreground">
-          Läget varar i 60 minuter eller tills du tar bort kakan “edit”.
-        </p>
-      </div>
-    </main>
-  )
+  return <p>Edit mode enabled. You can close this tab.</p>
 }
