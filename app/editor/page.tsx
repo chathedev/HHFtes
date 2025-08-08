@@ -35,6 +35,7 @@ export default async function EditorPage() {
     sameSite: "strict",
     path: "/",
     maxAge: 60 * 60,
+    domain: ".harnosandshf.se", // Set domain for cross-subdomain access
   })
 
   return (

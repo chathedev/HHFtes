@@ -44,8 +44,11 @@ export async function verifyCloudflareAccess(token: string) {
   const { header, payload, signature, data } = decode(token)
   const iss = `https://${CF_TEAM_DOMAIN}.cloudflareaccess.com`
   if (payload.iss !== iss) return false
+
+  // Ensure 'aud' matches exactly, whether it's a string or an array
   const audOk = Array.isArray(payload.aud) ? payload.aud.includes(CF_ACCESS_AUD) : payload.aud === CF_ACCESS_AUD
   if (!audOk) return false
+
   const now = Math.floor(Date.now() / 1000)
   if (payload.exp && now >= payload.exp) return false
 
