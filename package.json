@@ -9,10 +9,6 @@
     "start": "next start"
   },
   "dependencies": {
-    "@dnd-kit/core": "latest",
-    "@dnd-kit/sortable": "latest",
-    "@dnd-kit/utilities": "latest",
-    "@hookform/resolvers": "^3.9.1",
     "@radix-ui/react-accordion": "latest",
     "@radix-ui/react-alert-dialog": "latest",
     "@radix-ui/react-aspect-ratio": "latest",
@@ -29,6 +25,7 @@
     "@radix-ui/react-popover": "latest",
     "@radix-ui/react-progress": "latest",
     "@radix-ui/react-radio-group": "latest",
+    "@radix-ui/react-resizable": "^1.1.1",
     "@radix-ui/react-scroll-area": "latest",
     "@radix-ui/react-select": "latest",
     "@radix-ui/react-separator": "latest",
@@ -36,17 +33,18 @@
     "@radix-ui/react-slot": "latest",
     "@radix-ui/react-switch": "latest",
     "@radix-ui/react-tabs": "latest",
+    "@radix-ui/react-textarea": "^1.1.0",
     "@radix-ui/react-toast": "latest",
     "@radix-ui/react-toggle": "latest",
     "@radix-ui/react-toggle-group": "latest",
     "@radix-ui/react-tooltip": "latest",
-    "autoprefixer": "^10.4.20",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "latest",
-    "date-fns": "4.1.0",
+    "date-fns": "^3.6.0",
     "embla-carousel-react": "latest",
     "input-otp": "latest",
+    "jose": "latest",
     "lucide-react": "^0.454.0",
     "next": "15.2.4",
     "next-themes": "latest",
@@ -62,18 +60,16 @@
     "tailwind-merge": "^2.5.5",
     "tailwindcss-animate": "^1.0.7",
     "vaul": "latest",
-    "zod": "^3.24.1"
+    "zod": "^3.23.8"
   },
   "devDependencies": {
     "@types/node": "^22",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "eslint": "^8",
+    "eslint-config-next": "15.2.4",
     "postcss": "^8.5",
-    "tailwindcss": "^3.4.17",
+    "tailwindcss": "^3.4.1",
     "typescript": "^5"
-  },
-  "packageManager": "pnpm@10.0.0",
-  "engines": {
-    "node": ">=18.18.0"
   }
 }

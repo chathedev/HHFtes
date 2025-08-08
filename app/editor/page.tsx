@@ -5,7 +5,7 @@ export const dynamic = "force-dynamic"
 
 export default async function EditorPage() {
   const hdrs = await headers()
-  const cfJwt = hdrs.get("CF-Access-Jwt-Assertion") || ""
+  const cfJwt = hdrs.get("cf-access-jwt-assertion") || "" // Use lowercase header name
 
   const ok = await verifyCloudflareAccess(cfJwt).catch(() => false)
   if (!ok) {
@@ -34,8 +34,8 @@ export default async function EditorPage() {
     secure: true,
     sameSite: "strict",
     path: "/",
-    maxAge: 60 * 60,
     domain: ".harnosandshf.se", // Set domain for cross-subdomain access
+    maxAge: 3600, // 60 minutes
   })
 
   return (
