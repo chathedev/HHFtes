@@ -24,107 +24,75 @@ Continue building your app on:
 
 ---
 
-## On-site editor
+## On-site editor (protected)
 
-This project includes an authenticated, on-site editor that’s disabled by default. It uses Cloudflare Access, an HttpOnly cookie, and a protected PR flow to GitHub. Public visitors never see edit UI.
+This project includes an optional, protected on-site editor that’s disabled by default. It keeps the site fully backward-compatible and does not change existing routes, except for the new `/editor` entry point and `/api/edit/*` endpoints.
 
-### 1) Prerequisites
+### Prerequisites
 
-- Next.js App Router (already in this repo)
-- Vercel deployment
-- GitHub repo connected to Vercel
+1. Put Cloudflare Access in front of:
+   - `/editor`
+   - `/api/edit/*`
+2. Add these environment variables in Vercel Project Settings:
+   - `CF_TEAM_DOMAIN` (e.g. `myteam` for `https://myteam.cloudflareaccess.com`)
+   - `CF_ACCESS_AUD` (the audience tag of your CF Access app)
+   - `GITHUB_TOKEN` (repo scope)
+   - `GITHUB_OWNER`
+   - `GITHUB_REPO`
+   - `GIT_AUTHOR_NAME`
+   - `GIT_AUTHOR_EMAIL`
 
-### 2) Environment variables (Vercel → Project Settings → Environment Variables)
+### How it works
 
-- CF_ACCESS_AUD
-- CF_TEAM_DOMAIN
-- GITHUB_TOKEN (repo scope)
-- GITHUB_OWNER
-- GITHUB_REPO
-- GIT_AUTHOR_NAME
-- GIT_AUTHOR_EMAIL
+- Visit `/editor` with a valid CF Access token → we verify the `CF-Access-Jwt-Assertion`, set an HttpOnly cookie `edit=1` for 1 hour, and enable Next.js `draftMode`. [^1][^5]
+- Public pages remain unchanged. No editor UI appears unless the `edit=1` cookie exists.
+- POST `/api/edit/commit` creates a branch and Pull Request with your changes under `/content` using the GitHub REST API.
 
-### 3) Cloudflare Access
+### Add the floating Edit pill (optional)
 
-Protect these paths behind Cloudflare Access (SaaS app or self-hosted):
-- `/editor`
-- `/api/edit/*`
-
-The middleware validates `CF-Access-Jwt-Assertion` for those paths only.
-
-### 4) Enabling edit mode
-
-Visit `/editor` with a valid Cloudflare Access session. The page:
-- Verifies your token
-- Sets `edit=1` cookie (`HttpOnly; Secure; SameSite=Strict; Max-Age=3600`)
-- Enables Next.js `draftMode` for previewing changes
-- Shows a confirmation message
-
-Close the tab and browse the site.
-
-### 5) Optional: show the Edit pill
-
-To show the small “Edit” pill for editors, mount the gate and provider where you want (e.g. in `app/layout.tsx`). This is optional and off by default.
+Mount the pill only on pages/layouts where you want it:
 
 \`\`\`tsx
-// app/layout.tsx (example snippet – do NOT copy blindly to production)
-/*
-import { TinaProvider, TinaSidebar } from "@/tina/config"
-import { EditGate } from "@/components/edit-gate"
-
-export default function RootLayout({ children }: { children: React.ReactNode }) {
-  return (
-    <html lang="sv">
-      <body>
-        <TinaProvider>
-          <EditGate />
-          <TinaSidebar />
-          {children}
-        </TinaProvider>
-      </body>
-    </html>
-  )
-}
-*/
+// app/layout.tsx (example only — do not enable globally unless desired)
+{/* <EditGate /> */}
 \`\`\`
 
-### 6) Make a field editable
+Import: `import { EditGate } from '@/components/edit-gate'`
 
-Use `EditableField` to bind UI to a file in `/content`.
+### Make a field editable (opt-in)
+
+Replace a static string with:
 
 \`\`\`tsx
-// Example (do not ship this change directly – opt in where needed):
-// <EditableField filePath="content/home.json" field="heroTitle" fallback="Hej Härnösand!" />
+{/* <EditableField filePath="content/home.json" field="heroTitle" fallback="My Title" /> */}
 \`\`\`
 
-When the `edit` cookie exists and the sidebar is open, the field becomes inline-editable.
+This shows static text for the public. With the `edit` cookie and the sidebar toggled, it turns into an inline input.
 
-### 7) Draft preview
+### Publish (open PR)
 
-- On `/editor`, `draftMode()` is enabled.
-- Public pages remain unchanged for regular visitors.
+Send a POST to `/api/edit/commit`:
 
-### 8) Publish (open PR)
-
-Send a POST request to `/api/edit/commit` with changed file contents to open a PR:
-
-\`\`\`
-POST /api/edit/commit
-{
-  "changes": [
-    { "filePath": "content/home.json", "content": "{ \"heroTitle\": \"Hello\" }" }
-  ]
-}
+\`\`\`bash
+curl -X POST /api/edit/commit \
+  -H "CF-Access-Jwt-Assertion: <token>" \
+  -H "Content-Type: application/json" \
+  -d '{"changes":[{"filePath":"content/home.json","content":"{\"heroTitle\":\"Hej\"}"}]}'
 \`\`\`
 
-Requirements:
-- Valid Cloudflare Access token
-- `edit=1` cookie present
-- Paths must be under `content/`
+Response: `{ "ok": true, "url": "https://github.com/OWNER/REPO/pull/123" }`
 
-A PR titled “Site edits from /editor” is created against your default branch.
+### Disable edit mode
 
-### 9) Disable edit mode
+Delete the `edit` cookie (or wait for it to expire).
 
-- Wait for cookie expiry (60 min), or
-- Manually delete the `edit` cookie from the browser
+### Security
+
+- `/editor` and `/api/edit/*` validate the Cloudflare Access token. If missing/invalid → 401. [^5]
+- Commits require both a valid token and the `edit=1` cookie.
+- Only paths under `/content` are allowed and directory traversal is blocked.
+- Requests are size-limited and validated with zod.
+- Draft mode is limited to `/editor`, so public traffic is unaffected. [^1]
+
+[^1]: [Next.js Draft Mode](https://nextjs.org/docs/app/build-reference/functions/get-draft-mode)
+[^5]: [Cloudflare Access](https://developers.cloudflare.com/cloudflare-one/identity/)

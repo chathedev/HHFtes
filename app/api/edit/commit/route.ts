@@ -1,78 +1,72 @@
-import { NextResponse, type NextRequest } from "next/server"
-import { z } from "zod"
-import { cookies, headers } from "next/headers"
-import { verifyCloudflareAccess } from "@/lib/security/verify-cloudflare-access"
-import { commitChanges } from "@/lib/git/commit-changes"
+import 'server-only'
 
-const bodySchema = z.object({
+import { NextRequest, NextResponse } from 'next/server'
+import { cookies, headers } from 'next/headers'
+import { z } from 'zod'
+import { verifyCloudflareAccess } from '@/lib/security/verify-cloudflare-access'
+import { openPullRequestWithChanges } from '@/lib/git/commit-changes'
+
+// simple in-memory rate limit: 10/min/IP (best-effort)
+const bucket = new Map<string, { count: number; ts: number }>()
+
+const BodySchema = z.object({
   changes: z
     .array(
       z.object({
         filePath: z
           .string()
-          .min(1)
-          .refine((p) => p.startsWith("content/"), "filePath must be under content/")
-          .refine((p) => !p.includes(".."), "Path traversal not allowed"),
+          .refine((p) => p.startsWith('content/'), 'filePath must start with content/')
+          .refine((p) => !p.includes('..'), 'No directory traversal'),
         content: z.string(),
       })
     )
-    .min(1),
+    .min(1)
+    .max(50),
 })
 
-/**
- * Very simple in-memory rate limit: 10/min per IP.
- * Note: Not shared across serverless instances.
- */
-const WINDOW_MS = 60_000
-const LIMIT = 10
-const bucket = new Map<string, number[]>()
-
-function rateLimited(ip: string) {
-  const now = Date.now()
-  const arr = bucket.get(ip) ?? []
-  const fresh = arr.filter((t) => now - t < WINDOW_MS)
-  fresh.push(now)
-  bucket.set(ip, fresh)
-  return fresh.length > LIMIT
-}
-
 export async function POST(req: NextRequest) {
-  const hdrs = await headers()
-  const cfJwt = hdrs.get("CF-Access-Jwt-Assertion") || ""
-  const ok = await verifyCloudflareAccess(cfJwt)
-  if (!ok) return new NextResponse("Unauthorized", { status: 401 })
+  // size guard ~1MB
+  const contentLength = Number(req.headers.get('content-length') || '0')
+  if (contentLength > 1_000_000) {
+    return NextResponse.json({ error: 'Payload too large' }, { status: 413 })
+  }
 
-  const cookieStore = await cookies()
-  const hasEditCookie = cookieStore.get("edit")?.value === "1"
-  if (!hasEditCookie) return new NextResponse("Edit mode cookie missing", { status: 401 })
-
+  // rate limit
   const ip =
-    req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
-    (req as any).ip ||
-    "unknown"
-
-  if (rateLimited(ip)) {
-    return new NextResponse("Rate limit exceeded", { status: 429 })
+    req.ip ||
+    req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
+    'unknown'
+  const now = Date.now()
+  const b = bucket.get(ip) || { count: 0, ts: now }
+  if (now - b.ts > 60_000) {
+    b.count = 0
+    b.ts = now
+  }
+  b.count++
+  bucket.set(ip, b)
+  if (b.count > 10) {
+    return NextResponse.json({ error: 'Rate limit exceeded' }, { status: 429 })
   }
 
-  // Size guard (1MB)
-  const raw = await req.text()
-  if (new TextEncoder().encode(raw).length > 1_000_000) {
-    return new NextResponse("Payload too large", { status: 413 })
+  // security checks
+  const token = (await headers()).get('CF-Access-Jwt-Assertion') || ''
+  const cookieJar = await cookies()
+  const hasEditCookie = cookieJar.get('edit')?.value === '1'
+  const valid = hasEditCookie && (await verifyCloudflareAccess(token).catch(() => false))
+  if (!valid) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  let parsed
+  const json = await req.json().catch(() => null)
+  const parsed = BodySchema.safeParse(json)
+  if (!parsed.success) {
+    return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 })
+  }
+
   try {
-    parsed = bodySchema.parse(JSON.parse(raw))
-  } catch (err: any) {
-    return NextResponse.json({ error: err?.message ?? "Invalid body" }, { status: 400 })
-  }
-
-  try {
-    const prUrl = await commitChanges(parsed.changes)
-    return NextResponse.json({ ok: true, prUrl })
-  } catch (err: any) {
-    console.error("Commit error:", err)
-    return NextResponse.json({ error: err?.message ?? "Failed to commit" }, { status: 500 })
+    const prUrl = await openPullRequestWithChanges(parsed.data.changes)
+    return NextResponse.json({ ok: true, url: prUrl })
+  } catch (e: any) {
+    return NextResponse.json({ error: e?.message || 'Commit failed' }, { status: 500 })
   }
 }

@@ -1,42 +1,60 @@
-"use client"
+'use client'
 
-import * as React from "react"
-import { useTinaUI } from "@/tina/config"
-import { cn } from "@/lib/utils"
+import { useEffect, useState } from 'react'
+import { cn } from '@/lib/utils'
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
+import { Button } from '@/components/ui/button'
 
-function hasEditCookie() {
-  if (typeof document === "undefined") return false
-  return document.cookie.split("; ").some((p) => p.startsWith("edit="))
-}
+export function EditGate() {
+  const [hasEdit, setHasEdit] = useState(false)
+  const [open, setOpen] = useState(false)
 
-export function EditGate({
-  className,
-  label = "Edit",
-}: {
-  className?: string
-  label?: string
-}) {
-  const { toggle, isOpen } = useTinaUI()
-  const [canEdit, setCanEdit] = React.useState(false)
-
-  React.useEffect(() => {
-    setCanEdit(hasEditCookie())
+  useEffect(() => {
+    const present = document.cookie.split('; ').some((c) => c.startsWith('edit=1'))
+    setHasEdit(present)
   }, [])
 
-  if (!canEdit) return null
+  if (!hasEdit) return null
 
   return (
-    <button
-      type="button"
-      onClick={toggle}
-      aria-pressed={isOpen}
-      className={cn(
-        "fixed bottom-4 right-4 z-[9999] rounded-full bg-black/90 text-white text-sm px-4 py-2 shadow-lg",
-        "hover:bg-black transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-black",
-        className
-      )}
-    >
-      {label}
-    </button>
+    <>
+      <button
+        onClick={() => setOpen(true)}
+        className={cn(
+          'fixed bottom-4 right-4 z-50 rounded-full bg-black text-white',
+          'px-4 py-2 text-sm shadow-lg transition hover:scale-[1.02]'
+        )}
+        aria-label="Open editor"
+      >
+        Edit
+      </button>
+
+      <Sheet open={open} onOpenChange={setOpen}>
+        <SheetContent side="right" className="w-[360px] p-0">
+          <div className="p-4 border-b">
+            <SheetHeader>
+              <SheetTitle>Redigeringsläge</SheetTitle>
+            </SheetHeader>
+          </div>
+          <div className="p-4 space-y-3 text-sm">
+            <p className="text-muted-foreground">
+              Med redigeringsläget aktiverat kan du klicka på fält som är
+              markerade som redigerbara och spara dina ändringar lokalt.
+            </p>
+            <p className="text-muted-foreground">
+              Publicering görs via ett Pull Request till GitHub.
+            </p>
+            <Button
+              variant="outline"
+              onClick={() => {
+                window.dispatchEvent(new CustomEvent('tina:toggle'))
+              }}
+            >
+              Visa/Dölj redigerbara fält
+            </Button>
+          </div>
+        </SheetContent>
+      </Sheet>
+    </>
   )
 }

@@ -26,6 +26,7 @@ import {
 } from "@dnd-kit/core"
 import { SortableContext, verticalListSortingStrategy, useSortable } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
+import Link from 'next/link'
 
 const BACKEND_API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL || "https://api.nuredo.se"
 
@@ -418,62 +419,58 @@ const sectionEditors: { [key: string]: React.FC<EditableSectionProps> } = {
 
 export const dynamic = "force-dynamic"
 
-export default async function EditorGate() {
-  // Double-check Cloudflare Access here (middleware also enforces this).
-  const hdrs = await headers()
-  const cfJwt = hdrs.get("CF-Access-Jwt-Assertion") || ""
+export default async function EditorGatePage() {
+  const h = await headers()
+  const token = h.get('CF-Access-Jwt-Assertion') || ''
 
-  const verified = await verifyCloudflareAccess(cfJwt)
-  if (!verified) {
-    // If this page is hit without a valid CF token, reject.
+  const valid = await verifyCloudflareAccess(token).catch(() => false)
+
+  if (!valid) {
     return (
-      <main className="min-h-[60vh] flex items-center justify-center p-8">
-        <div className="max-w-xl text-center">
-          <h1 className="text-2xl font-semibold">401 – Åtkomst nekad</h1>
-          <p className="text-muted-foreground mt-2">
-            Cloudflare Access-token saknas eller är ogiltigt.
+      <main className="min-h-screen grid place-items-center p-8">
+        <div className="max-w-md text-center space-y-4">
+          <h1 className="text-2xl font-semibold">403 – Åtkomst nekad</h1>
+          <p className="text-muted-foreground">
+            Cloudflare Access-token saknas eller är ogiltigt. Logga in via
+            Cloudflare Access och försök igen.
           </p>
         </div>
       </main>
     )
   }
 
-  // Enable edit mode for 60 minutes.
-  const c = await cookies()
-  c.set({
-    name: "edit",
-    value: "1",
+  // Enable draft preview for this session and set edit cookie
+  ;(await draftMode()).enable()
+  const jar = await cookies()
+  jar.set({
+    name: 'edit',
+    value: '1',
     httpOnly: true,
-    sameSite: "strict",
     secure: true,
-    path: "/",
-    maxAge: 60 * 60,
+    sameSite: 'strict',
+    path: '/',
+    maxAge: 60 * 60, // 1h
   })
 
-  // Enable Next.js draft mode so editors see changes immediately.
-  ;(await draftMode()).enable()
-
   return (
-    <main className="min-h-[60vh] flex items-center justify-center p-8">
-      <div className="max-w-xl text-center">
-        <h1 className="text-3xl font-semibold">Redigeringsläge aktiverat ✅</h1>
-        <p className="text-muted-foreground mt-3">
-          Du kan nu redigera innehåll direkt på webbplatsen.
-          Denna flik kan stängas. Besök sidan du vill uppdatera och använd “Edit”-knappen.
+    <main className="min-h-screen grid place-items-center p-8">
+      <div className="max-w-lg text-center space-y-4">
+        <h1 className="text-3xl font-bold">Redigeringsläge aktiverat</h1>
+        <p className="text-muted-foreground">
+          Du kan nu redigera innehåll direkt på sajten. Denna vy kan stängas.
         </p>
-
-        <div className="mt-6">
-          <a
+        <p className="text-sm text-muted-foreground">
+          Tips: Lägg till EditGate-komponenten på valfri sida för att visa en
+          flytande “Edit”-pill för redigerare.
+        </p>
+        <div className="pt-2">
+          <Link
             href="/"
-            className="inline-block rounded-full bg-black text-white px-6 py-2 text-sm hover:opacity-90"
+            className="inline-flex items-center rounded-full bg-black/90 px-4 py-2 text-white hover:bg-black"
           >
             Gå till startsidan
-          </a>
+          </Link>
         </div>
-
-        <p className="text-xs text-muted-foreground mt-6">
-          Tip: Redigeringsläget upphör automatiskt om 60 minuter eller när du rensar kakan “edit”.
-        </p>
       </div>
     </main>
   )

@@ -1,56 +1,68 @@
-"use client"
+'use client'
 
-import * as React from "react"
-import { useTinaUI } from "@/tina/config"
+import { useEffect, useMemo, useState } from 'react'
 
 type Props = {
-  filePath: string // e.g. "content/home.json"
-  field: string // e.g. "heroTitle"
+  filePath: string // e.g. content/home.json
+  field: string // e.g. heroTitle
   fallback?: string
-  as?: "h1" | "h2" | "p" | "span" | "div"
   className?: string
 }
 
-function hasEditCookie() {
-  if (typeof document === "undefined") return false
-  return document.cookie.split("; ").some((p) => p.startsWith("edit="))
-}
+/**
+ * Inline-editable field bound to JSON file content.
+ * - When cookie edit=1 is absent, renders static text (fallback).
+ * - When present and "tina sidebar" is toggled, renders an input and keeps local state.
+ * - This component only edits client-side; publishing is done via /api/edit/commit.
+ */
+export function EditableField({ filePath, field, fallback, className }: Props) {
+  const [hasEdit, setHasEdit] = useState(false)
+  const [enabled, setEnabled] = useState(false)
+  const [value, setValue] = useState<string | undefined>(undefined)
 
-export function EditableField({ filePath, field, fallback = "", as = "span", className }: Props) {
-  const Tag: any = as
-  const { isOpen, getValue, setValue, ensureLoaded } = useTinaUI()
-  const [enabled, setEnabled] = React.useState(false)
-  const [value, setLocalValue] = React.useState<string>(fallback)
-
-  React.useEffect(() => {
-    setEnabled(hasEditCookie())
+  // read initial content
+  useEffect(() => {
+    const present = document.cookie.split('; ').some((c) => c.startsWith('edit=1'))
+    setHasEdit(present)
   }, [])
 
-  React.useEffect(() => {
-    if (!enabled) return
-    ensureLoaded(filePath).then(() => {
-      const v = getValue(filePath, field)
-      if (typeof v === "string") setLocalValue(v)
-    })
-  }, [enabled, filePath, field, getValue, ensureLoaded])
+  useEffect(() => {
+    const onToggle = () => setEnabled((v) => !v)
+    window.addEventListener('tina:toggle', onToggle)
+    return () => window.removeEventListener('tina:toggle', onToggle)
+  }, [])
 
-  if (!enabled || !isOpen) {
-    // Public view: just render text (no editing).
-    return <Tag className={className}>{value}</Tag>
+  useEffect(() => {
+    // fetch JSON only when editing
+    if (!hasEdit) return
+    fetch(`/${filePath}`, { cache: 'no-store' })
+      .then((r) => r.json())
+      .then((json) => {
+        const v = json?.[field]
+        if (typeof v === 'string') setValue(v)
+        else if (fallback !== undefined) setValue(fallback)
+      })
+      .catch(() => {
+        if (fallback !== undefined) setValue(fallback)
+      })
+  }, [filePath, field, hasEdit, fallback])
+
+  const display = useMemo(() => value ?? fallback ?? '', [value, fallback])
+
+  if (!hasEdit || !enabled) {
+    return <span className={className}>{display}</span>
   }
 
   return (
-    <label className={className} style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
-      <input
-        value={value}
-        onChange={(e) => {
-          const next = e.target.value
-          setLocalValue(next)
-          setValue(filePath, field, next)
-        }}
-        className="rounded-md border px-3 py-1 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-black"
-      />
-      <span className="text-xs text-muted-foreground">({filePath} • {field})</span>
-    </label>
+    <input
+      value={display}
+      onChange={(e) => setValue(e.target.value)}
+      className={
+        className ??
+        'rounded border px-2 py-1 text-sm outline-none ring-2 ring-offset-2 ring-amber-400'
+      }
+      data-file-path={filePath}
+      data-field={field}
+    />
   )
 }
