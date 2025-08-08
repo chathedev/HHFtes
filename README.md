@@ -1,29 +1,30 @@
-# On-site editor (protected)
+# HHF
 
-This project includes an authenticated, on-site editor that’s fully opt-in and keeps the existing site unchanged.
+*Automatically synced with your [v0.dev](https://v0.dev) deployments*
 
-How it works:
-- /editor: Requires Cloudflare Access (middleware validates the CF-Access-Jwt-Assertion). If valid, it sets an HttpOnly cookie `edit=1` and enables Next.js draftMode so editors can preview changes without affecting the public cache [^3].
-- /api/edit/*: Protected by Cloudflare Access. Commit endpoint opens a PR with changes under /content via the GitHub REST API.
+[![Deployed on Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-black?style=for-the-badge&logo=vercel)](https://vercel.com/challe-ws-projects/v0-hhf)
+[![Built with v0](https://img.shields.io/badge/Built%20with-v0.dev-black?style=for-the-badge)](https://v0.dev/chat/projects/boGcJCfXMAI)
 
-Environment variables on Vercel:
-- CF_TEAM_DOMAIN
-- CF_ACCESS_AUD
-- GITHUB_TOKEN
-- GITHUB_OWNER
-- GITHUB_REPO
-- GIT_AUTHOR_NAME
-- GIT_AUTHOR_EMAIL
+## Overview
 
-Optional floating “Edit” pill:
-- Import and mount `<EditGate />` where you want it visible (e.g., in app/layout.tsx). It only renders when the `edit=1` cookie exists.
-- Use `<EditableField filePath="content/home.json" field="heroTitle" />` to make fields inline-editable when edit mode is on.
+This repository will stay in sync with your deployed chats on [v0.dev](https://v0.dev).
+Any changes you make to your deployed app will be automatically pushed to this repository from [v0.dev](https://v0.dev).
 
-Security:
-- Middleware validates CF Access only for /editor and /api/edit/*; no changes to the rest of the app [^5].
-- Only allows writes under /content and validates inputs.
-- Draft Mode is limited to /editor, keeping public pages static [^1][^3].
+## Deployment
 
-[^1]: https://nextjs.org/docs/app/guides/data-security  
-[^3]: https://nextjs.org/docs/app/api-reference/functions/draft-mode  
-[^5]: https://nextjs.org/docs/app/api-reference/file-conventions/middleware
+Your project is live at:
+
+**[https://vercel.com/challe-ws-projects/v0-hhf](https://vercel.com/challe-ws-projects/v0-hhf)**
+
+## Build your app
+
+Continue building your app on:
+
+**[https://v0.dev/chat/projects/boGcJCfXMAI](https://v0.dev/chat/projects/boGcJCfXMAI)**
+
+## How It Works
+
+1. Create and modify your project using [v0.dev](https://v0.dev)
+2. Deploy your chats from the v0 interface
+3. Changes are automatically pushed to this repository
+4. Vercel deploys the latest version from this repository

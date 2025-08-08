@@ -1,30 +1,19 @@
-import { NextRequest, NextResponse } from "next/server"
-import { verifyCloudflareAccess } from "@/lib/security/verify-cloudflare-access"
+import { NextResponse } from "next/server"
+import type { NextRequest } from "next/server"
 
-export const config = {
-  matcher: ["/editor/:path*", "/api/edit/:path*"],
-}
-
-export async function middleware(req: NextRequest) {
-  let token: string | undefined
-
-  // Try to get token from header (lowercase)
-  token = req.headers.get("cf-access-jwt-assertion")
-
-  // If not in header, try to get from cookie
-  if (!token) {
-    token = req.cookies.get("CF_Authorization")?.value
-  }
-
-  if (!token) {
-    return new NextResponse("Unauthorized (no CF token)", { status: 401 })
-  }
-
-  const isTokenValid = await verifyCloudflareAccess(token)
-
-  if (!isTokenValid) {
-    return new NextResponse("Unauthorized (invalid CF token)", { status: 401 })
+export function middleware(request: NextRequest) {
+  if (request.nextUrl.pathname.startsWith("/editor")) {
+    const isAuthed = request.cookies.get("editor-auth")?.value === "true"
+    if (!isAuthed) {
+      const login = new URL("/login", request.url)
+      login.searchParams.set("redirect", request.nextUrl.pathname)
+      return NextResponse.redirect(login)
+    }
   }
 
   return NextResponse.next()
+}
+
+export const config = {
+  matcher: ["/editor/:path*"],
 }
