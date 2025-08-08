@@ -3,22 +3,29 @@ import { verifyCloudflareAccess } from "@/lib/security/verify-cloudflare-access"
 import { redirect } from "next/navigation"
 
 export default async function EditorPage() {
-  const tokenFromHeader = headers().get("cf-access-jwt-assertion")
-  const tokenFromCookie = cookies().get("CF_Authorization")?.value
+  let token: string | undefined
 
-  const token = tokenFromHeader || tokenFromCookie
+  // Try to get token from header (lowercase)
+  token = cookies().get("cf-access-jwt-assertion")?.value
+
+  // If not in header, try to get from cookie
+  if (!token) {
+    token = cookies().get("CF_Authorization")?.value
+  }
 
   if (!token) {
+    // If no token, redirect to login or show unauthorized message
     redirect("/login?error=no_token")
   }
 
-  const isValid = await verifyCloudflareAccess(token)
+  const isTokenValid = await verifyCloudflareAccess(token)
 
-  if (!isValid) {
+  if (!isTokenValid) {
+    // If token is invalid, redirect to login or show unauthorized message
     redirect("/login?error=invalid_token")
   }
 
-  // If verification is successful, set the 'edit' cookie and enable draft mode
+  // If token is valid, enable draft mode and set the edit cookie
   cookies().set({
     name: "edit",
     value: "1",
@@ -26,7 +33,7 @@ export default async function EditorPage() {
     secure: true,
     sameSite: "strict",
     path: "/",
-    domain: ".harnosandshf.se", // Set domain for apex and www
+    domain: ".harnosandshf.se", // Set domain for cross-subdomain access
     maxAge: 3600, // 1 hour
   })
   draftMode().enable()

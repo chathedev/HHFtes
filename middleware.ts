@@ -1,5 +1,4 @@
-import { NextResponse } from "next/server"
-import type { NextRequest } from "next/server"
+import { NextRequest, NextResponse } from "next/server"
 import { verifyCloudflareAccess } from "@/lib/security/verify-cloudflare-access"
 
 export const config = {
@@ -7,18 +6,23 @@ export const config = {
 }
 
 export async function middleware(req: NextRequest) {
-  const tokenFromHeader = req.headers.get("cf-access-jwt-assertion")
-  const tokenFromCookie = req.cookies.get("CF_Authorization")?.value
+  let token: string | undefined
 
-  const token = tokenFromHeader || tokenFromCookie
+  // Try to get token from header (lowercase)
+  token = req.headers.get("cf-access-jwt-assertion")
+
+  // If not in header, try to get from cookie
+  if (!token) {
+    token = req.cookies.get("CF_Authorization")?.value
+  }
 
   if (!token) {
     return new NextResponse("Unauthorized (no CF token)", { status: 401 })
   }
 
-  const isValid = await verifyCloudflareAccess(token)
+  const isTokenValid = await verifyCloudflareAccess(token)
 
-  if (!isValid) {
+  if (!isTokenValid) {
     return new NextResponse("Unauthorized (invalid CF token)", { status: 401 })
   }
 
