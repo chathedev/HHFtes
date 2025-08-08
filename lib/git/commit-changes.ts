@@ -1,18 +1,17 @@
-import 'server-only'
-
+// GitHub PR helper using fetch (no Octokit dependency).
 type Change = { filePath: string; content: string }
 
-const GH_API = 'https://api.github.com'
+const GH = "https://api.github.com"
 
 async function gh<T>(path: string, init: RequestInit = {}) {
   const token = process.env.GITHUB_TOKEN!
-  const res = await fetch(`${GH_API}${path}`, {
+  const res = await fetch(`${GH}${path}`, {
     ...init,
     headers: {
-      Accept: 'application/vnd.github+json',
+      Accept: "application/vnd.github+json",
       Authorization: `Bearer ${token}`,
-      'Content-Type': 'application/json',
-      'X-GitHub-Api-Version': '2022-11-28',
+      "Content-Type": "application/json",
+      "X-GitHub-Api-Version": "2022-11-28",
       ...(init.headers || {}),
     },
   })
@@ -26,55 +25,48 @@ async function gh<T>(path: string, init: RequestInit = {}) {
 export async function openPullRequestWithChanges(changes: Change[]) {
   const owner = process.env.GITHUB_OWNER!
   const repo = process.env.GITHUB_REPO!
-  const authorName = process.env.GIT_AUTHOR_NAME || 'Site Editor'
-  const authorEmail = process.env.GIT_AUTHOR_EMAIL || 'site-editor@example.com'
+  const name = process.env.GIT_AUTHOR_NAME || "Site Editor"
+  const email = process.env.GIT_AUTHOR_EMAIL || "site-editor@example.com"
 
-  // Get default branch
+  // default branch
   const repoInfo = await gh<{ default_branch: string }>(`/repos/${owner}/${repo}`)
   const base = repoInfo.default_branch
 
-  // Base ref SHA
-  const baseRef = await gh<{ object: { sha: string } }>(
-    `/repos/${owner}/${repo}/git/ref/heads/${base}`
-  )
-  const baseSha = baseRef.object.sha
+  // base SHA
+  const ref = await gh<{ object: { sha: string } }>(`/repos/${owner}/${repo}/git/ref/heads/${base}`)
+  const baseSha = ref.object.sha
 
-  // Create branch
+  // new branch
   const branch = `edit-${Date.now()}`
   await gh(`/repos/${owner}/${repo}/git/refs`, {
-    method: 'POST',
-    body: JSON.stringify({
-      ref: `refs/heads/${branch}`,
-      sha: baseSha,
-    }),
+    method: "POST",
+    body: JSON.stringify({ ref: `refs/heads/${branch}`, sha: baseSha }),
   })
 
-  // Commit each file (GitHub will create individual commits)
+  // commit each file via Contents API
   for (const ch of changes) {
-    const contentB64 = Buffer.from(ch.content, 'utf8').toString('base64')
+    const contentB64 = Buffer.from(ch.content, "utf8").toString("base64")
     await gh(`/repos/${owner}/${repo}/contents/${encodeURIComponent(ch.filePath)}`, {
-      method: 'PUT',
+      method: "PUT",
       body: JSON.stringify({
         message: `chore(content): update ${ch.filePath}`,
         content: contentB64,
         branch,
-        committer: { name: authorName, email: authorEmail },
-        author: { name: authorName, email: authorEmail },
+        committer: { name, email },
+        author: { name, email },
       }),
     })
   }
 
-  // Open PR
+  // open PR
   const pr = await gh<{ html_url: string }>(`/repos/${owner}/${repo}/pulls`, {
-    method: 'POST',
+    method: "POST",
     body: JSON.stringify({
-      title: 'Site edits from /editor',
+      title: "Site edits from /editor",
       head: branch,
       base,
-      body:
-        'Edits submitted from on-site editor. Please review and merge to publish.',
+      body: "Edits submitted from the on-site editor. Merge to publish.",
     }),
   })
-
   return pr.html_url
 }

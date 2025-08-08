@@ -1,22 +1,31 @@
-import 'server-only'
+import { NextRequest, NextResponse } from "next/server"
+import { cookies, headers } from "next/headers"
+import { z } from "zod"
+import { verifyCloudflareAccess } from "@/lib/security/verify-cloudflare-access"
+import { openPullRequestWithChanges } from "@/lib/git/commit-changes"
 
-import { NextRequest, NextResponse } from 'next/server'
-import { cookies, headers } from 'next/headers'
-import { z } from 'zod'
-import { verifyCloudflareAccess } from '@/lib/security/verify-cloudflare-access'
-import { openPullRequestWithChanges } from '@/lib/git/commit-changes'
+// Simple in-memory rate limit: 10/min per IP
+const WINDOW = 60_000
+const LIMIT = 10
+const bucket = new Map<string, number[]>()
 
-// simple in-memory rate limit: 10/min/IP (best-effort)
-const bucket = new Map<string, { count: number; ts: number }>()
+function rateLimited(ip: string) {
+  const now = Date.now()
+  const arr = (bucket.get(ip) || []).filter((t) => now - t < WINDOW)
+  arr.push(now)
+  bucket.set(ip, arr)
+  return arr.length > LIMIT
+}
 
-const BodySchema = z.object({
+const Body = z.object({
   changes: z
     .array(
       z.object({
         filePath: z
           .string()
-          .refine((p) => p.startsWith('content/'), 'filePath must start with content/')
-          .refine((p) => !p.includes('..'), 'No directory traversal'),
+          .min(1)
+          .refine((p) => p.startsWith("content/"), "filePath must be under content/")
+          .refine((p) => !p.includes(".."), "Path traversal blocked"),
         content: z.string(),
       })
     )
@@ -25,48 +34,40 @@ const BodySchema = z.object({
 })
 
 export async function POST(req: NextRequest) {
-  // size guard ~1MB
-  const contentLength = Number(req.headers.get('content-length') || '0')
+  const contentLength = Number(req.headers.get("content-length") || "0")
   if (contentLength > 1_000_000) {
-    return NextResponse.json({ error: 'Payload too large' }, { status: 413 })
+    return NextResponse.json({ error: "Payload too large" }, { status: 413 })
   }
 
-  // rate limit
-  const ip =
-    req.ip ||
-    req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
-    'unknown'
-  const now = Date.now()
-  const b = bucket.get(ip) || { count: 0, ts: now }
-  if (now - b.ts > 60_000) {
-    b.count = 0
-    b.ts = now
-  }
-  b.count++
-  bucket.set(ip, b)
-  if (b.count > 10) {
-    return NextResponse.json({ error: 'Rate limit exceeded' }, { status: 429 })
+  const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown"
+  if (rateLimited(ip)) {
+    return NextResponse.json({ error: "Rate limit exceeded" }, { status: 429 })
   }
 
-  // security checks
-  const token = (await headers()).get('CF-Access-Jwt-Assertion') || ''
-  const cookieJar = await cookies()
-  const hasEditCookie = cookieJar.get('edit')?.value === '1'
-  const valid = hasEditCookie && (await verifyCloudflareAccess(token).catch(() => false))
-  if (!valid) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const hdrs = await headers()
+  const token = hdrs.get("CF-Access-Jwt-Assertion") || ""
+  const jar = await cookies()
+  const hasEdit = jar.get("edit")?.value === "1"
+  const ok = hasEdit && (await verifyCloudflareAccess(token).catch(() => false))
+  if (!ok) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
 
-  const json = await req.json().catch(() => null)
-  const parsed = BodySchema.safeParse(json)
-  if (!parsed.success) {
-    return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 })
+  let body: unknown
+  try {
+    body = await req.json()
+  } catch {
+    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 })
+  }
+  const parse = Body.safeParse(body)
+  if (!parse.success) {
+    return NextResponse.json({ error: parse.error.flatten() }, { status: 400 })
   }
 
   try {
-    const prUrl = await openPullRequestWithChanges(parsed.data.changes)
+    const prUrl = await openPullRequestWithChanges(parse.data.changes)
     return NextResponse.json({ ok: true, url: prUrl })
   } catch (e: any) {
-    return NextResponse.json({ error: e?.message || 'Commit failed' }, { status: 500 })
+    return NextResponse.json({ error: e?.message || "Commit failed" }, { status: 500 })
   }
 }
