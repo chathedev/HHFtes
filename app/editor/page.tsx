@@ -3,14 +3,22 @@ import { verifyCloudflareAccess } from "@/lib/security/verify-cloudflare-access"
 import { redirect } from "next/navigation"
 
 export default async function EditorPage() {
-  const token = cookies().get("CF_Authorization")?.value || headers().get("cf-access-jwt-assertion")
+  const tokenFromHeader = headers().get("cf-access-jwt-assertion")
+  const tokenFromCookie = cookies().get("CF_Authorization")?.value
 
-  if (!token || !(await verifyCloudflareAccess(token))) {
-    // Redirect to login or show an error if not authorized
-    redirect("/login?error=unauthorized")
+  const token = tokenFromHeader || tokenFromCookie
+
+  if (!token) {
+    redirect("/login?error=no_token")
   }
 
-  // Set the "edit" cookie for the entire domain, including subdomains
+  const isValid = await verifyCloudflareAccess(token)
+
+  if (!isValid) {
+    redirect("/login?error=invalid_token")
+  }
+
+  // If verification is successful, set the 'edit' cookie and enable draft mode
   cookies().set({
     name: "edit",
     value: "1",
@@ -18,10 +26,9 @@ export default async function EditorPage() {
     secure: true,
     sameSite: "strict",
     path: "/",
-    domain: ".harnosandshf.se", // Set domain for cross-subdomain access
+    domain: ".harnosandshf.se", // Set domain for apex and www
     maxAge: 3600, // 1 hour
   })
-
   draftMode().enable()
 
   return <p>Edit mode enabled. You can close this tab.</p>
