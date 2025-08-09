@@ -1,44 +1,58 @@
 import { NextResponse, type NextRequest } from "next/server"
-import * as jose from "jose"
+import { createRemoteJWKSet, jwtVerify } from "jose"
 
-// Protect ONLY /editor routes via Cloudflare Access
+function normalizeIssuer(input: string) {
+  const hasScheme = /^https?:\/\//i.test(input)
+  const base = hasScheme ? input : `https://${input}`
+  return base.replace(/\/+$/, "")
+}
+
 export async function middleware(request: NextRequest) {
-  // Only match /editor paths (config.matcher enforces this as well)
+  // Only protect /editor (config.matcher also enforces this)
   if (!request.nextUrl.pathname.startsWith("/editor")) {
     return NextResponse.next()
   }
 
-  // Read token from header or cookie
-  const token = request.headers.get("cf-access-jwt-assertion") || request.cookies.get("CF_Authorization")?.value || ""
+  // Allow Next.js prefetch requests through (they may not include auth headers)
+  // This avoids false 401s on prefetch requests and aligns with Next.js guidance. [^2][^3][^5]
+  if (request.headers.get("next-router-prefetch") === "1" || request.headers.get("purpose") === "prefetch") {
+    return NextResponse.next()
+  }
+
+  // Token from header or cookie (header takes precedence)
+  const token = request.headers.get("cf-access-jwt-assertion") || request.cookies.get("CF_Authorization")?.value
 
   if (!token) {
     return new NextResponse("Unauthorized", { status: 401 })
   }
 
-  const teamDomain = process.env.CF_TEAM_DOMAIN
-  const expectedAud = process.env.CF_ACCESS_AUD
+  const rawTeamDomain = process.env.CF_TEAM_DOMAIN
+  const audEnv = process.env.CF_ACCESS_AUD
 
-  // If config is missing, treat as unauthorized per requirements
-  if (!teamDomain || !expectedAud) {
+  if (!rawTeamDomain || !audEnv) {
+    // Missing required config -> Unauthorized
     return new NextResponse("Unauthorized", { status: 401 })
   }
 
-  const issuer = `https://${teamDomain}`
+  const issuer = normalizeIssuer(rawTeamDomain)
   const jwksUrl = `${issuer}/cdn-cgi/access/certs`
+  const JWKS = createRemoteJWKSet(new URL(jwksUrl))
+
+  // Accept single or multiple audiences from env (comma-separated)
+  const expectedAudiences = audEnv
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean)
 
   try {
-    const JWKS = jose.createRemoteJWKSet(new URL(jwksUrl))
-
-    // jose will validate 'aud' claim whether it's a string or array when we pass a string or array here.
-    await jose.jwtVerify(token, JWKS, {
-      issuer,
-      audience: expectedAud,
+    // Verify signature and claims against CF Access
+    await jwtVerify(token, JWKS, {
+      issuer, // verify iss matches the normalized issuer
+      audience: expectedAudiences.length > 1 ? expectedAudiences : expectedAudiences[0],
     })
 
-    // Valid
     return NextResponse.next()
-  } catch (err) {
-    // Invalid/missing → 401
+  } catch {
     return new NextResponse("Unauthorized", { status: 401 })
   }
 }
