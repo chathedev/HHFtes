@@ -9,13 +9,14 @@ const ALLOWED_EMAIL = "harnosandshf@wby.se"
 const ALLOWED_PASSWORD = "harnosandshf10!"
 const AUTH_KEY = "editor-auth"
 
-// Content source
-const RAW_URL = "https://raw.githubusercontent.com/chathedev/HHFNAF/main/content/home.json"
-
-// GitHub repo metadata (non-sensitive)
+// Public GitHub repo metadata (safe for client)
+// Also used to build the RAW URL to avoid 404 from a wrong repo/branch.
 const OWNER = (typeof process !== "undefined" && (process as any).env?.NEXT_PUBLIC_GITHUB_OWNER) || "chathedev"
-const REPO = (typeof process !== "undefined" && (process as any).env?.NEXT_PUBLIC_GITHUB_REPO) || "HHFNAF"
+const REPO = (typeof process !== "undefined" && (process as any).env?.NEXT_PUBLIC_GITHUB_REPO) || "HHFNAFN"
 const BRANCH = (typeof process !== "undefined" && (process as any).env?.NEXT_PUBLIC_GITHUB_BRANCH) || "main"
+
+// Load source JSON (fixed: build from OWNER/REPO/BRANCH to avoid 404)
+const RAW_URL = `https://raw.githubusercontent.com/${OWNER}/${REPO}/${BRANCH}/content/home.json`
 
 // Token is NOT read from env to avoid exposing secrets. User pastes a fine-grained PAT at runtime.
 const TOKEN_STORAGE_KEY = "editor.github.token"
@@ -35,6 +36,7 @@ function isHttpsUrl(url: string) {
 }
 
 function encodeToBase64Utf8(str: string) {
+  // Safe base64 for UTF-8 strings in browsers
   return btoa(unescape(encodeURIComponent(str)))
 }
 
@@ -113,7 +115,7 @@ export default function EditorPage() {
   const [partnerLogoEdit, setPartnerLogoEdit] = useState<{ index: number; x: number; y: number } | null>(null)
   const partnerLogoInputRef = useRef<HTMLInputElement>(null)
 
-  // Load data on mount
+  // Load data on mount (fixed RAW_URL)
   const fetchData = async () => {
     setLoading(true)
     setError(null)
@@ -388,9 +390,6 @@ export default function EditorPage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <div className="sticky top-0 bg-white shadow px-4 py-3">
-          <div className="h-6 w-32 bg-gray-200 rounded animate-pulse" />
-        </div>
         <div className="max-w-7xl mx-auto p-4 grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="space-y-4">
             <div className="h-28 bg-white rounded shadow animate-pulse" />
@@ -406,18 +405,6 @@ export default function EditorPage() {
   if (error) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <div className="sticky top-0 bg-white shadow px-4 py-3">
-          <div className="max-w-7xl mx-auto flex items-center justify-between">
-            <h1 className="font-semibold">Site Editor</h1>
-            <button
-              onClick={onLogout}
-              className="text-sm rounded bg-gray-200 hover:bg-gray-300 px-3 py-1.5"
-              type="button"
-            >
-              Logout
-            </button>
-          </div>
-        </div>
         <div className="max-w-3xl mx-auto p-4">
           <div className="bg-red-50 border border-red-200 text-red-700 p-4 rounded">
             <p className="font-medium">Error</p>
@@ -441,46 +428,45 @@ export default function EditorPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Sticky top bar */}
-      <div className="sticky top-0 z-20 bg-white shadow">
-        <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
-          <h1 className="text-lg font-semibold">Site Editor</h1>
-          <div className="flex gap-2">
-            <button
-              onClick={validate}
-              className="inline-flex items-center rounded bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-600"
-            >
-              Validate
-            </button>
-            <button
-              onClick={handleReset}
-              className="inline-flex items-center rounded bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-600"
-            >
-              Reset
-            </button>
-            <button
-              onClick={onLogout}
-              className="inline-flex items-center rounded bg-gray-200 hover:bg-gray-300 text-gray-900 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400"
-            >
-              Logout
-            </button>
-            <button
-              onClick={handlePublish}
-              disabled={publishing}
-              className={`inline-flex items-center rounded ${
-                publishing ? "bg-green-400" : "bg-green-600 hover:bg-green-700"
-              } text-white px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-600 disabled:cursor-not-allowed`}
-            >
-              {publishing ? "Publishing..." : "Publish"}
-            </button>
-          </div>
-        </div>
-      </div>
+      {/* HEADER REMOVED AS REQUESTED */}
 
       {/* Split layout */}
       <div className="max-w-7xl mx-auto px-4 py-6 grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Left tools */}
         <aside className="space-y-6">
+          <section className="bg-white rounded shadow p-4">
+            <h2 className="font-medium mb-3">Actions</h2>
+            <div className="flex flex-wrap gap-2">
+              <button
+                onClick={validate}
+                className="inline-flex items-center rounded bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-600"
+              >
+                Validate
+              </button>
+              <button
+                onClick={handleReset}
+                className="inline-flex items-center rounded bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-600"
+              >
+                Reset
+              </button>
+              <button
+                onClick={handlePublish}
+                disabled={publishing}
+                className={`inline-flex items-center rounded ${
+                  publishing ? "bg-green-400" : "bg-green-600 hover:bg-green-700"
+                } text-white px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-600 disabled:cursor-not-allowed`}
+              >
+                {publishing ? "Publishing..." : "Publish"}
+              </button>
+              <button
+                onClick={onLogout}
+                className="inline-flex items-center rounded bg-gray-200 hover:bg-gray-300 text-gray-900 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400"
+              >
+                Logout
+              </button>
+            </div>
+          </section>
+
           <section className="bg-white rounded shadow p-4">
             <h2 className="font-medium mb-3">GitHub token</h2>
             <p className="text-xs text-gray-600 mb-2">

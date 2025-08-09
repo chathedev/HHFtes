@@ -1,12 +1,16 @@
-import { NextResponse, type NextRequest } from "next/server"
+// middleware.ts
+// Cloudflare Access removed per request. This middleware is now a no-op.
+// It only matches /editor to avoid affecting any other routes/pages.
 
-// Cloudflare Access removed. Middleware now allows /editor through without CF checks.
-// Keeping the file to avoid Next.js errors if it was previously present.
+import type { NextRequest } from "next/server"
+import { NextResponse } from "next/server"
+
 export function middleware(_req: NextRequest) {
+  // Always allow access to /editor (no auth here).
   return NextResponse.next()
 }
 
-// Only attach to /editor if Next.js decides to invoke it
 export const config = {
+  // IMPORTANT: Only match the editor route.
   matcher: ["/editor/:path*"],
 }
