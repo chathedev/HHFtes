@@ -1,25 +1,36 @@
 "use client"
 
 import type React from "react"
+import { useState, useEffect, useCallback } from "react"
+import { Button } from "@/components/ui/button"
+import { Textarea } from "@/components/ui/textarea"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { toast } from "@/components/ui/use-toast"
+import { useRouter } from "next/navigation"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+import { PanelLeft, Save, RotateCcw, LogOut, CheckCircle, XCircle, Github, Loader2, Info } from "lucide-react"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { Separator } from "@/components/ui/separator"
+import { Toaster } from "@/components/ui/toaster"
 
-import { useEffect, useMemo, useRef, useState } from "react"
+// Hardcoded editor login (per request) - this is now the only credential needed
+const DEFAULT_LOGIN_PASSWORD = "harnosandshf10!"
 
-// Hardcoded editor login (per request)
-const ALLOWED_EMAIL = "harnosandshf@wby.se"
-const ALLOWED_PASSWORD = "harnosandshf10!"
-const AUTH_KEY = "editor-auth"
+// Environment variables for GitHub API
+const GITHUB_OWNER = "chathedev"
+const GITHUB_REPO = "HHFNAF"
+const BRANCH = process.env.NEXT_PUBLIC_VERCEL_GIT_COMMIT_REF || "main" // Use Vercel branch or default to main
 
-// Public GitHub repo metadata (safe for client)
-// Also used to build the RAW URL to avoid 404 from a wrong repo/branch.
-const OWNER = (typeof process !== "undefined" && (process as any).env?.NEXT_PUBLIC_GITHUB_OWNER) || "chathedev"
-const REPO = (typeof process !== "undefined" && (process as any).env?.NEXT_PUBLIC_GITHUB_REPO) || "HHFNAFN"
-const BRANCH = (typeof process !== "undefined" && (process as any).env?.NEXT_PUBLIC_GITHUB_BRANCH) || "main"
+// Path to the content file within the repository
+const FILE_PATH_IN_REPO = "content/home.json"
 
-// Load source JSON (fixed: build from OWNER/REPO/BRANCH to avoid 404)
-const RAW_URL = `https://raw.githubusercontent.com/${OWNER}/${REPO}/${BRANCH}/content/home.json`
+// GitHub API URL for contents (for SHA and PUT operations)
+const GITHUB_API_CONTENTS_URL = `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/${FILE_PATH_IN_REPO}`
 
-// Token is NOT read from env to avoid exposing secrets. User pastes a fine-grained PAT at runtime.
-const TOKEN_STORAGE_KEY = "editor.github.token"
+// Raw content URL for fetching the file directly
+const RAW_CONTENT_FETCH_URL = `https://raw.githubusercontent.com/${GITHUB_OWNER}/${GITHUB_REPO}/${BRANCH}/${FILE_PATH_IN_REPO}`
 
 type HomeData = {
   heroTitle: string
@@ -41,715 +52,422 @@ function encodeToBase64Utf8(str: string) {
 }
 
 export default function EditorPage() {
-  // Auth
-  const [authed, setAuthed] = useState(false)
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
-  const [loginError, setLoginError] = useState<string | null>(null)
+  const [content, setContent] = useState("")
+  const [originalContent, setOriginalContent] = useState("")
+  const [gitHubToken, setGitHubToken] = useState("")
+  const [isSaving, setIsSaving] = useState(false)
+  const [validationError, setValidationError] = useState<string | null>(null)
+  const [authed, setAuthed] = useState(false) // This state will be managed by successful API login
+  const router = useRouter()
+
+  // Check authentication status on component mount
   useEffect(() => {
-    const stored = sessionStorage.getItem(AUTH_KEY)
-    setAuthed(stored === "1")
-  }, [])
-  const onLogin = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (email.trim().toLowerCase() === ALLOWED_EMAIL && password === ALLOWED_PASSWORD) {
-      sessionStorage.setItem(AUTH_KEY, "1")
-      setAuthed(true)
-      setLoginError(null)
-    } else {
-      setLoginError("Invalid credentials. Please try again.")
+    const checkAuth = async () => {
+      try {
+        // Attempt to fetch a protected resource or check a cookie directly
+        // For simplicity, we'll assume if the user is on this page, they are authenticated
+        // or will attempt to authenticate via the form.
+        // A more robust solution would involve checking the 'editor-auth' cookie here.
+        const res = await fetch("/api/auth/check-auth", { method: "GET" }) // You might need to create this endpoint
+        if (res.ok) {
+          setAuthed(true)
+        } else {
+          setAuthed(false)
+        }
+      } catch (error) {
+        console.error("Auth check failed:", error)
+        setAuthed(false)
+      }
     }
-  }
-  const onLogout = () => {
-    sessionStorage.removeItem(AUTH_KEY)
-    setAuthed(false)
-  }
-
-  // Data + UI state
-  const [data, setData] = useState<HomeData | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [publishing, setPublishing] = useState(false)
-  const [validationErrors, setValidationErrors] = useState<ValidationErrors>({})
-  const hasErrors = useMemo(() => Object.keys(validationErrors).length > 0, [validationErrors])
-
-  // Simple toast
-  const [toast, setToast] = useState<{ message: string; href?: string } | null>(null)
-  const showToast = (t: { message: string; href?: string }) => {
-    setToast(t)
-    setTimeout(() => setToast(null), 6000)
-  }
-
-  // Runtime GitHub token (user-supplied)
-  const [gitHubToken, setGitHubToken] = useState<string>("")
-  useEffect(() => {
-    const saved = sessionStorage.getItem(TOKEN_STORAGE_KEY)
-    if (saved) setGitHubToken(saved)
+    checkAuth()
   }, [])
-  const saveToken = (t: string) => {
-    setGitHubToken(t)
-    sessionStorage.setItem(TOKEN_STORAGE_KEY, t)
-  }
-  const clearToken = () => {
-    setGitHubToken("")
-    sessionStorage.removeItem(TOKEN_STORAGE_KEY)
-  }
 
-  // Inline edit states for hero text
-  const [isEditingTitle, setIsEditingTitle] = useState(false)
-  const [isEditingSubtitle, setIsEditingSubtitle] = useState(false)
-  const [isEditingCTA, setIsEditingCTA] = useState(false)
-  const titleRef = useRef<HTMLHeadingElement>(null)
-  const subtitleRef = useRef<HTMLParagraphElement>(null)
-  const ctaRef = useRef<HTMLButtonElement>(null)
-  const titleDraft = useRef<string>("")
-  const subtitleDraft = useRef<string>("")
-  const ctaDraft = useRef<string>("")
+  const fetchData = useCallback(async () => {
+    if (!authed || !gitHubToken) return
 
-  // Hero image popover
-  const [imagePopoverOpen, setImagePopoverOpen] = useState(false)
-  const [imagePopoverPos, setImagePopoverPos] = useState<{ x: number; y: number }>({ x: 0, y: 0 })
-  const imageInputRef = useRef<HTMLInputElement>(null)
-
-  // Partner logo popover
-  const [partnerLogoEdit, setPartnerLogoEdit] = useState<{ index: number; x: number; y: number } | null>(null)
-  const partnerLogoInputRef = useRef<HTMLInputElement>(null)
-
-  // Load data on mount (fixed RAW_URL)
-  const fetchData = async () => {
-    setLoading(true)
-    setError(null)
     try {
-      const res = await fetch(RAW_URL, { cache: "no-store" })
-      if (!res.ok) throw new Error(`${res.status} ${res.statusText}`)
-      const json: HomeData = await res.json()
-      setData(json)
+      // Fetch raw content directly from the raw.githubusercontent.com URL
+      const response = await fetch(RAW_CONTENT_FETCH_URL, {
+        cache: "no-store", // Ensure fresh data
+      })
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch content from ${RAW_CONTENT_FETCH_URL}: ${response.statusText}`)
+      } else {
+        const text = await response.text()
+        setContent(text)
+        setOriginalContent(text)
+        toast({
+          title: "Content Loaded",
+          description: "Successfully loaded content from GitHub.",
+        })
+      }
+    } catch (error: any) {
+      console.error("Error fetching content:", error)
+      toast({
+        title: "Error Loading Content",
+        description: error.message || "Could not load content from GitHub.",
+        variant: "destructive",
+      })
+    }
+  }, [authed, gitHubToken]) // gitHubToken is still a dependency for `authed` state, even if not used in fetch headers
+
+  useEffect(() => {
+    if (authed && gitHubToken) {
+      // Only fetch data if authenticated and PAT is set
+      fetchData()
+    }
+  }, [fetchData, authed, gitHubToken])
+
+  const handleLogout = async () => {
+    try {
+      const response = await fetch("/api/auth/logout", { method: "POST" })
+      if (response.ok) {
+        setAuthed(false)
+        setGitHubToken("")
+        setContent("")
+        setOriginalContent("")
+        router.push("/login") // Redirect to login page after logout
+        toast({
+          title: "Logged Out",
+          description: "You have been successfully logged out.",
+        })
+      } else {
+        throw new Error("Logout failed.")
+      }
+    } catch (error: any) {
+      console.error("Logout error:", error)
+      toast({
+        title: "Logout Failed",
+        description: error.message || "An error occurred during logout.",
+        variant: "destructive",
+      })
+    }
+  }
+
+  const validateContent = useCallback(() => {
+    try {
+      JSON.parse(content)
+      setValidationError(null)
+      toast({
+        title: "Validation Successful",
+        description: "Content is valid JSON.",
+        className: "bg-green-500 text-white",
+      })
+      return true
     } catch (e: any) {
-      setError(`Failed to load data: ${e?.message || "Unknown error"}`)
-    } finally {
-      setLoading(false)
+      setValidationError(e.message)
+      toast({
+        title: "Validation Failed",
+        description: `Invalid JSON: ${e.message}`,
+        variant: "destructive",
+      })
+      return false
     }
-  }
-  useEffect(() => void fetchData(), [])
+  }, [content])
 
-  // Validation
-  const validate = () => {
-    const errs: ValidationErrors = {}
-    if (!data) {
-      setValidationErrors(errs)
-      return errs
-    }
-    if (!data.heroTitle.trim()) errs.heroTitle = "Hero title cannot be empty."
-    if (!data.ctaText.trim()) errs.ctaText = "CTA text cannot be empty."
-    if (!data.heroImage.trim()) errs.heroImage = "Hero image URL cannot be empty."
-    else if (!isHttpsUrl(data.heroImage)) errs.heroImage = "Hero image URL must start with https://"
-
-    data.partners.forEach((p, i) => {
-      if (!p.name.trim()) errs[`partners.${i}.name`] = "Partner name cannot be empty."
-      if (!p.logoUrl.trim()) errs[`partners.${i}.logoUrl`] = "Logo URL cannot be empty."
-      else if (!isHttpsUrl(p.logoUrl)) errs[`partners.${i}.logoUrl`] = "Logo URL must start with https://"
-    })
-
-    setValidationErrors(errs)
-    return errs
-  }
-
-  // Publish via GitHub Contents API using user-supplied token
   const handlePublish = async () => {
-    if (!data) return
-    const errs = validate()
-    if (Object.keys(errs).length > 0) return
-
-    if (!gitHubToken) {
-      showToast({ message: "Please set a GitHub token in the left panel before publishing." })
+    if (!validateContent()) {
       return
     }
 
-    setPublishing(true)
+    setIsSaving(true)
     try {
-      // Get SHA
-      const getRes = await fetch(
-        `https://api.github.com/repos/${OWNER}/${REPO}/contents/content/home.json?ref=${BRANCH}`,
-        {
-          headers: {
-            Authorization: `Bearer ${gitHubToken}`,
-            Accept: "application/vnd.github+json",
-          },
+      // First, get the SHA of the current file using the GitHub API
+      const shaResponse = await fetch(GITHUB_API_CONTENTS_URL + `?ref=${BRANCH}`, {
+        headers: {
+          Authorization: `token ${gitHubToken}`,
+          Accept: "application/vnd.github.v3+json", // Request JSON for SHA
         },
-      )
-      if (!getRes.ok) throw new Error(`GET file failed: ${getRes.status} ${getRes.statusText}`)
-      const fileInfo = await getRes.json()
-      const sha = fileInfo?.sha
-      if (!sha) throw new Error("Could not read file sha from GitHub response.")
+      })
 
-      // Update
-      const pretty = JSON.stringify(data, null, 2)
-      const content = encodeToBase64Utf8(pretty)
+      if (!shaResponse.ok) {
+        throw new Error(`Failed to get file SHA from ${GITHUB_API_CONTENTS_URL}: ${shaResponse.statusText}`)
+      }
 
-      const putRes = await fetch(`https://api.github.com/repos/${OWNER}/${REPO}/contents/content/home.json`, {
+      const shaData = await shaResponse.json()
+      const currentSha = shaData.sha
+
+      // Prepare content for GitHub API (base64 encoded)
+      const encodedContent = btoa(content)
+
+      const commitMessage = `Update ${FILE_PATH_IN_REPO} via editor on branch ${BRANCH}`
+
+      const response = await fetch(GITHUB_API_CONTENTS_URL, {
         method: "PUT",
         headers: {
-          Authorization: `Bearer ${gitHubToken}`,
-          Accept: "application/vnd.github+json",
+          Authorization: `token ${gitHubToken}`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          message: "Editor changes from /editor",
-          content,
-          sha,
+          message: commitMessage,
+          content: encodedContent,
+          sha: currentSha, // Required for updating existing files
           branch: BRANCH,
         }),
       })
 
-      if (!putRes.ok) throw new Error(`PUT update failed: ${putRes.status} ${putRes.statusText}`)
-      const result = await putRes.json()
-      const commitUrl: string | undefined = result?.commit?.html_url
-
-      showToast({ message: "Changes published successfully.", href: commitUrl })
-    } catch (e: any) {
-      setError(e?.message || "Failed to publish changes.")
-    } finally {
-      setPublishing(false)
-    }
-  }
-
-  // Reset: re-fetch from source
-  const handleReset = () => {
-    fetchData()
-    setValidationErrors({})
-  }
-
-  // Editing helpers for hero text
-  const startEdit = (type: "title" | "subtitle" | "cta") => {
-    if (!data) return
-    if (type === "title") {
-      titleDraft.current = data.heroTitle
-      setIsEditingTitle(true)
-      setTimeout(() => titleRef.current?.focus(), 0)
-    } else if (type === "subtitle") {
-      subtitleDraft.current = data.heroSubtitle
-      setIsEditingSubtitle(true)
-      setTimeout(() => subtitleRef.current?.focus(), 0)
-    } else {
-      ctaDraft.current = data.ctaText
-      setIsEditingCTA(true)
-      setTimeout(() => ctaRef.current?.focus(), 0)
-    }
-  }
-  const onKeyDownEditable = (e: React.KeyboardEvent<HTMLElement>, type: "title" | "subtitle" | "cta") => {
-    if (e.key === "Enter") {
-      e.preventDefault()
-      ;(e.target as HTMLElement).blur()
-    } else if (e.key === "Escape") {
-      if (type === "title") {
-        if (titleRef.current) titleRef.current.textContent = titleDraft.current
-        setIsEditingTitle(false)
-      } else if (type === "subtitle") {
-        if (subtitleRef.current) subtitleRef.current.textContent = subtitleDraft.current
-        setIsEditingSubtitle(false)
-      } else {
-        if (ctaRef.current) ctaRef.current.textContent = ctaDraft.current
-        setIsEditingCTA(false)
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(`GitHub API error: ${response.status} - ${errorData.message || response.statusText}`)
       }
-    }
-  }
-  const onBlurEditable = (e: React.FocusEvent<HTMLElement>, type: "title" | "subtitle" | "cta") => {
-    if (!data) return
-    const text = e.currentTarget.textContent ?? ""
-    if (type === "title") {
-      setData({ ...data, heroTitle: text })
-      setIsEditingTitle(false)
-    } else if (type === "subtitle") {
-      setData({ ...data, heroSubtitle: text })
-      setIsEditingSubtitle(false)
-    } else {
-      setData({ ...data, ctaText: text })
-      setIsEditingCTA(false)
+
+      setOriginalContent(content) // Update original content after successful publish
+      toast({
+        title: "Published Successfully",
+        description: "Content updated on GitHub and deployment triggered.",
+        className: "bg-green-500 text-white",
+      })
+    } catch (error: any) {
+      console.error("Publish error:", error)
+      toast({
+        title: "Publish Failed",
+        description: error.message || "An error occurred during publishing.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsSaving(false)
     }
   }
 
-  // Hero image popover
-  const openImagePopover = (e: React.MouseEvent) => {
-    setImagePopoverPos({ x: e.clientX, y: e.clientY })
-    setImagePopoverOpen(true)
-    setTimeout(() => imageInputRef.current?.focus(), 0)
-  }
-  const updateHeroImage = (url: string) => {
-    if (!data) return
-    setData({ ...data, heroImage: url })
-  }
-
-  // Partners
-  const addPartner = () => {
-    if (!data) return
-    setData({
-      ...data,
-      partners: [...data.partners, { name: "New Partner", logoUrl: "https://via.placeholder.com/200x80?text=Logo" }],
+  const handleReset = () => {
+    setContent(originalContent)
+    setValidationError(null)
+    toast({
+      title: "Content Reset",
+      description: "Changes have been reverted to the last saved version.",
     })
   }
-  const removePartner = (index: number) => {
-    if (!data) return
-    const next = [...data.partners]
-    next.splice(index, 1)
-    setData({ ...data, partners: next })
-  }
 
-  const startEditPartnerName = (index: number) => {
-    const el = document.getElementById(`partner-name-${index}`) as HTMLParagraphElement | null
-    if (el) {
-      ;(el as any).__draft = el.textContent || ""
-      el.contentEditable = "true"
-      el.focus()
+  const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    const formData = new FormData(e.currentTarget)
+    const password = formData.get("password") as string
+
+    try {
+      const response = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ password: password }), // Only send password
+      })
+
+      if (response.ok) {
+        setAuthed(true)
+        toast({
+          title: "Login Successful",
+          description: "You are now logged in.",
+        })
+        router.push("/editor") // Redirect to editor page on successful login
+      } else {
+        const errorData = await response.json()
+        throw new Error(errorData.error || "Login failed.") // Use error from server response
+      }
+    } catch (error: any) {
+      console.error("Login error:", error)
+      toast({
+        title: "Login Failed",
+        description: error.message || "Invalid credentials.",
+        variant: "destructive",
+      })
     }
   }
-  const onKeyDownPartnerName = (e: React.KeyboardEvent<HTMLParagraphElement>, index: number) => {
-    if (e.key === "Enter") {
-      e.preventDefault()
-      e.currentTarget.blur()
-    } else if (e.key === "Escape") {
-      const draft = (e.currentTarget as any).__draft as string
-      e.currentTarget.textContent = draft
-      e.currentTarget.blur()
-    }
-  }
-  const onBlurPartnerName = (e: React.FocusEvent<HTMLParagraphElement>, index: number) => {
-    const name = e.currentTarget.textContent || ""
-    e.currentTarget.contentEditable = "false"
-    if (!data) return
-    const next = [...data.partners]
-    next[index] = { ...next[index], name }
-    setData({ ...data, partners: next })
-  }
 
-  const openPartnerLogoPopover = (index: number, e: React.MouseEvent) => {
-    setPartnerLogoEdit({ index, x: e.clientX, y: e.clientY })
-    setTimeout(() => partnerLogoInputRef.current?.focus(), 0)
-  }
-  const updatePartnerLogo = (index: number, logoUrl: string) => {
-    if (!data) return
-    const next = [...data.partners]
-    next[index] = { ...next[index], logoUrl }
-    setData({ ...data, partners: next })
-  }
-
-  // If not authenticated, show inline login (only at /editor)
   if (!authed) {
     return (
-      <main className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
-        <div className="w-full max-w-md bg-white rounded-xl shadow p-6">
-          <h1 className="text-2xl font-semibold text-center">Editor Login</h1>
-          <p className="mt-1 text-sm text-gray-600 text-center">Enter your email and password to continue.</p>
-          <form className="mt-6 space-y-4" onSubmit={onLogin}>
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                Email
-              </label>
-              <input
-                id="email"
-                type="email"
-                autoComplete="username"
-                className="mt-1 w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="you@example.com"
-                required
-              />
-            </div>
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-                Password
-              </label>
-              <input
-                id="password"
+      <div className="flex min-h-screen items-center justify-center bg-gray-100 p-4">
+        <Card className="w-full max-w-md">
+          <CardHeader>
+            <CardTitle className="text-2xl text-center">Editor Login</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleLogin} className="space-y-4">
+              {/* Removed email input */}
+              <div>
+                <Label htmlFor="password">Password</Label>
+                <Input id="password" name="password" type="password" required defaultValue={DEFAULT_LOGIN_PASSWORD} />
+              </div>
+              <Button type="submit" className="w-full">
+                Login
+              </Button>
+            </form>
+            <div className="mt-6 space-y-4">
+              <h3 className="text-lg font-semibold">GitHub Personal Access Token (PAT)</h3>
+              <p className="text-sm text-gray-600">
+                Enter a GitHub PAT with `repo` scope to enable content fetching and publishing.
+              </p>
+              <Input
                 type="password"
-                autoComplete="current-password"
-                className="mt-1 w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-                required
+                placeholder="Enter GitHub PAT"
+                value={gitHubToken}
+                onChange={(e) => setGitHubToken(e.target.value)}
               />
+              <Button
+                onClick={() => {
+                  if (gitHubToken) {
+                    setAuthed(true) // Set authed to true to allow fetching data with PAT
+                    toast({
+                      title: "PAT Applied",
+                      description: "GitHub token has been set. Attempting to fetch content.",
+                    })
+                    // No router.push here, as setting authed will trigger useEffect to fetch data
+                  } else {
+                    toast({
+                      title: "PAT Missing",
+                      description: "Please enter a GitHub Personal Access Token.",
+                      variant: "destructive",
+                    })
+                  }
+                }}
+                className="w-full"
+                disabled={!gitHubToken}
+              >
+                Use PAT
+              </Button>
+              <p className="text-xs text-gray-500 mt-2">
+                <a
+                  href="https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens#creating-a-personal-access-token-classic"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-500 hover:underline"
+                >
+                  How to create a PAT
+                </a>
+              </p>
             </div>
-            {loginError && <p className="text-sm text-red-600">{loginError}</p>}
-            <button
-              type="submit"
-              className="w-full rounded bg-blue-600 hover:bg-blue-700 text-white py-2 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-600"
-            >
-              Login
-            </button>
-          </form>
-          <p className="mt-4 text-xs text-gray-500 text-center">
-            This login is only used to access the editor. No external services required.
-          </p>
-        </div>
-      </main>
-    )
-  }
-
-  // Loading skeleton
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50">
-        <div className="max-w-7xl mx-auto p-4 grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="space-y-4">
-            <div className="h-28 bg-white rounded shadow animate-pulse" />
-            <div className="h-56 bg-white rounded shadow animate-pulse" />
-          </div>
-          <div className="md:col-span-2 h-[28rem] bg-white rounded shadow animate-pulse" />
-        </div>
+          </CardContent>
+        </Card>
+        <Toaster />
       </div>
     )
   }
-
-  // Error state
-  if (error) {
-    return (
-      <div className="min-h-screen bg-gray-50">
-        <div className="max-w-3xl mx-auto p-4">
-          <div className="bg-red-50 border border-red-200 text-red-700 p-4 rounded">
-            <p className="font-medium">Error</p>
-            <p className="text-sm mt-1">{error}</p>
-          </div>
-          <button
-            onClick={() => {
-              setError(null)
-              fetchData()
-            }}
-            className="mt-4 inline-flex items-center rounded bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-600"
-          >
-            Try again
-          </button>
-        </div>
-      </div>
-    )
-  }
-
-  if (!data) return null
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* HEADER REMOVED AS REQUESTED */}
+    <TooltipProvider>
+      <div className="flex min-h-screen bg-gray-50">
+        {/* Left Sidebar */}
+        <aside className="w-64 bg-gray-800 text-white flex flex-col p-4 shadow-lg">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl font-bold">Editor</h2>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="ghost" size="icon" className="text-gray-400 hover:text-white">
+                  <PanelLeft className="h-5 w-5" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="right">
+                <p>Toggle Sidebar</p>
+              </TooltipContent>
+            </Tooltip>
+          </div>
 
-      {/* Split layout */}
-      <div className="max-w-7xl mx-auto px-4 py-6 grid grid-cols-1 md:grid-cols-3 gap-6">
-        {/* Left tools */}
-        <aside className="space-y-6">
-          <section className="bg-white rounded shadow p-4">
-            <h2 className="font-medium mb-3">Actions</h2>
-            <div className="flex flex-wrap gap-2">
-              <button
-                onClick={validate}
-                className="inline-flex items-center rounded bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-600"
-              >
-                Validate
-              </button>
-              <button
-                onClick={handleReset}
-                className="inline-flex items-center rounded bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-600"
-              >
-                Reset
-              </button>
-              <button
-                onClick={handlePublish}
-                disabled={publishing}
-                className={`inline-flex items-center rounded ${
-                  publishing ? "bg-green-400" : "bg-green-600 hover:bg-green-700"
-                } text-white px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-600 disabled:cursor-not-allowed`}
-              >
-                {publishing ? "Publishing..." : "Publish"}
-              </button>
-              <button
-                onClick={onLogout}
-                className="inline-flex items-center rounded bg-gray-200 hover:bg-gray-300 text-gray-900 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400"
-              >
-                Logout
-              </button>
+          <ScrollArea className="flex-grow pr-2">
+            <nav className="space-y-2">
+              <h3 className="text-lg font-semibold mb-2">Content Sections</h3>
+              {/* Example: Dynamically list sections from home.json if needed */}
+              <Button variant="ghost" className="w-full justify-start text-left text-white hover:bg-gray-700">
+                Home Page Content
+              </Button>
+              {/* Add more content sections here */}
+            </nav>
+            <Separator className="my-6 bg-gray-700" />
+            <div className="space-y-2">
+              <h3 className="text-lg font-semibold mb-2">Editor Actions</h3>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    onClick={validateContent}
+                    variant="ghost"
+                    className="w-full justify-start text-left text-white hover:bg-gray-700"
+                  >
+                    <CheckCircle className="mr-2 h-4 w-4" /> Validate JSON
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="right">
+                  <p>Check if the content is valid JSON</p>
+                </TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    onClick={handleReset}
+                    variant="ghost"
+                    className="w-full justify-start text-left text-white hover:bg-gray-700"
+                    disabled={content === originalContent}
+                  >
+                    <RotateCcw className="mr-2 h-4 w-4" /> Reset Changes
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="right">
+                  <p>Revert to the last published version</p>
+                </TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    onClick={handlePublish}
+                    disabled={isSaving || content === originalContent}
+                    className="w-full justify-start text-left bg-green-600 hover:bg-green-700 text-white"
+                  >
+                    {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}{" "}
+                    Publish to GitHub
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="right">
+                  <p>Save changes to GitHub and trigger a new deployment</p>
+                </TooltipContent>
+              </Tooltip>
+              {validationError && (
+                <div className="flex items-center text-red-400 text-sm mt-2">
+                  <XCircle className="mr-2 h-4 w-4" />
+                  <span>{validationError}</span>
+                </div>
+              )}
             </div>
-          </section>
+          </ScrollArea>
 
-          <section className="bg-white rounded shadow p-4">
-            <h2 className="font-medium mb-3">GitHub token</h2>
-            <p className="text-xs text-gray-600 mb-2">
-              Paste a fine‑grained PAT with contents read/write for {OWNER}/{REPO}. Stored only in your browser session.
-            </p>
-            <div className="flex gap-2">
-              <input
-                type="password"
-                value={gitHubToken}
-                onChange={(e) => saveToken(e.target.value)}
-                placeholder="ghp_..."
-                className="flex-1 rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600"
-                aria-label="GitHub token"
-              />
-              <button
-                onClick={clearToken}
-                className="rounded bg-gray-200 hover:bg-gray-300 px-3 py-2 text-sm"
-                type="button"
-              >
-                Clear
-              </button>
+          <div className="mt-auto pt-4 border-t border-gray-700">
+            {/* Removed Tooltip from Logout Button as requested */}
+            <Button
+              onClick={handleLogout}
+              variant="ghost"
+              className="w-full justify-start text-left text-white hover:bg-gray-700"
+            >
+              <LogOut className="mr-2 h-4 w-4" /> Logout
+            </Button>
+            <div className="mt-4 text-xs text-gray-400 flex items-center">
+              <Github className="mr-2 h-4 w-4" />
+              <span>
+                Repo: {GITHUB_OWNER}/{GITHUB_REPO}
+              </span>
             </div>
-          </section>
-
-          <section className="bg-white rounded shadow p-4">
-            <h2 className="font-medium mb-3">Hero image</h2>
-            <label htmlFor="heroImageInput" className="block text-sm text-gray-700">
-              Image URL
-            </label>
-            <input
-              id="heroImageInput"
-              type="text"
-              value={data.heroImage}
-              onChange={(e) => updateHeroImage(e.target.value)}
-              className={`mt-1 w-full rounded border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600 ${
-                validationErrors.heroImage ? "border-red-500" : "border-gray-300"
-              }`}
-              placeholder="https://example.com/image.jpg"
-            />
-            {validationErrors.heroImage && <p className="mt-2 text-xs text-red-600">{validationErrors.heroImage}</p>}
-            <p className="mt-2 text-xs text-gray-500">Tip: Click the hero image in the preview to edit inline.</p>
-          </section>
-
-          <section className="bg-white rounded shadow p-4">
-            <div className="flex items-center justify-between">
-              <h2 className="font-medium">Partners</h2>
-              <button
-                onClick={addPartner}
-                className="text-xs inline-flex items-center rounded bg-blue-600 hover:bg-blue-700 text-white px-2 py-1 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-600"
-              >
-                + Add partner
-              </button>
+            <div className="text-xs text-gray-400 flex items-center mt-1">
+              <Info className="mr-2 h-4 w-4" />
+              <span>Branch: {BRANCH}</span>
             </div>
-            <div className="mt-3 space-y-2">
-              <button
-                onClick={() => {
-                  if (data.partners.length > 0) removePartner(data.partners.length - 1)
-                }}
-                className="w-full text-xs inline-flex items-center justify-center rounded bg-red-600 hover:bg-red-700 text-white px-2 py-1 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-600"
-              >
-                Remove last partner
-              </button>
-            </div>
-          </section>
-
-          {hasErrors && (
-            <section className="bg-red-50 border border-red-200 rounded p-4">
-              <h3 className="font-medium text-red-800">Validation</h3>
-              <ul className="mt-2 list-disc list-inside text-sm text-red-700 space-y-1">
-                {Object.entries(validationErrors).map(([k, v]) => (
-                  <li key={k}>
-                    <span className="font-mono">{k}</span>: {v}
-                  </li>
-                ))}
-              </ul>
-            </section>
-          )}
+          </div>
         </aside>
 
-        {/* Right live preview (primary) */}
-        <main className="md:col-span-2">
-          <div className="bg-white rounded shadow overflow-hidden">
-            {/* Hero */}
-            <div
-              className="relative h-80 sm:h-96 bg-gray-200 bg-center bg-cover cursor-pointer"
-              style={{ backgroundImage: `url('${data.heroImage}')` }}
-              onClick={(e) => openImagePopover(e)}
-              role="button"
-              aria-label="Edit hero image URL"
-            >
-              <div className="absolute inset-0 bg-black/50 flex flex-col items-center justify-center text-white px-4">
-                <h2
-                  ref={titleRef}
-                  className={`text-3xl sm:text-4xl font-bold text-center outline-none rounded ${
-                    validationErrors.heroTitle ? "ring-2 ring-red-500" : ""
-                  }`}
-                  contentEditable={isEditingTitle}
-                  suppressContentEditableWarning
-                  onDoubleClick={() => startEdit("title")}
-                  onKeyDown={(e) => onKeyDownEditable(e, "title")}
-                  onBlur={(e) => onBlurEditable(e, "title")}
-                  tabIndex={0}
-                >
-                  {data.heroTitle}
-                </h2>
-
-                <p
-                  ref={subtitleRef}
-                  className="mt-3 text-lg sm:text-xl text-center max-w-3xl outline-none rounded"
-                  contentEditable={isEditingSubtitle}
-                  suppressContentEditableWarning
-                  onDoubleClick={() => startEdit("subtitle")}
-                  onKeyDown={(e) => onKeyDownEditable(e, "subtitle")}
-                  onBlur={(e) => onBlurEditable(e, "subtitle")}
-                  tabIndex={0}
-                >
-                  {data.heroSubtitle}
-                </p>
-
-                <button
-                  ref={ctaRef}
-                  className={`mt-6 inline-flex items-center rounded bg-blue-600 hover:bg-blue-700 px-5 py-3 text-white font-medium outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-600 ${
-                    validationErrors.ctaText ? "ring-2 ring-red-500 focus:ring-red-500" : ""
-                  }`}
-                  contentEditable={isEditingCTA}
-                  suppressContentEditableWarning
-                  onDoubleClick={() => startEdit("cta")}
-                  onKeyDown={(e) => onKeyDownEditable(e as any, "cta")}
-                  onBlur={(e) => onBlurEditable(e as any, "cta")}
-                >
-                  {data.ctaText}
-                </button>
-              </div>
-            </div>
-
-            {/* Partners */}
-            <div className="p-4 sm:p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold">Our Partners</h3>
-                <button
-                  onClick={addPartner}
-                  className="text-xs inline-flex items-center rounded bg-blue-600 hover:bg-blue-700 text-white px-2 py-1 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-600"
-                >
-                  + Add partner
-                </button>
-              </div>
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-                {data.partners.map((p, i) => (
-                  <div key={`${p.name}-${i}`} className="relative border rounded p-3 flex flex-col items-center">
-                    <img
-                      src={p.logoUrl || "/placeholder.svg"}
-                      alt={p.name}
-                      className={`h-16 object-contain cursor-pointer ${
-                        validationErrors[`partners.${i}.logoUrl`] ? "outline outline-2 outline-red-500" : ""
-                      }`}
-                      onClick={(e) => openPartnerLogoPopover(i, e)}
-                    />
-                    <p
-                      id={`partner-name-${i}`}
-                      className={`mt-2 text-sm text-center outline-none rounded ${
-                        validationErrors[`partners.${i}.name`] ? "ring-2 ring-red-500" : ""
-                      }`}
-                      onDoubleClick={() => startEditPartnerName(i)}
-                      onKeyDown={(e) => onKeyDownPartnerName(e, i)}
-                      onBlur={(e) => onBlurPartnerName(e, i)}
-                      tabIndex={0}
-                    >
-                      {p.name}
-                    </p>
-                    <button
-                      onClick={() => removePartner(i)}
-                      className="absolute top-2 right-2 text-xs rounded bg-red-600 hover:bg-red-700 text-white px-2 py-0.5 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-600"
-                      aria-label={`Remove partner ${p.name}`}
-                    >
-                      Remove
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
+        {/* Main Content Area */}
+        <main className="flex-1 p-8 overflow-auto">
+          <h1 className="text-4xl font-bold text-gray-900 mb-8">Site Editor</h1>
+          <Card className="mb-8">
+            <CardHeader>
+              <CardTitle>Edit `{FILE_PATH_IN_REPO}` Content</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Textarea
+                className="min-h-[600px] font-mono text-sm"
+                value={content}
+                onChange={(e) => setContent(e.target.value)}
+                placeholder="Loading content..."
+              />
+            </CardContent>
+          </Card>
         </main>
+        <Toaster />
       </div>
-
-      {/* Hero image popover */}
-      {imagePopoverOpen && (
-        <>
-          <div
-            className="fixed z-30 bg-white shadow-lg border rounded p-3 w-72"
-            style={{
-              top: imagePopoverPos.y,
-              left: imagePopoverPos.x,
-              transform: "translate(-50%, -110%)",
-            }}
-          >
-            <label htmlFor="heroImagePopover" className="block text-sm text-gray-700 mb-1">
-              Hero Image URL
-            </label>
-            <input
-              id="heroImagePopover"
-              ref={imageInputRef}
-              type="text"
-              value={data.heroImage}
-              onChange={(e) => updateHeroImage(e.target.value)}
-              className={`w-full rounded border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600 ${
-                validationErrors.heroImage ? "border-red-500" : "border-gray-300"
-              }`}
-              placeholder="https://..."
-            />
-            <div className="mt-2 flex justify-end gap-2">
-              <button
-                onClick={() => setImagePopoverOpen(false)}
-                className="text-sm rounded bg-gray-200 hover:bg-gray-300 px-3 py-1"
-              >
-                Close
-              </button>
-            </div>
-          </div>
-          <div className="fixed inset-0 z-20" onClick={() => setImagePopoverOpen(false)} aria-hidden="true" />
-        </>
-      )}
-
-      {/* Partner logo popover */}
-      {partnerLogoEdit && (
-        <>
-          <div
-            className="fixed z-30 bg-white shadow-lg border rounded p-3 w-80"
-            style={{
-              top: partnerLogoEdit.y,
-              left: partnerLogoEdit.x,
-              transform: "translate(-50%, -110%)",
-            }}
-          >
-            <label htmlFor="partnerLogoUrl" className="block text-sm text-gray-700 mb-1">
-              Partner Logo URL
-            </label>
-            <input
-              id="partnerLogoUrl"
-              ref={partnerLogoInputRef}
-              type="text"
-              value={data.partners[partnerLogoEdit.index]?.logoUrl || ""}
-              onChange={(e) => updatePartnerLogo(partnerLogoEdit.index, e.target.value)}
-              className={`w-full rounded border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600 ${
-                validationErrors[`partners.${partnerLogoEdit.index}.logoUrl`] ? "border-red-500" : "border-gray-300"
-              }`}
-              placeholder="https://..."
-            />
-            <div className="mt-2 flex justify-end gap-2">
-              <button
-                onClick={() => setPartnerLogoEdit(null)}
-                className="text-sm rounded bg-gray-200 hover:bg-gray-300 px-3 py-1"
-              >
-                Close
-              </button>
-            </div>
-          </div>
-          <div className="fixed inset-0 z-20" onClick={() => setPartnerLogoEdit(null)} aria-hidden="true" />
-        </>
-      )}
-
-      {/* Simple toast */}
-      {toast && (
-        <div className="fixed bottom-4 right-4 z-50 bg-gray-900 text-white rounded shadow-lg px-4 py-3 max-w-sm">
-          <p className="text-sm">{toast.message}</p>
-          {toast.href && (
-            <a
-              href={toast.href}
-              target="_blank"
-              rel="noreferrer"
-              className="text-xs underline text-blue-300 mt-1 inline-block"
-            >
-              View commit
-            </a>
-          )}
-          <button
-            onClick={() => setToast(null)}
-            className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-white text-gray-900 text-xs"
-            aria-label="Close toast"
-          >
-            ×
-          </button>
-        </div>
-      )}
-    </div>
+    </TooltipProvider>
   )
 }

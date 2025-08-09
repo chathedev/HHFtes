@@ -27,6 +27,14 @@ function Header() {
     }
   }, [])
 
+  // Define paths where the header should be visible
+  const visiblePaths = ["/", "/nyheter", "/partners", "/lag", "/kontakt"]
+
+  // If the current path is not in the visiblePaths array, do not render the header
+  if (!visiblePaths.includes(pathname)) {
+    return null
+  }
+
   const navLinks = [
     { name: "Hem", href: "/" },
     { name: "Nyheter", href: "/nyheter" }, // Changed from Arena to Nyheter

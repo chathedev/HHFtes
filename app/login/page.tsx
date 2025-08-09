@@ -10,9 +10,9 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { toast } from "@/hooks/use-toast"
+import { Toaster } from "@/components/ui/toaster"
 
 export default function LoginPage() {
-  const [username, setUsername] = useState("")
   const [password, setPassword] = useState("")
   const [loading, setLoading] = useState(false)
   const router = useRouter()
@@ -27,7 +27,7 @@ export default function LoginPage() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ username, password }),
+        body: JSON.stringify({ password }),
       })
 
       const data = await response.json()
@@ -35,13 +35,13 @@ export default function LoginPage() {
       if (response.ok) {
         toast({
           title: "Success",
-          description: data.message,
+          description: "Login successful. Redirecting...",
         })
         router.push("/editor")
       } else {
         toast({
           title: "Error",
-          description: data.message || "Login failed",
+          description: data.error || "Login failed",
           variant: "destructive",
         })
       }
@@ -66,23 +66,10 @@ export default function LoginPage() {
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
-              <Label htmlFor="username">Username</Label>
-              <Input
-                id="username"
-                type="text"
-                placeholder="admin"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                required
-                className="mt-1"
-              />
-            </div>
-            <div>
               <Label htmlFor="password">Password</Label>
               <Input
                 id="password"
                 type="password"
-                placeholder="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
@@ -95,6 +82,7 @@ export default function LoginPage() {
           </form>
         </CardContent>
       </Card>
+      <Toaster />
     </div>
   )
 }
