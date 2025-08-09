@@ -4,6 +4,22 @@ import type React from "react"
 
 import { useEffect, useMemo, useRef, useState } from "react"
 
+// Hardcoded editor login (per request)
+const ALLOWED_EMAIL = "harnosandshf@wby.se"
+const ALLOWED_PASSWORD = "harnosandshf10!"
+const AUTH_KEY = "editor-auth"
+
+// Content source
+const RAW_URL = "https://raw.githubusercontent.com/chathedev/HHFNAF/main/content/home.json"
+
+// GitHub repo metadata (non-sensitive)
+const OWNER = (typeof process !== "undefined" && (process as any).env?.NEXT_PUBLIC_GITHUB_OWNER) || "chathedev"
+const REPO = (typeof process !== "undefined" && (process as any).env?.NEXT_PUBLIC_GITHUB_REPO) || "HHFNAF"
+const BRANCH = (typeof process !== "undefined" && (process as any).env?.NEXT_PUBLIC_GITHUB_BRANCH) || "main"
+
+// Token is NOT read from env to avoid exposing secrets. User pastes a fine-grained PAT at runtime.
+const TOKEN_STORAGE_KEY = "editor.github.token"
+
 type HomeData = {
   heroTitle: string
   heroSubtitle: string
@@ -14,32 +30,46 @@ type HomeData = {
 
 type ValidationErrors = Record<string, string>
 
-const RAW_URL = "https://raw.githubusercontent.com/chathedev/HHFNAF/main/content/home.json"
-
-// Public repo metadata (non-sensitive)
-const OWNER = (typeof process !== "undefined" && (process as any).env?.NEXT_PUBLIC_GITHUB_OWNER) || "chathedev"
-const REPO = (typeof process !== "undefined" && (process as any).env?.NEXT_PUBLIC_GITHUB_REPO) || "HHFNAF"
-const BRANCH = (typeof process !== "undefined" && (process as any).env?.NEXT_PUBLIC_GITHUB_BRANCH) || "main"
-
-// Token is NOT read from env to avoid client exposure errors.
-// The user can paste a fine-grained PAT at runtime (stored in sessionStorage).
-const TOKEN_STORAGE_KEY = "editor.github.token"
-
 function isHttpsUrl(url: string) {
   return /^https:\/\/.+/i.test(url.trim())
 }
 
 function encodeToBase64Utf8(str: string) {
-  // Safe base64 for UTF-8 strings in browsers
   return btoa(unescape(encodeURIComponent(str)))
 }
 
 export default function EditorPage() {
+  // Auth
+  const [authed, setAuthed] = useState(false)
+  const [email, setEmail] = useState("")
+  const [password, setPassword] = useState("")
+  const [loginError, setLoginError] = useState<string | null>(null)
+  useEffect(() => {
+    const stored = sessionStorage.getItem(AUTH_KEY)
+    setAuthed(stored === "1")
+  }, [])
+  const onLogin = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (email.trim().toLowerCase() === ALLOWED_EMAIL && password === ALLOWED_PASSWORD) {
+      sessionStorage.setItem(AUTH_KEY, "1")
+      setAuthed(true)
+      setLoginError(null)
+    } else {
+      setLoginError("Invalid credentials. Please try again.")
+    }
+  }
+  const onLogout = () => {
+    sessionStorage.removeItem(AUTH_KEY)
+    setAuthed(false)
+  }
+
+  // Data + UI state
   const [data, setData] = useState<HomeData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [publishing, setPublishing] = useState(false)
   const [validationErrors, setValidationErrors] = useState<ValidationErrors>({})
+  const hasErrors = useMemo(() => Object.keys(validationErrors).length > 0, [validationErrors])
 
   // Simple toast
   const [toast, setToast] = useState<{ message: string; href?: string } | null>(null)
@@ -74,7 +104,7 @@ export default function EditorPage() {
   const subtitleDraft = useRef<string>("")
   const ctaDraft = useRef<string>("")
 
-  // Hero image inline popover
+  // Hero image popover
   const [imagePopoverOpen, setImagePopoverOpen] = useState(false)
   const [imagePopoverPos, setImagePopoverPos] = useState<{ x: number; y: number }>({ x: 0, y: 0 })
   const imageInputRef = useRef<HTMLInputElement>(null)
@@ -121,7 +151,6 @@ export default function EditorPage() {
     setValidationErrors(errs)
     return errs
   }
-  const hasErrors = useMemo(() => Object.keys(validationErrors).length > 0, [validationErrors])
 
   // Publish via GitHub Contents API using user-supplied token
   const handlePublish = async () => {
@@ -210,7 +239,6 @@ export default function EditorPage() {
       e.preventDefault()
       ;(e.target as HTMLElement).blur()
     } else if (e.key === "Escape") {
-      // Cancel to draft
       if (type === "title") {
         if (titleRef.current) titleRef.current.textContent = titleDraft.current
         setIsEditingTitle(false)
@@ -302,6 +330,60 @@ export default function EditorPage() {
     setData({ ...data, partners: next })
   }
 
+  // If not authenticated, show inline login (only at /editor)
+  if (!authed) {
+    return (
+      <main className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
+        <div className="w-full max-w-md bg-white rounded-xl shadow p-6">
+          <h1 className="text-2xl font-semibold text-center">Editor Login</h1>
+          <p className="mt-1 text-sm text-gray-600 text-center">Enter your email and password to continue.</p>
+          <form className="mt-6 space-y-4" onSubmit={onLogin}>
+            <div>
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+                Email
+              </label>
+              <input
+                id="email"
+                type="email"
+                autoComplete="username"
+                className="mt-1 w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="you@example.com"
+                required
+              />
+            </div>
+            <div>
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+                Password
+              </label>
+              <input
+                id="password"
+                type="password"
+                autoComplete="current-password"
+                className="mt-1 w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••"
+                required
+              />
+            </div>
+            {loginError && <p className="text-sm text-red-600">{loginError}</p>}
+            <button
+              type="submit"
+              className="w-full rounded bg-blue-600 hover:bg-blue-700 text-white py-2 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-600"
+            >
+              Login
+            </button>
+          </form>
+          <p className="mt-4 text-xs text-gray-500 text-center">
+            This login is only used to access the editor. No external services required.
+          </p>
+        </div>
+      </main>
+    )
+  }
+
   // Loading skeleton
   if (loading) {
     return (
@@ -325,7 +407,16 @@ export default function EditorPage() {
     return (
       <div className="min-h-screen bg-gray-50">
         <div className="sticky top-0 bg-white shadow px-4 py-3">
-          <h1 className="font-semibold">Site Editor</h1>
+          <div className="max-w-7xl mx-auto flex items-center justify-between">
+            <h1 className="font-semibold">Site Editor</h1>
+            <button
+              onClick={onLogout}
+              className="text-sm rounded bg-gray-200 hover:bg-gray-300 px-3 py-1.5"
+              type="button"
+            >
+              Logout
+            </button>
+          </div>
         </div>
         <div className="max-w-3xl mx-auto p-4">
           <div className="bg-red-50 border border-red-200 text-red-700 p-4 rounded">
@@ -337,7 +428,7 @@ export default function EditorPage() {
               setError(null)
               fetchData()
             }}
-            className="mt-4 inline-flex items-center rounded bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            className="mt-4 inline-flex items-center rounded bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-600"
           >
             Try again
           </button>
@@ -357,22 +448,28 @@ export default function EditorPage() {
           <div className="flex gap-2">
             <button
               onClick={validate}
-              className="inline-flex items-center rounded bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              className="inline-flex items-center rounded bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-600"
             >
               Validate
             </button>
             <button
               onClick={handleReset}
-              className="inline-flex items-center rounded bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+              className="inline-flex items-center rounded bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-600"
             >
               Reset
+            </button>
+            <button
+              onClick={onLogout}
+              className="inline-flex items-center rounded bg-gray-200 hover:bg-gray-300 text-gray-900 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400"
+            >
+              Logout
             </button>
             <button
               onClick={handlePublish}
               disabled={publishing}
               className={`inline-flex items-center rounded ${
                 publishing ? "bg-green-400" : "bg-green-600 hover:bg-green-700"
-              } text-white px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:cursor-not-allowed`}
+              } text-white px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-600 disabled:cursor-not-allowed`}
             >
               {publishing ? "Publishing..." : "Publish"}
             </button>
@@ -395,7 +492,7 @@ export default function EditorPage() {
                 value={gitHubToken}
                 onChange={(e) => saveToken(e.target.value)}
                 placeholder="ghp_..."
-                className="flex-1 rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="flex-1 rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600"
                 aria-label="GitHub token"
               />
               <button
@@ -418,7 +515,7 @@ export default function EditorPage() {
               type="text"
               value={data.heroImage}
               onChange={(e) => updateHeroImage(e.target.value)}
-              className={`mt-1 w-full rounded border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+              className={`mt-1 w-full rounded border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600 ${
                 validationErrors.heroImage ? "border-red-500" : "border-gray-300"
               }`}
               placeholder="https://example.com/image.jpg"
@@ -432,7 +529,7 @@ export default function EditorPage() {
               <h2 className="font-medium">Partners</h2>
               <button
                 onClick={addPartner}
-                className="text-xs inline-flex items-center rounded bg-blue-600 hover:bg-blue-700 text-white px-2 py-1 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                className="text-xs inline-flex items-center rounded bg-blue-600 hover:bg-blue-700 text-white px-2 py-1 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-600"
               >
                 + Add partner
               </button>
@@ -442,7 +539,7 @@ export default function EditorPage() {
                 onClick={() => {
                   if (data.partners.length > 0) removePartner(data.partners.length - 1)
                 }}
-                className="w-full text-xs inline-flex items-center justify-center rounded bg-red-600 hover:bg-red-700 text-white px-2 py-1 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                className="w-full text-xs inline-flex items-center justify-center rounded bg-red-600 hover:bg-red-700 text-white px-2 py-1 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-600"
               >
                 Remove last partner
               </button>
@@ -505,7 +602,7 @@ export default function EditorPage() {
 
                 <button
                   ref={ctaRef}
-                  className={`mt-6 inline-flex items-center rounded bg-blue-600 hover:bg-blue-700 px-5 py-3 text-white font-medium outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${
+                  className={`mt-6 inline-flex items-center rounded bg-blue-600 hover:bg-blue-700 px-5 py-3 text-white font-medium outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-600 ${
                     validationErrors.ctaText ? "ring-2 ring-red-500 focus:ring-red-500" : ""
                   }`}
                   contentEditable={isEditingCTA}
@@ -525,7 +622,7 @@ export default function EditorPage() {
                 <h3 className="text-lg font-semibold">Our Partners</h3>
                 <button
                   onClick={addPartner}
-                  className="text-xs inline-flex items-center rounded bg-blue-600 hover:bg-blue-700 text-white px-2 py-1 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                  className="text-xs inline-flex items-center rounded bg-blue-600 hover:bg-blue-700 text-white px-2 py-1 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-600"
                 >
                   + Add partner
                 </button>
@@ -555,7 +652,7 @@ export default function EditorPage() {
                     </p>
                     <button
                       onClick={() => removePartner(i)}
-                      className="absolute top-2 right-2 text-xs rounded bg-red-600 hover:bg-red-700 text-white px-2 py-0.5 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                      className="absolute top-2 right-2 text-xs rounded bg-red-600 hover:bg-red-700 text-white px-2 py-0.5 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-600"
                       aria-label={`Remove partner ${p.name}`}
                     >
                       Remove
@@ -588,7 +685,7 @@ export default function EditorPage() {
               type="text"
               value={data.heroImage}
               onChange={(e) => updateHeroImage(e.target.value)}
-              className={`w-full rounded border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+              className={`w-full rounded border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600 ${
                 validationErrors.heroImage ? "border-red-500" : "border-gray-300"
               }`}
               placeholder="https://..."
@@ -626,7 +723,7 @@ export default function EditorPage() {
               type="text"
               value={data.partners[partnerLogoEdit.index]?.logoUrl || ""}
               onChange={(e) => updatePartnerLogo(partnerLogoEdit.index, e.target.value)}
-              className={`w-full rounded border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+              className={`w-full rounded border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600 ${
                 validationErrors[`partners.${partnerLogoEdit.index}.logoUrl`] ? "border-red-500" : "border-gray-300"
               }`}
               placeholder="https://..."
