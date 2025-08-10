@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { ChevronLeft, ExternalLink } from "lucide-react"
+import { ChevronLeft, ExternalLink, Instagram } from "lucide-react"
 import { Card } from "@/components/ui/card"
 
 export default function LagPage() {
@@ -8,8 +8,16 @@ export default function LagPage() {
       name: "A-lag",
       count: 2,
       teams: [
-        { name: "Dam/utv", link: "https://www.laget.se/HHK-dam-utv" },
-        { name: "A-lag Herrar", link: "https://www.laget.se/HarnosandsHFHerr" },
+        {
+          name: "Dam/utv",
+          link: "https://www.laget.se/HHK-dam-utv",
+          instagramLink: "https://www.instagram.com/harnosandshfdam/",
+        },
+        {
+          name: "A-lag Herrar",
+          link: "https://www.laget.se/HarnosandsHFHerr",
+          instagramLink: "https://www.instagram.com/harnosandshfherr/",
+        },
       ],
     },
     {
@@ -24,7 +32,11 @@ export default function LagPage() {
           name: "Flickor 16 (F08/09)",
           link: "https://www.laget.se/HHK-Flickor16",
         },
-        { name: "F-10", link: "https://www.laget.se/HHK-F10" },
+        {
+          name: "F-10",
+          link: "https://www.laget.se/HHK-F10",
+          instagramLink: "https://www.instagram.com/harnosandhff10/",
+        },
         { name: "F-11", link: "https://www.laget.se/HHK-F11" },
         { name: "F-12", link: "https://www.laget.se/HHK-F12" },
         { name: "F-13", link: "https://www.laget.se/HHF-F13" },
@@ -105,6 +117,17 @@ export default function LagPage() {
                     Besök lagets sida
                     <ExternalLink className="w-4 h-4 ml-2 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
                   </Link>
+                  {team.instagramLink && (
+                    <Link
+                      href={team.instagramLink}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center text-pink-600 hover:underline font-medium group mt-2"
+                    >
+                      Följ på Instagram
+                      <Instagram className="w-4 h-4 ml-2 transition-transform group-hover:scale-110" />
+                    </Link>
+                  )}
                 </Card>
               ))}
             </div>
