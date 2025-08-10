@@ -2,17 +2,7 @@ import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
 
 export async function middleware(request: NextRequest) {
-  const { pathname, host } = request.nextUrl
-
-  // Redirection logic for specific domains
-  const redirectDomains = ["harnosandshf.se", "www.harnosandshf.se"]
-  const targetDomain = "www.laget.se"
-  const targetPath = "/HarnosandsHF"
-
-  if (redirectDomains.includes(host)) {
-    const redirectUrl = new URL(`https://${targetDomain}${targetPath}`)
-    return NextResponse.redirect(redirectUrl)
-  }
+  const { pathname } = request.nextUrl
 
   // Allow API routes, static assets, and public pages to pass through
   if (
@@ -38,7 +28,7 @@ export async function middleware(request: NextRequest) {
 
   // For the /editor route, check for authentication token
   if (pathname.startsWith("/editor")) {
-    const token = request.cookies.get("editor-auth")?.value // Correct cookie name
+    const token = request.cookies.get("auth_token")?.value
 
     if (!token) {
       // Redirect to login page if no token is found
@@ -52,6 +42,7 @@ export async function middleware(request: NextRequest) {
   }
 
   // For any other path not explicitly handled, allow access (or redirect to home)
+  // You might want to add more specific routing logic here if needed
   return NextResponse.next()
 }
 

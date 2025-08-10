@@ -1,20 +1,37 @@
-"use client" // Keep as client component if it has client-side interactivity
+"use client"
 
-import { Calendar, Trophy, Zap, Clock } from "lucide-react"
-// Removed useEffect and useState for data fetching, now receives props
+import { Calendar, Trophy, Zap, MapPin, Clock } from "lucide-react"
+import { useEffect, useState } from "react"
 
 interface Match {
-  date: string // YYYY-MM-DD
-  time: string // HH:MM or "Heldag" or "HH:MM - HH:MM"
-  title: string // Match title
+  id: string
+  title: string
+  date: string
+  time: string
+  opponent: string
+  location: string
+  isHome: boolean
 }
 
-interface MatchCardsProps {
-  upcomingMatches: Match[] // Receive matches as prop
-}
+export default function MatchCards() {
+  const [upcomingMatches, setUpcomingMatches] = useState<Match[]>([])
+  const [loading, setLoading] = useState(true)
 
-export default function MatchCards({ upcomingMatches }: MatchCardsProps) {
-  // No loading state needed here, data is pre-fetched
+  useEffect(() => {
+    const fetchMatches = async () => {
+      try {
+        const response = await fetch("/api/matches")
+        const matches = await response.json()
+        setUpcomingMatches(matches)
+      } catch (error) {
+        console.error("Error fetching matches:", error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchMatches()
+  }, [])
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString)
@@ -35,23 +52,23 @@ export default function MatchCards({ upcomingMatches }: MatchCardsProps) {
               <Calendar className="w-12 h-12 text-orange-500 mb-4" />
               <h3 className="text-xl font-bold text-orange-500 mb-4">KOMMANDE MATCHER</h3>
 
-              {upcomingMatches.length > 0 ? (
+              {loading ? (
+                <p className="text-gray-600 text-sm">Laddar matcher...</p>
+              ) : upcomingMatches.length > 0 ? (
                 <div className="space-y-3 w-full">
-                  {upcomingMatches.slice(0, 3).map(
-                    (
-                      match,
-                      index, // Display top 3 matches
-                    ) => (
-                      <div key={index} className="border-l-4 border-orange-500 pl-3 text-left">
-                        <div className="font-semibold text-sm text-gray-800">{match.title}</div>
-                        <div className="flex items-center text-xs text-gray-600 mt-1">
-                          <Clock className="w-3 h-3 mr-1" />
-                          {formatDate(match.date)} {match.time}
-                        </div>
-                        {/* Removed opponent and location as they are not directly available from the new API */}
+                  {upcomingMatches.map((match) => (
+                    <div key={match.id} className="border-l-4 border-orange-500 pl-3 text-left">
+                      <div className="font-semibold text-sm text-gray-800">{match.opponent}</div>
+                      <div className="flex items-center text-xs text-gray-600 mt-1">
+                        <Clock className="w-3 h-3 mr-1" />
+                        {formatDate(match.date)} {match.time}
                       </div>
-                    ),
-                  )}
+                      <div className="flex items-center text-xs text-gray-600">
+                        <MapPin className="w-3 h-3 mr-1" />
+                        {match.isHome ? "Hemma" : "Borta"}
+                      </div>
+                    </div>
+                  ))}
                 </div>
               ) : (
                 <p className="text-gray-600 text-sm">Inga kommande matcher hittades</p>

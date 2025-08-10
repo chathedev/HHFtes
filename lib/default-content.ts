@@ -4,44 +4,21 @@ import type { FullContent } from "./content-types"
 export const defaultContent: FullContent = {
   hero: {
     imageUrl: "https://az316141.cdn.laget.se/2317159/11348130.jpg",
-    title: "Välkommen till Härnösands HF",
-    description: "Din lokala handbollsklubb i hjärtat av Härnösand.",
-    cta: {
-      text: "Bli Medlem",
-      link: "/kontakt",
-    },
-    image: "/placeholder.svg?height=800&width=1200",
+    title: "LAGET FÖRE ALLT",
+    description: "Härnösands HF - En förening med stolthet, gemenskap och passion för sporten.",
+    button1Text: "Våra 23 Lag",
+    button1Link: "/lag",
+    button2Text: "Senaste Nytt",
+    button2Link: "/nyheter",
   },
   stats: {
     totalTeams: 23,
     aTeams: 2,
     youthTeams: 21,
     yearsHistory: "50+",
-    title: "Våra Framgångar",
-    description: "En klubb med stolta traditioner och en ljus framtid.",
-    stats: [
-      {
-        value: "100+",
-        label: "Aktiva Medlemmar",
-      },
-      {
-        value: "20+",
-        label: "År i Handboll",
-      },
-      {
-        value: "5+",
-        label: "Seriesegrar",
-      },
-    ],
-  },
-  upcomingEvents: {
-    // Placeholder for upcoming events section
-  },
-  matchCards: {
-    // Placeholder for match cards section
   },
   aboutClub: {
-    title: "Om Härnösands HF",
+    title: "Härnösands HF",
     paragraph1:
       "Vi är en handbollsklubb som värnar om gemenskap, utveckling och sund konkurrens. Med våra 23 lag från ungdom till seniorer erbjuder vi handboll för alla åldrar och nivåer.",
     paragraph2:
@@ -57,7 +34,6 @@ export const defaultContent: FullContent = {
     imageAlt: "Härnösands HF Team",
     statNumber: 23,
     statLabel: "lag totalt",
-    image: "/placeholder.svg?height=400&width=600",
   },
   partners: [
     {
@@ -259,5 +235,5 @@ export const defaultContent: FullContent = {
       linkUrl: undefined,
     },
   ],
-  sections: ["hero", "stats", "upcomingEvents", "matchCards", "aboutClub", "partnersCarousel"],
+  sections: ["hero", "stats", "upcomingEvents", "aboutClub", "partnersCarousel"],
 }

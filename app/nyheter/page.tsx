@@ -3,8 +3,8 @@
 import Link from "next/link"
 import { ChevronLeft, CalendarDays, LinkIcon } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { useEffect, useState } from "react"
 import Image from "next/image"
-import { useState } from "react" // Keep useState for client-side interactivity if needed
 
 interface NewsItem {
   title: string
@@ -14,11 +14,30 @@ interface NewsItem {
   imageUrl?: string // Optional image URL
 }
 
-// Client component to render news
-function NewsDisplay({ initialNews }: { initialNews: NewsItem[] }) {
-  const [news, setNews] = useState<NewsItem[]>(initialNews) // Initialize with server-fetched data
+export default function NyheterPage() {
+  const [news, setNews] = useState<NewsItem[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
-  // No need for useEffect to fetch data here anymore
+  useEffect(() => {
+    const fetchNews = async () => {
+      try {
+        setLoading(true)
+        const response = await fetch("/api/news")
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`)
+        }
+        const data = await response.json()
+        setNews(data)
+      } catch (e: any) {
+        setError(e.message || "Failed to fetch news.")
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchNews()
+  }, [])
 
   return (
     <div className="flex flex-col min-h-screen bg-white">
@@ -33,7 +52,12 @@ function NewsDisplay({ initialNews }: { initialNews: NewsItem[] }) {
           Håll dig uppdaterad med de senaste nyheterna från Härnösands HF!
         </p>
 
-        {news.length === 0 && <p className="text-center text-gray-600">Inga nyheter att visa just nu.</p>}
+        {loading && <p className="text-center text-gray-600">Laddar nyheter...</p>}
+        {error && <p className="text-center text-red-500">Fel: {error}</p>}
+
+        {!loading && !error && news.length === 0 && (
+          <p className="text-center text-gray-600">Inga nyheter att visa just nu.</p>
+        )}
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {news.map((item, index) => (
@@ -80,27 +104,4 @@ function NewsDisplay({ initialNews }: { initialNews: NewsItem[] }) {
       </main>
     </div>
   )
-}
-
-// Main Server Component for the page
-export default async function NyheterPageWrapper() {
-  const initialNews = await getNewsItems()
-  return <NewsDisplay initialNews={initialNews} />
-}
-
-// Server-side data fetching function
-async function getNewsItems(): Promise<NewsItem[]> {
-  try {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_VERCEL_URL || "http://localhost:3000"}/api/news`, {
-      next: { revalidate: 3600 }, // Revalidate every hour
-    })
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`)
-    }
-    const data: NewsItem[] = await response.json()
-    return data
-  } catch (e: any) {
-    console.error("Server-side fetch error for news:", e)
-    return [] // Return empty array on error
-  }
 }

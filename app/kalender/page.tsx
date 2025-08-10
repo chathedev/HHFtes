@@ -1,10 +1,10 @@
 "use client"
 
 import Link from "next/link"
-import { ChevronLeft, CalendarDays, Clock } from "lucide-react"
+import { ChevronLeft, CalendarDays, Clock } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { useState, useMemo } from "react" // Keep useState and useMemo for client-side filtering
+import { useEffect, useState, useMemo } from "react"
 
 interface Event {
   date: string // YYYY-MM-DD
@@ -18,12 +18,31 @@ interface GroupedEvents {
 
 type EventFilter = "Alla" | "Träning" | "Match" | "Möte" | "Övrigt"
 
-// Client component to handle filtering and rendering
-function CalendarDisplay({ initialEvents }: { initialEvents: Event[] }) {
+export default function KalenderPage() {
+  const [allEvents, setAllEvents] = useState<Event[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [activeFilter, setActiveFilter] = useState<EventFilter>("Alla")
-  const [allEvents, setAllEvents] = useState<Event[]>(initialEvents) // Initialize with server-fetched data
 
-  // No need for useEffect to fetch data here anymore, it's passed as prop
+  useEffect(() => {
+    const fetchCalendarEvents = async () => {
+      try {
+        setLoading(true)
+        const response = await fetch("/api/kalender-events")
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`)
+        }
+        const data: Event[] = await response.json()
+        setAllEvents(data)
+      } catch (e: any) {
+        setError(e.message || "Failed to fetch calendar events.")
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchCalendarEvents()
+  }, [])
 
   const filteredEvents = useMemo(() => {
     if (activeFilter === "Alla") {
@@ -35,26 +54,12 @@ function CalendarDisplay({ initialEvents }: { initialEvents: Event[] }) {
         case "Träning":
           return lowerTitle.includes("träning")
         case "Match":
-          return (
-            lowerTitle.includes("match") ||
-            lowerTitle.includes("cup") ||
-            lowerTitle.includes("sammandrag") ||
-            lowerTitle.includes("blixten")
-          )
+          return lowerTitle.includes("match") || lowerTitle.includes("cup") || lowerTitle.includes("sammandrag") || lowerTitle.includes("blixten")
         case "Möte":
           return lowerTitle.includes("möte") || lowerTitle.includes("årsmöte") || lowerTitle.includes("ledaravslutning")
         case "Övrigt":
           // Catch-all for anything not explicitly a training, match, or meeting
-          return !(
-            lowerTitle.includes("träning") ||
-            lowerTitle.includes("match") ||
-            lowerTitle.includes("cup") ||
-            lowerTitle.includes("sammandrag") ||
-            lowerTitle.includes("blixten") ||
-            lowerTitle.includes("möte") ||
-            lowerTitle.includes("årsmöte") ||
-            lowerTitle.includes("ledaravslutning")
-          )
+          return !(lowerTitle.includes("träning") || lowerTitle.includes("match") || lowerTitle.includes("cup") || lowerTitle.includes("sammandrag") || lowerTitle.includes("blixten") || lowerTitle.includes("möte") || lowerTitle.includes("årsmöte") || lowerTitle.includes("ledaravslutning"))
         default:
           return true
       }
@@ -119,11 +124,7 @@ function CalendarDisplay({ initialEvents }: { initialEvents: Event[] }) {
             <Button
               key={filter}
               variant={activeFilter === filter ? "default" : "outline"}
-              className={
-                activeFilter === filter
-                  ? "bg-orange-500 hover:bg-orange-600 text-white"
-                  : "border-gray-300 text-gray-700 hover:bg-gray-100"
-              }
+              className={activeFilter === filter ? "bg-orange-500 hover:bg-orange-600 text-white" : "border-gray-300 text-gray-700 hover:bg-gray-100"}
               onClick={() => setActiveFilter(filter)}
             >
               {filter}
@@ -131,12 +132,14 @@ function CalendarDisplay({ initialEvents }: { initialEvents: Event[] }) {
           ))}
         </div>
 
-        {/* No loading/error states here, as data is pre-fetched */}
-        {Object.keys(groupedEvents).length === 0 && (
+        {loading && <p className="text-center text-gray-600">Laddar kalender...</p>}
+        {error && <p className="text-center text-red-500">Fel: {error}</p>}
+
+        {!loading && !error && Object.keys(groupedEvents).length === 0 && (
           <p className="text-center text-gray-600">Inga planerade aktiviteter hittades för den valda filter.</p>
         )}
 
-        {Object.keys(groupedEvents).length > 0 && (
+        {!loading && !error && (
           <div className="space-y-12">
             {Object.entries(groupedEvents).map(([monthYear, events]) => (
               <section key={monthYear}>
@@ -169,30 +172,4 @@ function CalendarDisplay({ initialEvents }: { initialEvents: Event[] }) {
       </main>
     </div>
   )
-}
-
-// Main Server Component for the page
-export default async function KalenderPageWrapper() {
-  const initialEvents = await getCalendarEvents()
-  return <CalendarDisplay initialEvents={initialEvents} />
-}
-
-// Server-side data fetching function
-async function getCalendarEvents(): Promise<Event[]> {
-  try {
-    const response = await fetch(
-      `${process.env.NEXT_PUBLIC_VERCEL_URL || "http://localhost:3000"}/api/kalender-events`,
-      {
-        next: { revalidate: 3600 }, // Revalidate every hour
-      },
-    )
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`)
-    }
-    const data: Event[] = await response.json()
-    return data
-  } catch (e: any) {
-    console.error("Server-side fetch error for calendar events:", e)
-    return [] // Return empty array on error
-  }
 }

@@ -1,4 +1,4 @@
-export const dynamic = "force-dynamic" // Keep force-dynamic for editor updates
+export const dynamic = "force-dynamic"
 
 import type { FullContent } from "@/lib/content-types"
 import { defaultContent } from "@/lib/default-content"
@@ -6,14 +6,12 @@ import Hero from "@/components/hero"
 import Stats from "@/components/stats"
 import UpcomingEvents from "@/components/upcoming-events"
 import AboutClub from "@/components/about-club"
-import PartnersCarouselClient from "@/app/partners-carousel-client"
-import MatchCards from "@/components/match-cards" // Import MatchCards
-import type { JSX } from "react" // Declare JSX variable
+import PartnersCarouselClient from "@/app/partners-carousel-client" // Client component for carousel
 
 const BACKEND_API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL || "https://api.nuredo.se"
 
 /* -------------------------------------------------------------------------- */
-/*                           DATA-FETCHING FUNCTIONS                          */
+/*                           DATA-FETCHING FUNCTION                           */
 /* -------------------------------------------------------------------------- */
 async function getDynamicContent(): Promise<FullContent> {
   try {
@@ -35,41 +33,16 @@ async function getDynamicContent(): Promise<FullContent> {
   }
 }
 
-interface Match {
-  // Define Match interface here for server-side use
-  date: string
-  time: string
-  title: string
-}
-
-async function getUpcomingMatches(): Promise<Match[]> {
-  try {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_VERCEL_URL || "http://localhost:3000"}/api/matches`, {
-      next: { revalidate: 3600 }, // Revalidate every hour
-    })
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`)
-    }
-    const data: Match[] = await response.json()
-    return data
-  } catch (e: any) {
-    console.error("Server-side fetch error for upcoming matches:", e)
-    return []
-  }
-}
-
 /* -------------------------------------------------------------------------- */
 /*                                PAGE LAYOUT                                */
 /* -------------------------------------------------------------------------- */
 export default async function HomePage() {
   const content = await getDynamicContent()
-  const upcomingMatches = await getUpcomingMatches() // Fetch matches server-side
 
   const sectionComponents: { [key: string]: JSX.Element } = {
     hero: <Hero content={content.hero} />,
     stats: <Stats content={content.stats} />,
-    upcomingEvents: <UpcomingEvents upcomingMatches={upcomingMatches} />, // Pass matches as prop
-    matchCards: <MatchCards upcomingMatches={upcomingMatches} />, // Pass matches to MatchCards
+    upcomingEvents: <UpcomingEvents />, // UpcomingEvents fetches its own data
     aboutClub: <AboutClub content={content.aboutClub} />,
     partnersCarousel: <PartnersCarouselClient partners={content.partners} />,
   }
