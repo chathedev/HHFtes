@@ -4,9 +4,10 @@ import type { FullContent } from "@/lib/content-types"
 import { defaultContent } from "@/lib/default-content"
 import Hero from "@/components/hero"
 import Stats from "@/components/stats"
-import UpcomingEvents from "@/components/upcoming-events"
+import UpcomingEvents from "@/components/upcoming-events" // Client component
 import AboutClub from "@/components/about-club"
 import PartnersCarouselClient from "@/app/partners-carousel-client" // Client component for carousel
+import { getUpcomingMatchesServer } from "@/lib/get-matches" // Import the new server utility
 
 const BACKEND_API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL || "https://api.nuredo.se"
 
@@ -39,10 +40,23 @@ async function getDynamicContent(): Promise<FullContent> {
 export default async function HomePage() {
   const content = await getDynamicContent()
 
+  // Fetch upcoming matches on the server for the homepage
+  let upcomingMatches = []
+  let matchesLoading = true
+  let matchesError: string | null = null
+  try {
+    upcomingMatches = await getUpcomingMatchesServer()
+    matchesLoading = false
+  } catch (e: any) {
+    matchesError = e.message || "Failed to fetch upcoming matches."
+    matchesLoading = false
+    console.error("Server-side fetch error for homepage upcoming matches:", e)
+  }
+
   const sectionComponents: { [key: string]: JSX.Element } = {
     hero: <Hero content={content.hero} />,
     stats: <Stats content={content.stats} />,
-    upcomingEvents: <UpcomingEvents />, // UpcomingEvents fetches its own data
+    upcomingEvents: <UpcomingEvents upcomingMatches={upcomingMatches} loading={matchesLoading} error={matchesError} />,
     aboutClub: <AboutClub content={content.aboutClub} />,
     partnersCarousel: <PartnersCarouselClient partners={content.partners} />,
   }

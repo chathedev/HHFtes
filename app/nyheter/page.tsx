@@ -1,9 +1,6 @@
-"use client"
-
 import Link from "next/link"
 import { ChevronLeft, CalendarDays, LinkIcon } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { useEffect, useState } from "react"
 import Image from "next/image"
 
 interface NewsItem {
@@ -14,30 +11,24 @@ interface NewsItem {
   imageUrl?: string // Optional image URL
 }
 
-export default function NyheterPage() {
-  const [news, setNews] = useState<NewsItem[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+// Make this a Server Component
+export default async function NyheterPage() {
+  const BACKEND_API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL || "https://api.nuredo.se"
+  let news: NewsItem[] = []
+  let error: string | null = null
 
-  useEffect(() => {
-    const fetchNews = async () => {
-      try {
-        setLoading(true)
-        const response = await fetch("/api/news")
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`)
-        }
-        const data = await response.json()
-        setNews(data)
-      } catch (e: any) {
-        setError(e.message || "Failed to fetch news.")
-      } finally {
-        setLoading(false)
-      }
+  try {
+    const response = await fetch(`${BACKEND_API_URL}/api/news`, {
+      next: { revalidate: 3600 }, // Revalidate every hour
+    })
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`)
     }
-
-    fetchNews()
-  }, [])
+    news = await response.json()
+  } catch (e: any) {
+    error = e.message || "Failed to fetch news."
+    console.error("Server-side fetch error for news:", e)
+  }
 
   return (
     <div className="flex flex-col min-h-screen bg-white">
@@ -52,12 +43,9 @@ export default function NyheterPage() {
           Håll dig uppdaterad med de senaste nyheterna från Härnösands HF!
         </p>
 
-        {loading && <p className="text-center text-gray-600">Laddar nyheter...</p>}
         {error && <p className="text-center text-red-500">Fel: {error}</p>}
 
-        {!loading && !error && news.length === 0 && (
-          <p className="text-center text-gray-600">Inga nyheter att visa just nu.</p>
-        )}
+        {!error && news.length === 0 && <p className="text-center text-gray-600">Inga nyheter att visa just nu.</p>}
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {news.map((item, index) => (

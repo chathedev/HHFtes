@@ -1,10 +1,9 @@
-"use client"
+"use client" // This component remains a client component for interactivity, but data is passed from server
 
 import { CalendarDays, Clock, ArrowRight, Goal } from "lucide-react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { useEffect, useState } from "react"
 
 interface Match {
   date: string // YYYY-MM-DD
@@ -12,107 +11,13 @@ interface Match {
   title: string // Match title
 }
 
-export default function UpcomingEvents() {
-  const [upcomingMatches, setUpcomingMatches] = useState<Match[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+interface UpcomingEventsProps {
+  upcomingMatches: Match[]
+  loading: boolean
+  error: string | null
+}
 
-  useEffect(() => {
-    const fetchMatches = async () => {
-      try {
-        setLoading(true)
-        const now = new Date() // Use actual current date
-        const fetchedMatches: Match[] = []
-
-        // Loop over the current month and the next 5 months (total 6 months)
-        for (let i = 0; i < 6; i++) {
-          let currentYear = now.getFullYear()
-          let currentMonth = now.getMonth() + i // 0-indexed month
-
-          if (currentMonth > 11) {
-            currentMonth -= 12
-            currentYear++
-          }
-
-          const paddedMonth = (currentMonth + 1).toString().padStart(2, "0") // Convert to 1-indexed and pad
-          const url = `https://www.laget.se/HarnosandsHF/Event/FilterEvents?Year=${currentYear}&Month=${paddedMonth}&PrintMode=False&SiteType=Club&Visibility=2&types=6`
-
-          const response = await fetch(url)
-          if (!response.ok) {
-            console.warn(`Failed to fetch matches for ${currentYear}-${paddedMonth}: ${response.statusText}`)
-            continue
-          }
-
-          const html = await response.text()
-          const parser = new DOMParser()
-          const doc = parser.parseFromString(html, "text/html")
-
-          doc.querySelectorAll(".fullCalendar__day").forEach((dayElement) => {
-            const dateAttribute = dayElement.getAttribute("data-day")
-            if (!dateAttribute) return
-
-            const fullDate = dateAttribute
-
-            dayElement.querySelectorAll(".fullCalendar__list li").forEach((liElement) => {
-              let time = "Okänd tid"
-              let title = ""
-
-              const timeElement = liElement.querySelector("time")
-              if (timeElement) {
-                time = timeElement.textContent?.trim() || "Okänd tid"
-              }
-
-              let rawTitle = liElement.textContent?.trim() || ""
-
-              if (time !== "Okänd tid") {
-                rawTitle = rawTitle.replace(time, "").trim()
-              }
-
-              if (rawTitle.includes("Heldag")) {
-                time = "Heldag"
-                rawTitle = rawTitle.replace(/Heldag/i, "").trim()
-              }
-
-              title = rawTitle
-                .replace(/Läs mer/i, "")
-                .replace(/v\.\d+/i, "")
-                .replace(/\s+/g, " ")
-                .trim()
-
-              if (title) {
-                fetchedMatches.push({ date: fullDate, time, title })
-              }
-            })
-          })
-        }
-
-        // Filter out past matches and sort by date and time
-        const nowDateTime = new Date()
-        const filteredAndSortedMatches = fetchedMatches
-          .filter((match) => {
-            const matchDateTime = new Date(
-              `${match.date}T${match.time.replace("Okänd tid", "00:00").replace("Heldag", "00:00")}`,
-            )
-            return matchDateTime >= nowDateTime
-          })
-          .sort((a, b) => {
-            const dateTimeA = new Date(`${a.date}T${a.time.replace("Okänd tid", "00:00").replace("Heldag", "00:00")}`)
-            const dateTimeB = new Date(`${b.date}T${b.time.replace("Okänd tid", "00:00").replace("Heldag", "00:00")}`)
-            return dateTimeA.getTime() - dateTimeB.getTime()
-          })
-
-        setUpcomingMatches(filteredAndSortedMatches)
-      } catch (e: any) {
-        setError(e.message || "Failed to fetch matches.")
-        console.error("Client-side fetch error:", e)
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    fetchMatches()
-  }, [])
-
+export default function UpcomingEvents({ upcomingMatches, loading, error }: UpcomingEventsProps) {
   const formatMatchDate = (dateString: string) => {
     const date = new Date(dateString)
     return date.toLocaleDateString("sv-SE", {
@@ -134,9 +39,7 @@ export default function UpcomingEvents() {
           <CardContent className="p-6">
             {loading && <p className="text-center text-gray-600">Laddar matcher...</p>}
             {error && (
-              <p className="text-center text-red-500">
-                Fel: {error}. Detta kan bero på CORS-begränsningar från källwebbplatsen.
-              </p>
+              <p className="text-center text-red-500">Fel: {error}. Detta kan bero på problem med att hämta data.</p>
             )}
 
             {!loading && !error && upcomingMatches.length === 0 && null}
