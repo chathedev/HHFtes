@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { Facebook, Instagram, Mail, Phone, MapPin, ExternalLink } from "lucide-react"
+import { Instagram, Mail, MapPin, ExternalLink } from "lucide-react"
 
 export default function Footer() {
   return (
@@ -11,10 +11,12 @@ export default function Footer() {
             <h3 className="text-xl font-bold text-orange-400">Härnösands HF</h3>
             <p className="text-gray-300">Härnösands Handbollsförening - En förening för alla som älskar handboll.</p>
             <div className="flex space-x-4">
-              <Link href="#" className="text-gray-400 hover:text-orange-400 transition-colors">
-                <Facebook size={20} />
-              </Link>
-              <Link href="#" className="text-gray-400 hover:text-orange-400 transition-colors">
+              <Link
+                href="https://www.instagram.com/harnosandshf"
+                className="text-gray-400 hover:text-orange-400 transition-colors"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
                 <Instagram size={20} />
               </Link>
             </div>
@@ -56,30 +58,14 @@ export default function Footer() {
                 <span>info@harnosandshf.se</span>
               </div>
               <div className="flex items-center space-x-2 text-gray-300">
-                <Phone size={16} />
-                <span>0611-123 456</span>
-              </div>
-              <div className="flex items-center space-x-2 text-gray-300">
                 <MapPin size={16} />
                 <span>Härnösand, Sverige</span>
               </div>
             </div>
           </div>
 
-          {/* Training Times */}
-          <div className="space-y-4">
-            <h3 className="text-xl font-bold text-orange-400">Träningstider</h3>
-            <div className="space-y-2 text-gray-300">
-              <div>
-                <p className="font-semibold">Måndag & Onsdag</p>
-                <p>18:00 - 20:00</p>
-              </div>
-              <div>
-                <p className="font-semibold">Lördag</p>
-                <p>10:00 - 12:00</p>
-              </div>
-            </div>
-          </div>
+          {/* This column will now be empty or can be repurposed */}
+          <div className="space-y-4">{/* This section was removed as per user request */}</div>
         </div>
 
         {/* Bottom Section */}
@@ -94,9 +80,9 @@ export default function Footer() {
               rel="noopener noreferrer"
               className="group flex items-center space-x-1 text-sm transition-all duration-300 hover:scale-105"
             >
-              <span className="text-gray-400">Designad av</span>
+              <span className="text-gray-400">Byggd av</span>
               <span className="bg-gradient-to-r from-blue-400 to-blue-600 bg-clip-text text-transparent font-bold group-hover:from-blue-300 group-hover:to-blue-500 transition-all duration-300">
-                WBY
+                Websites by You
               </span>
               <ExternalLink
                 size={12}
