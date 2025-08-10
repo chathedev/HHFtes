@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { ChevronLeft, CalendarDays, Clock } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { useEffect, useState, useMemo } from "react"
+import { useState, useMemo } from "react" // Keep useState and useMemo for client-side interactivity if needed
 
 interface Match {
   date: string // YYYY-MM-DD
@@ -15,131 +15,11 @@ interface GroupedMatches {
   [monthYear: string]: Match[]
 }
 
-export default function MatchesPage() {
-  const [allMatches, setAllMatches] = useState<Match[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+// Client component to render matches
+function MatchesDisplay({ initialMatches }: { initialMatches: Match[] }) {
+  const [allMatches, setAllMatches] = useState<Match[]>(initialMatches) // Initialize with server-fetched data
 
-  useEffect(() => {
-    const fetchMatches = async () => {
-      try {
-        setLoading(true)
-        const startDate = new Date()
-        const fetchedMatches: Match[] = []
-
-        for (let i = 0; i < 4; i++) {
-          let year = startDate.getFullYear()
-          let month = startDate.getMonth() + i
-          if (month > 11) {
-            month -= 12
-            year++
-          }
-
-          const paddedMonth = (month + 1).toString().padStart(2, "0")
-          const url = `https://www.laget.se/HarnosandsHF/Event/FilterEvents?Year=${year}&Month=${paddedMonth}&PrintMode=False&SiteType=Club&Visibility=2&types=6`
-
-          const response = await fetch(url)
-          if (!response.ok) {
-            console.warn(`Failed to fetch matches for ${year}-${paddedMonth}: ${response.statusText}`)
-            continue
-          }
-
-          const html = await response.text()
-          const parser = new DOMParser()
-          const doc = parser.parseFromString(html, "text/html")
-
-          doc.querySelectorAll(".fullCalendar__day").forEach((dayElement) => {
-            const dateAttribute = dayElement.getAttribute("data-day")
-            if (!dateAttribute) return
-
-            const fullDate = `${year}-${paddedMonth}-${dateAttribute.padStart(2, "0")}`
-
-            dayElement.querySelectorAll(".fullCalendar__list li").forEach((liElement) => {
-              // Skip if it's a training
-              const textContent = liElement.textContent?.toLowerCase() || ""
-              if (textContent.includes("träning")) return
-
-              let time = "Okänd tid"
-              let title = ""
-
-              const timeElement = liElement.querySelector("time")
-              if (timeElement) {
-                time = timeElement.textContent?.trim() || "Okänd tid"
-              }
-
-              let rawTitle = liElement.textContent?.trim() || ""
-
-              if (rawTitle.includes("Heldag")) {
-                time = "Heldag"
-                rawTitle = rawTitle.replace(/Heldag/i, "").trim()
-              }
-
-              if (time === "Okänd tid") {
-                const timeRegex = /\b(\d{2}:\d{2})\b/g
-                const foundTimes: string[] = []
-                let match
-                while ((match = timeRegex.exec(rawTitle)) !== null) {
-                  foundTimes.push(match[1])
-                }
-
-                if (foundTimes.length >= 2) {
-                  time = `${foundTimes[0]} - ${foundTimes[foundTimes.length - 1]}`
-                  rawTitle = rawTitle
-                    .replace(foundTimes[0], "")
-                    .replace(foundTimes[foundTimes.length - 1], "")
-                    .trim()
-                } else if (foundTimes.length === 1) {
-                  time = foundTimes[0]
-                  rawTitle = rawTitle.replace(foundTimes[0], "").trim()
-                }
-              }
-
-              title = rawTitle
-                .replace(/Läs mer/i, "")
-                .replace(/v\.\d+/i, "")
-                .replace(/\s+/g, " ")
-                .trim()
-
-              if (title) {
-                fetchedMatches.push({ date: fullDate, time, title })
-              }
-            })
-          })
-        }
-
-        const now = new Date()
-        const filteredAndSortedMatches = fetchedMatches
-          .filter((match) => {
-            if (match.time === "Heldag") {
-              const dateOnly = new Date(match.date)
-              return dateOnly >= new Date(now.getFullYear(), now.getMonth(), now.getDate())
-            }
-            const dateTime = new Date(
-              `${match.date}T${match.time.split(" ")[0].replace("Okänd tid", "00:00")}`
-            )
-            return dateTime >= now
-          })
-          .sort((a, b) => {
-            const dateA = new Date(
-              `${a.date}T${a.time.split(" ")[0].replace("Okänd tid", "00:00").replace("Heldag", "00:00")}`
-            )
-            const dateB = new Date(
-              `${b.date}T${b.time.split(" ")[0].replace("Okänd tid", "00:00").replace("Heldag", "00:00")}`
-            )
-            return dateA.getTime() - dateB.getTime()
-          })
-
-        setAllMatches(filteredAndSortedMatches)
-      } catch (e: any) {
-        setError(e.message || "Failed to fetch matches.")
-        console.error(e)
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    fetchMatches()
-  }, [])
+  // No need for useEffect to fetch data here anymore
 
   const groupedMatches = useMemo(() => {
     const grouped: GroupedMatches = allMatches.reduce((acc, match) => {
@@ -183,18 +63,9 @@ export default function MatchesPage() {
           Här hittar du alla kommande matcher för Härnösands HF.
         </p>
 
-        {loading && <p className="text-center text-gray-600">Laddar matcher...</p>}
-        {error && (
-          <p className="text-center text-red-500">
-            Fel: {error}. Detta kan bero på CORS-begränsningar från källwebbplatsen när du försöker hämta data direkt från webbläsaren.
-          </p>
-        )}
+        {allMatches.length === 0 && <p className="text-center text-gray-600">Inga matcher planerade.</p>}
 
-        {!loading && !error && Object.keys(groupedMatches).length === 0 && (
-          <p className="text-center text-gray-600">Inga matcher planerade.</p>
-        )}
-
-        {!loading && !error && (
+        {allMatches.length > 0 && (
           <div className="space-y-12">
             {Object.entries(groupedMatches).map(([monthYear, matches]) => (
               <section key={monthYear}>
@@ -225,4 +96,27 @@ export default function MatchesPage() {
       </main>
     </div>
   )
+}
+
+// Main Server Component for the page
+export default async function MatchesPageWrapper() {
+  const initialMatches = await getMatches()
+  return <MatchesDisplay initialMatches={initialMatches} />
+}
+
+// Server-side data fetching function
+async function getMatches(): Promise<Match[]> {
+  try {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_VERCEL_URL || "http://localhost:3000"}/api/matches`, {
+      next: { revalidate: 3600 }, // Revalidate every hour
+    })
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`)
+    }
+    const data: Match[] = await response.json()
+    return data
+  } catch (e: any) {
+    console.error("Server-side fetch error for matches:", e)
+    return [] // Return empty array on error
+  }
 }
