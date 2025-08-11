@@ -4,12 +4,10 @@ import type { FullContent } from "@/lib/content-types"
 import { defaultContent } from "@/lib/default-content"
 import Hero from "@/components/hero"
 import Stats from "@/components/stats"
-import UpcomingEvents from "@/components/upcoming-events"
+import UpcomingEvents from "@/components/upcoming-events" // Client component
 import AboutClub from "@/components/about-club"
-import PartnersCarouselClient from "@/app/partners-carousel-client"
-import LazySectionWrapper from "@/components/lazy-section-wrapper"
-import { getUpcomingMatchesServer } from "@/lib/get-matches"
-import { Suspense } from "react"
+import PartnersCarouselClient from "@/app/partners-carousel-client" // Client component for carousel
+import { getUpcomingMatchesServer } from "@/lib/get-matches" // Import the new server utility
 
 const BACKEND_API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL || "https://api.nuredo.se"
 
@@ -55,61 +53,20 @@ export default async function HomePage() {
     console.error("Server-side fetch error for homepage upcoming matches:", e)
   }
 
+  const sectionComponents: { [key: string]: JSX.Element } = {
+    hero: <Hero content={content.hero} />,
+    stats: <Stats content={content.stats} />,
+    upcomingEvents: <UpcomingEvents upcomingMatches={upcomingMatches} loading={matchesLoading} error={matchesError} />,
+    aboutClub: <AboutClub content={content.aboutClub} />,
+    partnersCarousel: <PartnersCarouselClient partners={content.partners} />,
+  }
+
   return (
     <div>
-      {/* Hero loads immediately - no lazy wrapper */}
-      <Hero content={content.hero} />
-
-      {/* All other sections are lazy loaded */}
-      <LazySectionWrapper delay={0}>
-        <Stats content={content.stats} />
-      </LazySectionWrapper>
-
-      <LazySectionWrapper delay={100}>
-        <Suspense
-          fallback={
-            <div className="py-16 bg-gray-50">
-              <div className="container mx-auto px-4 text-center">
-                <div className="bg-white rounded-lg shadow-lg p-8">
-                  <div className="animate-pulse">
-                    <div className="h-8 bg-gray-200 rounded w-64 mx-auto mb-4"></div>
-                    <div className="h-4 bg-gray-200 rounded w-48 mx-auto"></div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          }
-        >
-          <UpcomingEvents upcomingMatches={upcomingMatches} loading={matchesLoading} error={matchesError} />
-        </Suspense>
-      </LazySectionWrapper>
-
-      <LazySectionWrapper delay={200}>
-        <AboutClub content={content.aboutClub} />
-      </LazySectionWrapper>
-
-      <LazySectionWrapper delay={300}>
-        <Suspense
-          fallback={
-            <div className="py-16 bg-gray-50">
-              <div className="container mx-auto px-4 text-center">
-                <div className="bg-white rounded-lg shadow-lg p-8">
-                  <div className="animate-pulse">
-                    <div className="h-8 bg-gray-200 rounded w-48 mx-auto mb-4"></div>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                      {[...Array(8)].map((_, i) => (
-                        <div key={i} className="h-24 bg-gray-200 rounded"></div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          }
-        >
-          <PartnersCarouselClient partners={content.partners} />
-        </Suspense>
-      </LazySectionWrapper>
+      {content.sections.map((sectionKey) => {
+        const component = sectionComponents[sectionKey]
+        return component ? <div key={sectionKey}>{component}</div> : null
+      })}
     </div>
   )
 }

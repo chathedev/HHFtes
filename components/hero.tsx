@@ -1,9 +1,8 @@
-"use client"
-
-import { Button } from "@/components/ui/button"
+import Image from "next/image"
 import Link from "next/link"
+import { Button } from "@/components/ui/button"
+import { ArrowRight } from "lucide-react"
 import type { HeroContent } from "@/lib/content-types"
-import LazyImage from "@/components/lazy-image"
 
 interface HeroProps {
   content: HeroContent
@@ -11,40 +10,41 @@ interface HeroProps {
 
 export default function Hero({ content }: HeroProps) {
   return (
-    <section className="relative bg-gradient-to-br from-green-700 via-green-600 to-orange-500 text-white overflow-hidden">
-      {/* Background Image with Lazy Loading */}
-      <div className="absolute inset-0">
-        <LazyImage
-          src="/placeholder.svg?height=800&width=1200"
-          alt="Handball action background"
-          fill
-          className="object-cover opacity-20"
-          priority={true} // Hero image should load immediately
-          sizes="100vw"
-        />
-      </div>
-
-      <div className="relative z-10 container mx-auto px-4 py-24 md:py-32 text-center">
-        <div className="max-w-4xl mx-auto">
-          <h1 className="text-5xl md:text-7xl font-bold mb-6 leading-tight">{content.title}</h1>
-          <p className="text-xl md:text-2xl mb-8 leading-relaxed opacity-90">{content.subtitle}</p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button
-              asChild
-              size="lg"
-              className="bg-orange-500 hover:bg-orange-600 text-white px-8 py-4 text-lg font-semibold rounded-full shadow-lg transition-all duration-300 hover:scale-105"
-            >
-              <Link href={content.primaryButtonLink}>{content.primaryButtonText}</Link>
-            </Button>
-            <Button
-              asChild
-              variant="outline"
-              size="lg"
-              className="border-2 border-white text-white hover:bg-white hover:text-green-700 px-8 py-4 text-lg font-semibold rounded-full shadow-lg transition-all duration-300 hover:scale-105 bg-transparent"
-            >
-              <Link href={content.secondaryButtonLink}>{content.secondaryButtonText}</Link>
-            </Button>
-          </div>
+    <section className="relative w-full h-screen flex items-center justify-center overflow-hidden">
+      <Image
+        src={content.imageUrl || "/placeholder.svg"}
+        alt="Härnösands HF Team"
+        fill
+        quality={90}
+        priority
+        className="object-cover z-0"
+      />
+      {/* Enhanced overlay for better text contrast and visual depth */}
+      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/40 to-transparent z-10" />
+      <div className="relative z-20 text-white text-center px-4 max-w-5xl mx-auto">
+        <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-extrabold mb-4 leading-tight tracking-tight animate-fade-in-up text-shadow-outline">
+          {content.title.split(" ")[0]}{" "}
+          <span className="text-orange-400">{content.title.split(" ").slice(1).join(" ")}</span>
+        </h1>
+        <p className="text-lg sm:text-xl md:text-2xl mb-10 max-w-3xl mx-auto animate-fade-in-up delay-200 text-shadow-md">
+          {content.description}
+        </p>
+        <div className="flex flex-col sm:flex-row justify-center gap-6 animate-fade-in-up delay-400">
+          <Button
+            asChild
+            className="bg-orange-500 hover:bg-orange-600 text-white px-10 py-4 rounded-full text-lg font-semibold shadow-lg transition-transform duration-300 hover:scale-105 focus:outline-none focus:ring-4 focus:ring-orange-300"
+          >
+            <Link href={content.button1Link}>
+              {content.button1Text}
+              <ArrowRight className="ml-3 h-5 w-5" />
+            </Link>
+          </Button>
+          <Button
+            asChild
+            className="bg-green-700 hover:bg-green-800 text-white px-10 py-4 rounded-full text-lg font-semibold shadow-lg transition-transform duration-300 hover:scale-105 focus:outline-none focus:ring-4 focus:ring-green-300"
+          >
+            <Link href={content.button2Link}>{content.button2Text}</Link>
+          </Button>
         </div>
       </div>
     </section>

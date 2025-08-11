@@ -1,5 +1,6 @@
 "use client"
 
+import Image from "next/image"
 import Link from "next/link"
 import type { Partner } from "@/lib/content-types"
 import { Star, Plus, Minus } from "lucide-react"
@@ -7,7 +8,6 @@ import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { useState, useEffect } from "react"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
-import LazyImage from "@/components/lazy-image"
 
 interface PartnersCarouselProps {
   partners: Partner[]
@@ -75,7 +75,7 @@ export default function PartnersCarousel({ partners }: PartnersCarouselProps) {
                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
                       {partnersByTier[tierName].map((partner) => {
                         const isDiamant = partner.tier === "Diamantpartner"
-                        const isHighcon = partner.id === "highcon"
+                        const isHighcon = partner.id === "highcon" // Assuming 'highcon' is a specific ID for special styling
                         return (
                           <div key={partner.id} className="relative group w-full h-36">
                             <Card
@@ -87,7 +87,7 @@ export default function PartnersCarousel({ partners }: PartnersCarouselProps) {
                                 <Star className="absolute top-1 right-1 w-5 h-5 text-yellow-500 fill-yellow-500" />
                               )}
                               <div className={`relative w-full mb-2 ${isHighcon ? "h-24" : "h-20"}`}>
-                                <LazyImage
+                                <Image
                                   src={partner.src || "/placeholder.svg"}
                                   alt={partner.alt}
                                   fill

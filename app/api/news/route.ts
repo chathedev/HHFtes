@@ -1,14 +1,6 @@
 import { NextResponse } from "next/server"
 import { parseStringPromise } from "xml2js"
 
-// Function to strip HTML tags from a string
-function stripHtml(html: string): string {
-  return html
-    .replace(/<[^>]*>/g, "")
-    .replace(/\s+/g, " ")
-    .trim()
-}
-
 export async function GET() {
   try {
     const rssFeedUrl = "https://www.laget.se/HarnosandsHF/Home/NewsRss"
@@ -22,7 +14,8 @@ export async function GET() {
     const result = await parseStringPromise(xmlText, { explicitArray: false, ignoreAttrs: false })
 
     const newsItems = result.rss.channel.item.map((item: any) => {
-      // Clean description: remove HTML tags and the "Publicerad" line
+      // Clean description: replace <br> with newline, remove all other HTML tags,
+      // and remove the "Publicerad" line.
       let description = item.description || ""
       description = description.replace(/<br\s*\/?>/gi, "\n") // Replace <br> with newline
       description = description.replace(/<[^>]*>/g, "") // Remove all other HTML tags
