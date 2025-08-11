@@ -1,10 +1,11 @@
-"use client" // This component needs to be a client component due to useState
+"use client"
 
-import { useState } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { Header } from "@/components/header"
 import Footer from "@/components/footer"
+import { Input } from "@/components/ui/input"
+import { Search } from "lucide-react"
 
 function formatDate(dateStr?: string) {
   try {
@@ -61,8 +62,6 @@ const NEWS = [
 ]
 
 export default function NyheterPage() {
-  const [visible, setVisible] = useState(false)
-
   return (
     <>
       <Header />
@@ -70,47 +69,49 @@ export default function NyheterPage() {
         <div className="h-24"></div> {/* Spacer for fixed header */}
         <div className="container px-4 md:px-6 py-8 md:py-12 lg:py-16">
           <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl mb-8">Senaste Nyheterna</h1>
+          <p className="text-lg text-gray-700 mb-8">
+            Här hittar du de senaste nyheterna och uppdateringarna från Härnösands HF.
+          </p>
 
-          {!visible ? (
-            <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
-              <button
-                onClick={() => setVisible(true)}
-                className="inline-flex items-center gap-2 rounded-xl px-4 py-2 border border-gray-300 hover:border-gray-400 text-gray-800 bg-gray-50 hover:bg-gray-100 transition"
-                aria-label="Kolla nyheter"
-              >
-                <span>🔎 Kolla nyheter</span>
-              </button>
+          <div className="flex justify-center mb-8">
+            <div className="relative w-full max-w-md">
+              <Input
+                type="text"
+                placeholder="Sök nyheter..."
+                className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-green-500"
+              />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
             </div>
-          ) : (
-            <ul className="grid sm:grid-cols-2 gap-4">
-              {NEWS.map((item) => (
-                <li key={item.guid} className="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm">
-                  {item.image && (
-                    <Link href={item.link} target="_blank" rel="noopener noreferrer">
-                      <Image
-                        src={item.image || "/placeholder.svg"}
-                        alt={item.title}
-                        width={600} // Added width
-                        height={400} // Added height
-                        className="w-full h-40 object-cover"
-                        priority // Use priority for images in the initial view
-                      />
-                    </Link>
-                  )}
-                  <div className="p-4">
-                    <Link href={item.link} target="_blank" rel="noopener noreferrer" className="hover:underline">
-                      <h3 className="text-lg font-semibold leading-snug">{item.title}</h3>
-                    </Link>
-                    {item.pubDate && <p className="text-xs text-gray-500 mt-1">{formatDate(item.pubDate)}</p>}
-                    <div
-                      className="prose prose-sm max-w-none text-gray-700 mt-3"
-                      dangerouslySetInnerHTML={{ __html: item.description }}
+          </div>
+
+          <ul className="grid sm:grid-cols-2 gap-4">
+            {NEWS.map((item) => (
+              <li key={item.guid} className="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm">
+                {item.image && (
+                  <Link href={item.link} target="_blank" rel="noopener noreferrer">
+                    <Image
+                      src={item.image || "/placeholder.svg"}
+                      alt={item.title}
+                      width={600} // Added width
+                      height={400} // Added height
+                      className="w-full h-40 object-cover"
+                      priority // Use priority for images in the initial view
                     />
-                  </div>
-                </li>
-              ))}
-            </ul>
-          )}
+                  </Link>
+                )}
+                <div className="p-4">
+                  <Link href={item.link} target="_blank" rel="noopener noreferrer" className="hover:underline">
+                    <h3 className="text-lg font-semibold leading-snug">{item.title}</h3>
+                  </Link>
+                  {item.pubDate && <p className="text-xs text-gray-500 mt-1">{formatDate(item.pubDate)}</p>}
+                  <div
+                    className="prose prose-sm max-w-none text-gray-700 mt-3"
+                    dangerouslySetInnerHTML={{ __html: item.description }}
+                  />
+                </div>
+              </li>
+            ))}
+          </ul>
         </div>
       </main>
       <Footer />

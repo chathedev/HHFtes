@@ -27,7 +27,7 @@ const mockMatches: Match[] = [
 export default function MatcherPage() {
   // In a real application, you would fetch this data from an API or server action
   // For now, we'll use mock data or an empty array to demonstrate the "no matches" message.
-  const allMatches: Match[] = mockMatches // Or [] to test "no matches" message
+  const allMatches: Match[] = [] // Or mockMatches to test with matches
   const error: string | null = null // Simulate no error for now
 
   const groupedMatches: GroupedMatches = allMatches.reduce((acc, match) => {
@@ -68,7 +68,7 @@ export default function MatcherPage() {
       <main className="flex-1">
         <div className="h-24"></div> {/* Spacer for fixed header */}
         <div className="container px-4 md:px-6 py-8 md:py-12 lg:py-16 flex flex-col items-center justify-center text-center">
-          <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl mb-4">Matcher</h1>
+          <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl mb-4">Kommande Matcher</h1>
           {error && (
             <p className="text-center text-red-500 mb-8">
               Fel: {error}. Detta kan bero på problem med att hämta data från källan.

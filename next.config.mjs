@@ -1,5 +1,13 @@
+import { fileURLToPath } from 'url';
+import path from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  reactStrictMode: true,
+  swcMinify: true,
   eslint: {
     ignoreDuringBuilds: true,
   },
@@ -37,11 +45,51 @@ const nextConfig = {
         hostname: "files.builder.misssite.com",
       },
       {
+        protocol: 'https',
+        hostname: 'images.unsplash.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'plus.unsplash.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'assets.vercel.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'avatars.githubusercontent.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'lh3.googleusercontent.com',
+      },
+      {
         protocol: "https",
-        hostname: "laget001.blob.core.windows.net", // Added this for Nyheter page images
+        hostname: "laget001.blob.core.windows.net", // Added for news images
       },
     ],
   },
-}
+  webpack: (config, { isServer }) => {
+    // Add a rule to handle .mjs files
+    config.module.rules.push({
+      test: /\.mjs$/,
+      include: /node_modules/,
+      type: 'javascript/auto',
+    });
 
-export default nextConfig
+    // Resolve 'fs' module for client-side if needed (e.g., for tinacms)
+    if (!isServer) {
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        fs: false,
+        path: false,
+        os: false,
+      };
+    }
+
+    return config;
+  },
+};
+
+export default nextConfig;
