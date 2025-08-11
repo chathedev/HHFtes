@@ -28,7 +28,7 @@ function Header() {
   }, [])
 
   // Define paths where the header should be visible
-  const visiblePaths = ["/", "/nyheter", "/lag", "/kontakt"]
+  const visiblePaths = ["/", "/nyheter", "/lag", "/kontakt", "/matcher"]
 
   // If the current path is not in the visiblePaths array, do not render the header
   if (!visiblePaths.includes(pathname)) {
@@ -37,21 +37,22 @@ function Header() {
 
   const navLinks = [
     { name: "Hem", href: "/" },
-    { name: "Nyheter", href: "/nyheter" }, // Changed from Arena to Nyheter
+    { name: "Nyheter", href: "/nyheter" },
     { name: "Lag", href: "/lag" },
+    { name: "Matcher", href: "/matcher" },
     { name: "Kontakt", href: "/kontakt" },
   ]
 
   return (
     <header
       className={`fixed top-0 left-0 w-full z-50 text-white shadow-lg transition-all duration-300
-  ${
-    pathname === "/"
-      ? scrolled
-        ? "bg-black/90 backdrop-blur-md"
-        : "bg-transparent backdrop-blur-none"
-      : "bg-black/90 backdrop-blur-md"
-  }
+${
+  pathname === "/"
+    ? scrolled
+      ? "bg-black/90 backdrop-blur-md"
+      : "bg-transparent backdrop-blur-none"
+    : "bg-black/90 backdrop-blur-md"
+}
 `}
     >
       <div className="container mx-auto px-4 py-4 flex justify-between items-center">
@@ -61,7 +62,6 @@ function Header() {
           </div>
           <div>
             <div className="font-bold text-xl">Härnösands HF</div>
-            {/* Removed "Förening" text */}
           </div>
         </Link>
 
@@ -81,14 +81,14 @@ function Header() {
               key={link.href}
               href={link.href}
               className={`relative text-lg font-medium py-2 group transition-colors duration-300
-                ${pathname === link.href ? "text-orange-500" : "text-white hover:text-gray-300"}
-              `}
+             ${pathname === link.href ? "text-orange-500" : "text-white hover:text-gray-300"}
+           `}
             >
               {link.name}
               <span
                 className={`absolute bottom-0 left-0 h-[3px] bg-orange-500 transition-all duration-300 ease-out
-                  ${pathname === link.href ? "w-full" : "w-0 group-hover:w-full"}
-                `}
+               ${pathname === link.href ? "w-full" : "w-0 group-hover:w-full"}
+             `}
               />
             </Link>
           ))}
@@ -103,8 +103,8 @@ function Header() {
               key={link.href}
               href={link.href}
               className={`relative text-lg font-medium py-2
-                ${pathname === link.href ? "text-orange-500" : "text-white hover:text-gray-300"}
-              `}
+             ${pathname === link.href ? "text-orange-500" : "text-white hover:text-gray-300"}
+           `}
               onClick={() => setIsMenuOpen(false)} // Close menu on link click
             >
               {link.name}
