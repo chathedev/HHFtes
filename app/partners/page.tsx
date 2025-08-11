@@ -2,7 +2,6 @@ export const dynamic = "force-dynamic"
 
 import Image from "next/image"
 import Link from "next/link"
-import { Star } from "lucide-react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { defaultContent } from "@/lib/default-content"
@@ -71,14 +70,14 @@ function PartnersPageContent({ partners }: PartnersPageContentProps) {
                         ${isDiamant ? "border-4 border-yellow-500 bg-yellow-50" : "bg-white"}
                       `}
                     >
-                      {isDiamant && <Star className="w-8 h-8 text-yellow-500 fill-yellow-500 mb-4" />}
+                      {isDiamant && <div className="w-8 h-8 bg-yellow-500 rounded-full mb-4"></div>}
                       <div className="relative w-full h-24 mb-4">
                         <Image
                           src={partner.src || "/placeholder.svg"}
                           alt={partner.alt}
                           fill
-                          // Removed unoptimized to allow Next.js image optimization
                           className="object-contain"
+                          sizes="(max-width: 768px) 50vw, 25vw"
                         />
                       </div>
                       <h3 className="text-xl font-semibold text-gray-900 mb-2">{partner.alt}</h3>

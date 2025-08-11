@@ -1,5 +1,4 @@
 import Link from "next/link"
-import { Facebook, Instagram, Mail, MapPin, ExternalLink } from "lucide-react"
 
 export default function Footer() {
   return (
@@ -17,7 +16,7 @@ export default function Footer() {
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                <Facebook size={20} />
+                <div className="w-5 h-5 bg-gray-400 rounded"></div>
               </Link>
               <Link
                 href="https://www.instagram.com/harnosandshf"
@@ -25,7 +24,7 @@ export default function Footer() {
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                <Instagram size={20} />
+                <div className="w-5 h-5 bg-gray-400 rounded"></div>
               </Link>
             </div>
           </div>
@@ -62,11 +61,11 @@ export default function Footer() {
             <h3 className="text-xl font-bold text-orange-400">Kontakt</h3>
             <div className="space-y-2">
               <div className="flex items-center space-x-2 text-gray-300">
-                <Mail size={16} />
+                <div className="w-4 h-4 bg-gray-300 rounded"></div>
                 <span>info@harnosandshf.se</span>
               </div>
               <div className="flex items-center space-x-2 text-gray-300">
-                <MapPin size={16} />
+                <div className="w-4 h-4 bg-gray-300 rounded"></div>
                 <span>Härnösand, Sverige</span>
               </div>
             </div>
@@ -92,10 +91,7 @@ export default function Footer() {
               <span className="bg-gradient-to-r from-blue-400 to-blue-600 bg-clip-text text-transparent font-bold group-hover:from-blue-300 group-hover:to-blue-500 transition-all duration-300">
                 Websites by You
               </span>
-              <ExternalLink
-                size={12}
-                className="text-blue-400 group-hover:text-blue-300 transition-colors duration-300"
-              />
+              <div className="w-3 h-3 bg-blue-400 rounded"></div>
             </Link>
           </div>
         </div>

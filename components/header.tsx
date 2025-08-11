@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import Image from "next/image"
-import { Menu, X } from "lucide-react"
 import { usePathname } from "next/navigation"
 
 function Header() {
@@ -72,7 +71,7 @@ function Header() {
           onClick={() => setIsMenuOpen(!isMenuOpen)}
           aria-label="Toggle navigation menu"
         >
-          {isMenuOpen ? <X size={28} /> : <Menu size={28} />}
+          <div className={`w-7 h-7 ${isMenuOpen ? 'bg-red-500' : 'bg-white'} rounded`}></div>
         </button>
 
         {/* Desktop navigation */}

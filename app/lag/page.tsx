@@ -1,5 +1,4 @@
 import Link from "next/link"
-import { ChevronLeft, ExternalLink, Instagram } from "lucide-react"
 import { Card } from "@/components/ui/card"
 
 export default function LagPage() {
@@ -75,10 +74,7 @@ export default function LagPage() {
   return (
     <div className="flex flex-col min-h-screen bg-white">
       <main className="flex-1 py-8 px-4 md:px-6 lg:px-8 max-w-7xl mx-auto w-full">
-        <Link href="/" className="inline-flex items-center text-green-700 hover:underline mb-8">
-          <ChevronLeft className="w-4 h-4 mr-2" />
-          Tillbaka till startsidan
-        </Link>
+        <Link href="/" className="inline-flex items-center text-green-700 hover:underline mb-8">← Tillbaka till startsidan</Link>
 
         <h1 className="text-5xl font-bold text-green-700 mb-4 text-center">VÅRA LAG</h1>
         <p className="text-lg text-gray-700 mb-12 text-center max-w-3xl mx-auto">
@@ -123,7 +119,7 @@ export default function LagPage() {
                     className="inline-flex items-center text-green-700 hover:underline font-medium group"
                   >
                     Besök lagets sida
-                    <ExternalLink className="w-4 h-4 ml-2 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+                    <div className="w-4 h-4 bg-green-700 rounded ml-2"></div>
                   </Link>
                   {team.instagramLink && (
                     <Link
@@ -133,7 +129,7 @@ export default function LagPage() {
                       className="inline-flex items-center text-pink-600 hover:underline font-medium group mt-2"
                     >
                       Följ på Instagram
-                      <Instagram className="w-4 h-4 ml-2 transition-transform group-hover:scale-110" />
+                      <div className="w-4 h-4 bg-pink-600 rounded ml-2"></div>
                     </Link>
                   )}
                 </Card>

@@ -6,8 +6,15 @@ const nextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
+  experimental: {
+    optimizePackageImports: ['lucide-react', '@radix-ui/react-toast', '@radix-ui/react-collapsible'],
+  },
+  compiler: {
+    removeConsole: process.env.NODE_ENV === 'production',
+  },
   images: {
-    // Removed unoptimized: true to allow Next.js image optimization
+    formats: ['image/webp', 'image/avif'],
+    minimumCacheTTL: 31536000, // 1 year
     remotePatterns: [
       {
         protocol: "https",
@@ -39,6 +46,8 @@ const nextConfig = {
       },
     ],
   },
+  poweredByHeader: false,
+  compress: true,
 }
 
 export default nextConfig

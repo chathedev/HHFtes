@@ -1,5 +1,4 @@
 import Link from "next/link"
-import { ChevronLeft, CalendarDays, LinkIcon } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import Image from "next/image"
 
@@ -33,10 +32,7 @@ export default async function NyheterPage() {
   return (
     <div className="flex flex-col min-h-screen bg-white">
       <main className="flex-1 py-8 px-4 md:px-6 lg:px-8 max-w-7xl mx-auto w-full">
-        <Link href="/" className="inline-flex items-center text-green-700 hover:underline mb-8">
-          <ChevronLeft className="w-4 h-4 mr-2" />
-          Tillbaka till startsidan
-        </Link>
+        <Link href="/" className="inline-flex items-center text-green-700 hover:underline mb-8">← Tillbaka till startsidan</Link>
 
         <h1 className="text-5xl font-bold text-green-700 mb-4 text-center">Nyheter</h1>
         <p className="text-xl text-gray-700 mb-12 text-center max-w-3xl mx-auto">
@@ -64,7 +60,7 @@ export default async function NyheterPage() {
               <CardHeader>
                 <CardTitle className="text-xl font-semibold text-gray-800 mb-2">{item.title}</CardTitle>
                 <div className="flex items-center text-sm text-gray-500">
-                  <CalendarDays className="w-4 h-4 mr-1" />
+                  <div className="w-4 h-4 bg-gray-500 rounded mr-1"></div>
                   <span>
                     {new Date(item.pubDate).toLocaleDateString("sv-SE", {
                       year: "numeric",
@@ -83,7 +79,7 @@ export default async function NyheterPage() {
                   className="inline-flex items-center text-orange-500 hover:underline font-medium mt-auto"
                 >
                   Läs mer
-                  <LinkIcon className="w-4 h-4 ml-2" />
+                  <div className="w-4 h-4 bg-orange-500 rounded ml-2"></div>
                 </Link>
               </CardContent>
             </Card>

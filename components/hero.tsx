@@ -1,7 +1,6 @@
 import Image from "next/image"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { ArrowRight } from "lucide-react"
 import type { HeroContent } from "@/lib/content-types"
 
 interface HeroProps {
@@ -15,9 +14,10 @@ export default function Hero({ content }: HeroProps) {
         src={content.imageUrl || "/placeholder.svg"}
         alt="Härnösands HF Team"
         fill
-        quality={90}
+        quality={75}
         priority
         className="object-cover z-0"
+        sizes="100vw"
       />
       {/* Enhanced overlay for better text contrast and visual depth */}
       <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/40 to-transparent z-10" />
@@ -36,7 +36,6 @@ export default function Hero({ content }: HeroProps) {
           >
             <Link href={content.button1Link}>
               {content.button1Text}
-              <ArrowRight className="ml-3 h-5 w-5" />
             </Link>
           </Button>
           <Button
