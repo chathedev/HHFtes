@@ -3,6 +3,8 @@ import { ExternalLink, Instagram } from "lucide-react"
 import { Card } from "@/components/ui/card"
 import { Header } from "@/components/header"
 import Footer from "@/components/footer"
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
+import { Button } from "@/components/ui/button"
 
 export default function LagPage() {
   const teamCategories = [
@@ -141,6 +143,65 @@ export default function LagPage() {
               </div>
             </section>
           ))}
+
+          <section className="mt-16">
+            <div className="bg-white shadow-lg rounded-lg p-8 md:p-12 max-w-4xl mx-auto">
+              <h2 className="text-3xl font-bold text-green-700 mb-8 text-center">Vanliga frågor om att börja träna</h2>
+              <Accordion type="single" collapsible className="w-full">
+                <AccordionItem value="item-1">
+                  <AccordionTrigger className="text-lg font-semibold text-gray-800 hover:no-underline">
+                    Hur börjar jag spela handboll i Härnösands HF?
+                  </AccordionTrigger>
+                  <AccordionContent className="text-gray-700 text-base">
+                    Det enklaste sättet att börja är att kontakta oss! Vi hjälper dig att hitta rätt lag baserat på din
+                    ålder och erfarenhet. Du kan fylla i vårt kontaktformulär eller skicka ett mejl direkt till oss.
+                    <Link href="/kontakt" className="text-orange-500 hover:underline ml-2">
+                      Kontakta oss här.
+                    </Link>
+                  </AccordionContent>
+                </AccordionItem>
+                <AccordionItem value="item-2">
+                  <AccordionTrigger className="text-lg font-semibold text-gray-800 hover:no-underline">
+                    Vilken utrustning behöver jag?
+                  </AccordionTrigger>
+                  <AccordionContent className="text-gray-700 text-base">
+                    Till en början behöver du bara bekväma träningskläder, inomhusskor och en vattenflaska. Handbollar
+                    finns att låna under träningarna. När du väl bestämmer dig för att fortsätta kan du behöva
+                    klubbkläder.
+                  </AccordionContent>
+                </AccordionItem>
+                <AccordionItem value="item-3">
+                  <AccordionTrigger className="text-lg font-semibold text-gray-800 hover:no-underline">
+                    Finns det provträningar?
+                  </AccordionTrigger>
+                  <AccordionContent className="text-gray-700 text-base">
+                    Absolut! Vi erbjuder alltid några kostnadsfria provträningar så att du kan känna efter om handboll
+                    är något för dig. Detta ger dig en chans att träffa laget och tränarna innan du bestämmer dig.
+                  </AccordionContent>
+                </AccordionItem>
+                <AccordionItem value="item-4">
+                  <AccordionTrigger className="text-lg font-semibold text-gray-800 hover:no-underline">
+                    Hur anmäler jag mig?
+                  </AccordionTrigger>
+                  <AccordionContent className="text-gray-700 text-base">
+                    Efter dina provträningar får du information om hur du enkelt anmäler dig och blir en fullvärdig
+                    medlem i Härnösands HF. Vi ser fram emot att välkomna dig till vår handbollsfamilj!
+                    <Link href="/kontakt" className="text-orange-500 hover:underline ml-2">
+                      Anmäl dig via kontaktformuläret.
+                    </Link>
+                  </AccordionContent>
+                </AccordionItem>
+              </Accordion>
+              <div className="text-center mt-8">
+                <Button
+                  asChild
+                  className="bg-orange-500 hover:bg-orange-600 text-white px-8 py-3 rounded-md text-lg font-semibold transition-colors"
+                >
+                  <Link href="/kontakt">Kontakta oss för mer information</Link>
+                </Button>
+              </div>
+            </div>
+          </section>
         </div>
       </main>
       <Footer />
