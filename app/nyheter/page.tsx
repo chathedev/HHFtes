@@ -66,10 +66,9 @@ export default function NyheterPage() {
   return (
     <>
       <Header />
-      <main className="flex-1 py-8 md:py-12 lg:py-16 pt-32">
-        {" "}
-        {/* Increased pt to pt-32 */}
-        <div className="container px-4 md:px-6">
+      <main className="flex-1">
+        <div className="h-24"></div> {/* Spacer for fixed header */}
+        <div className="container px-4 md:px-6 py-8 md:py-12 lg:py-16">
           <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl mb-8">Senaste Nyheterna</h1>
 
           {!visible ? (

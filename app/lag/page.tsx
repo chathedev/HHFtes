@@ -1,5 +1,3 @@
-"use client"
-
 import Link from "next/link"
 import { ExternalLink, Instagram } from "lucide-react"
 import { Card } from "@/components/ui/card"
@@ -79,39 +77,14 @@ export default function LagPage() {
   return (
     <>
       <Header />
-      <main className="flex-1 py-8 md:py-12 lg:py-16 pt-32">
-        {" "}
-        {/* Increased pt to pt-32 */}
-        <div className="container px-4 md:px-6">
-          <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl mb-8">Våra Lag</h1>
-          <p className="text-lg text-gray-700">
+      <main className="flex-1">
+        <div className="h-24"></div> {/* Spacer for fixed header */}
+        <div className="container px-4 md:px-6 py-8 md:py-12 lg:py-16">
+          <h1 className="text-5xl font-bold text-green-700 mb-4 text-center">VÅRA LAG</h1>
+          <p className="text-lg text-gray-700 mb-12 text-center max-w-3xl mx-auto">
             Härnösands HF har {totalTeams} lag från ungdom till seniorer. Klicka på ett lag för att besöka deras
             officiella sida.
           </p>
-          {/* Add more content related to teams here */}
-          <div className="mt-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <div className="bg-white p-6 rounded-lg shadow-md">
-              <h2 className="text-xl font-semibold mb-2">Herrlaget</h2>
-              <p className="text-gray-600">Följ vårt herrlag i deras matcher och träningar.</p>
-              <Link href="#" className="text-orange-500 hover:underline mt-4 inline-block">
-                Läs mer
-              </Link>
-            </div>
-            <div className="bg-white p-6 rounded-lg shadow-md">
-              <h2 className="text-xl font-semibold mb-2">Damlaget</h2>
-              <p className="text-gray-600">Stöd vårt damlag på deras resa mot nya framgångar.</p>
-              <Link href="#" className="text-orange-500 hover:underline mt-4 inline-block">
-                Läs more
-              </Link>
-            </div>
-            <div className="bg-white p-6 rounded-lg shadow-md">
-              <h2 className="text-xl font-semibold mb-2">Ungdomslag</h2>
-              <p className="text-gray-600">Våra framtida stjärnor i olika åldersgrupper.</p>
-              <Link href="#" className="text-orange-500 hover:underline mt-4 inline-block">
-                Läs mer
-              </Link>
-            </div>
-          </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12 text-center">
             <Card className="p-6 bg-white/80 shadow-lg rounded-lg">

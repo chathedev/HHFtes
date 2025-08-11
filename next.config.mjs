@@ -7,7 +7,6 @@ const nextConfig = {
     ignoreBuildErrors: true,
   },
   images: {
-    // Removed unoptimized: true to allow Next.js image optimization
     remotePatterns: [
       {
         protocol: "https",
@@ -36,6 +35,10 @@ const nextConfig = {
       {
         protocol: "https",
         hostname: "files.builder.misssite.com",
+      },
+      {
+        protocol: "https",
+        hostname: "laget001.blob.core.windows.net", // Added this for Nyheter page images
       },
     ],
   },
