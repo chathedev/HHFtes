@@ -3,7 +3,8 @@
 import { useState } from "react"
 import Image from "next/image"
 import Link from "next/link"
-import { ChevronLeft } from "lucide-react"
+import { Header } from "@/components/header"
+import Footer from "@/components/footer"
 
 function formatDate(dateStr?: string) {
   try {
@@ -63,13 +64,12 @@ export default function NyheterPage() {
   const [visible, setVisible] = useState(false)
 
   return (
-    <div className="flex flex-col min-h-screen bg-white">
-      <main className="flex-1 py-8 md:py-12 lg:py-16">
+    <>
+      <Header />
+      <main className="flex-1 py-8 md:py-12 lg:py-16 pt-32">
+        {" "}
+        {/* Increased pt to pt-32 */}
         <div className="container px-4 md:px-6">
-          <Link href="/" className="inline-flex items-center text-green-700 hover:underline mb-8">
-            <ChevronLeft className="w-4 h-4 mr-2" />
-            Tillbaka till startsidan
-          </Link>
           <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl mb-8">Senaste Nyheterna</h1>
 
           {!visible ? (
@@ -114,6 +114,7 @@ export default function NyheterPage() {
           )}
         </div>
       </main>
-    </div>
+      <Footer />
+    </>
   )
 }

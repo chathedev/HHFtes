@@ -1,6 +1,10 @@
+"use client"
+
 import Link from "next/link"
-import { ChevronLeft, ExternalLink, Instagram } from "lucide-react"
+import { ExternalLink, Instagram } from "lucide-react"
 import { Card } from "@/components/ui/card"
+import { Header } from "@/components/header"
+import Footer from "@/components/footer"
 
 export default function LagPage() {
   const teamCategories = [
@@ -73,75 +77,100 @@ export default function LagPage() {
   const totalTeams = teamCategories.reduce((sum, cat) => sum + cat.count, 0)
 
   return (
-    <div className="flex flex-col min-h-screen bg-white">
-      <main className="flex-1 py-8 px-4 md:px-6 lg:px-8 max-w-7xl mx-auto w-full">
-        <Link href="/" className="inline-flex items-center text-green-700 hover:underline mb-8">
-          <ChevronLeft className="w-4 h-4 mr-2" />
-          Tillbaka till startsidan
-        </Link>
-
-        <h1 className="text-5xl font-bold text-green-700 mb-4 text-center">VÅRA LAG</h1>
-        <p className="text-lg text-gray-700 mb-12 text-center max-w-3xl mx-auto">
-          Härnösands HF har {totalTeams} lag från ungdom till seniorer. Klicka på ett lag för att besöka deras
-          officiella sida.
-        </p>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12 text-center">
-          <Card className="p-6 bg-white/80 shadow-lg rounded-lg">
-            <div className="text-5xl font-bold text-green-700">
-              {teamCategories.find((c) => c.name === "A-lag")?.count || 0}
+    <>
+      <Header />
+      <main className="flex-1 py-8 md:py-12 lg:py-16 pt-32">
+        {" "}
+        {/* Increased pt to pt-32 */}
+        <div className="container px-4 md:px-6">
+          <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl mb-8">Våra Lag</h1>
+          <p className="text-lg text-gray-700">
+            Härnösands HF har {totalTeams} lag från ungdom till seniorer. Klicka på ett lag för att besöka deras
+            officiella sida.
+          </p>
+          {/* Add more content related to teams here */}
+          <div className="mt-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="bg-white p-6 rounded-lg shadow-md">
+              <h2 className="text-xl font-semibold mb-2">Herrlaget</h2>
+              <p className="text-gray-600">Följ vårt herrlag i deras matcher och träningar.</p>
+              <Link href="#" className="text-orange-500 hover:underline mt-4 inline-block">
+                Läs mer
+              </Link>
             </div>
-            <div className="text-lg text-gray-600">A-lag</div>
-          </Card>
-          <Card className="p-6 bg-white/80 shadow-lg rounded-lg">
-            <div className="text-5xl font-bold text-green-700">
-              {teamCategories.find((c) => c.name === "Ungdomslag")?.count || 0}
+            <div className="bg-white p-6 rounded-lg shadow-md">
+              <h2 className="text-xl font-semibold mb-2">Damlaget</h2>
+              <p className="text-gray-600">Stöd vårt damlag på deras resa mot nya framgångar.</p>
+              <Link href="#" className="text-orange-500 hover:underline mt-4 inline-block">
+                Läs more
+              </Link>
             </div>
-            <div className="text-lg text-gray-600">Ungdomslag</div>
-          </Card>
-          <Card className="p-6 bg-white/80 shadow-lg rounded-lg">
-            <div className="text-5xl font-bold text-green-700">{totalTeams}</div>
-            <div className="text-lg text-gray-600">Totalt</div>
-          </Card>
-        </div>
+            <div className="bg-white p-6 rounded-lg shadow-md">
+              <h2 className="text-xl font-semibold mb-2">Ungdomslag</h2>
+              <p className="text-gray-600">Våra framtida stjärnor i olika åldersgrupper.</p>
+              <Link href="#" className="text-orange-500 hover:underline mt-4 inline-block">
+                Läs mer
+              </Link>
+            </div>
+          </div>
 
-        {teamCategories.map((category) => (
-          <section key={category.name} className="mb-12">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-3xl font-bold text-orange-500">{category.name}</h2>
-              <span className="text-xl font-bold text-orange-500">{category.count}</span>
-            </div>
-            <p className="text-lg text-gray-700 mb-8">{category.count} lag i kategorin</p>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {category.teams.map((team, index) => (
-                <Card key={index} className="p-6 bg-white/80 shadow-lg rounded-lg flex flex-col justify-between">
-                  <h3 className="text-xl font-semibold text-gray-800 mb-4">{team.name}</h3>
-                  <Link
-                    href={team.link}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center text-green-700 hover:underline font-medium group"
-                  >
-                    Besök lagets sida
-                    <ExternalLink className="w-4 h-4 ml-2 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
-                  </Link>
-                  {team.instagramLink && (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12 text-center">
+            <Card className="p-6 bg-white/80 shadow-lg rounded-lg">
+              <div className="text-5xl font-bold text-green-700">
+                {teamCategories.find((c) => c.name === "A-lag")?.count || 0}
+              </div>
+              <div className="text-lg text-gray-600">A-lag</div>
+            </Card>
+            <Card className="p-6 bg-white/80 shadow-lg rounded-lg">
+              <div className="text-5xl font-bold text-green-700">
+                {teamCategories.find((c) => c.name === "Ungdomslag")?.count || 0}
+              </div>
+              <div className="text-lg text-gray-600">Ungdomslag</div>
+            </Card>
+            <Card className="p-6 bg-white/80 shadow-lg rounded-lg">
+              <div className="text-5xl font-bold text-green-700">{totalTeams}</div>
+              <div className="text-lg text-gray-600">Totalt</div>
+            </Card>
+          </div>
+
+          {teamCategories.map((category) => (
+            <section key={category.name} className="mb-12">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-3xl font-bold text-orange-500">{category.name}</h2>
+                <span className="text-xl font-bold text-orange-500">{category.count}</span>
+              </div>
+              <p className="text-lg text-gray-700 mb-8">{category.count} lag i kategorin</p>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {category.teams.map((team, index) => (
+                  <Card key={index} className="p-6 bg-white/80 shadow-lg rounded-lg flex flex-col justify-between">
+                    <h3 className="text-xl font-semibold text-gray-800 mb-4">{team.name}</h3>
                     <Link
-                      href={team.instagramLink}
+                      href={team.link}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center text-pink-600 hover:underline font-medium group mt-2"
+                      className="inline-flex items-center text-green-700 hover:underline font-medium group"
                     >
-                      Följ på Instagram
-                      <Instagram className="w-4 h-4 ml-2 transition-transform group-hover:scale-110" />
+                      Besök lagets sida
+                      <ExternalLink className="w-4 h-4 ml-2 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
                     </Link>
-                  )}
-                </Card>
-              ))}
-            </div>
-          </section>
-        ))}
+                    {team.instagramLink && (
+                      <Link
+                        href={team.instagramLink}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center text-pink-600 hover:underline font-medium group mt-2"
+                      >
+                        Följ på Instagram
+                        <Instagram className="w-4 h-4 ml-2 transition-transform group-hover:scale-110" />
+                      </Link>
+                    )}
+                  </Card>
+                ))}
+              </div>
+            </section>
+          ))}
+        </div>
       </main>
-    </div>
+      <Footer />
+    </>
   )
 }
