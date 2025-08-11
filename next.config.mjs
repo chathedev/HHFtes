@@ -39,6 +39,9 @@ const nextConfig = {
       },
     ],
   },
+  experimental: {
+    ppr: 'incremental', // Enable Partial Prerendering
+  },
 }
 
 export default nextConfig

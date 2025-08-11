@@ -4,10 +4,14 @@ import type { FullContent } from "@/lib/content-types"
 import { defaultContent } from "@/lib/default-content"
 import Hero from "@/components/hero"
 import Stats from "@/components/stats"
-import UpcomingEvents from "@/components/upcoming-events" // Client component
 import AboutClub from "@/components/about-club"
-import PartnersCarouselClient from "@/app/partners-carousel-client" // Client component for carousel
-import { getUpcomingMatchesServer } from "@/lib/get-matches" // Import the new server utility
+import { getUpcomingMatchesServer } from "@/lib/get-matches"
+import UpcomingEvents from "@/components/upcoming-events"
+import PartnersCarouselClient from "@/app/partners-carousel-client"
+import LazySectionWrapper from "@/components/lazy-section-wrapper"
+
+import { Suspense } from "react"
+import type { JSX } from "react/jsx-runtime"
 
 const BACKEND_API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL || "https://api.nuredo.se"
 
@@ -53,19 +57,53 @@ export default async function HomePage() {
     console.error("Server-side fetch error for homepage upcoming matches:", e)
   }
 
+  // Define lightweight fallback components for Suspense
+  const upcomingEventsFallback = (
+    <section className="py-16 bg-gray-50">
+      <div className="container mx-auto px-4">
+        <div className="bg-white rounded-lg shadow-lg overflow-hidden max-w-2xl mx-auto p-6 text-center text-gray-600">
+          Laddar kommande matcher...
+        </div>
+      </div>
+    </section>
+  )
+
+  const partnersCarouselFallback = (
+    <section className="py-16 bg-gray-100">
+      <div className="container mx-auto px-4">
+        <div className="bg-white rounded-lg shadow-lg overflow-hidden p-6 text-center text-gray-600">
+          Laddar partners...
+        </div>
+      </div>
+    </section>
+  )
+
   const sectionComponents: { [key: string]: JSX.Element } = {
     hero: <Hero content={content.hero} />,
     stats: <Stats content={content.stats} />,
-    upcomingEvents: <UpcomingEvents upcomingMatches={upcomingMatches} loading={matchesLoading} error={matchesError} />,
+    upcomingEvents: (
+      <Suspense fallback={upcomingEventsFallback}>
+        <UpcomingEvents upcomingMatches={upcomingMatches} loading={matchesLoading} error={matchesError} />
+      </Suspense>
+    ),
     aboutClub: <AboutClub content={content.aboutClub} />,
-    partnersCarousel: <PartnersCarouselClient partners={content.partners} />,
+    partnersCarousel: (
+      <Suspense fallback={partnersCarouselFallback}>
+        <PartnersCarouselClient partners={content.partners} />
+      </Suspense>
+    ),
   }
 
   return (
     <div>
-      {content.sections.map((sectionKey) => {
+      {content.sections.map((sectionKey, index) => {
         const component = sectionComponents[sectionKey]
-        return component ? <div key={sectionKey}>{component}</div> : null
+        // Wrap all sections in LazySectionWrapper for consistent fade-in animation
+        return component ? (
+          <LazySectionWrapper key={sectionKey} delay={index * 100}>
+            {component}
+          </LazySectionWrapper>
+        ) : null
       })}
     </div>
   )
