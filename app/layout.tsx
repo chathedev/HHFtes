@@ -2,19 +2,14 @@ import type React from "react"
 import type { Metadata } from "next"
 import { Inter } from "next/font/google"
 import "./globals.css"
-import Header from "@/components/header"
-import Footer from "@/components/footer"
+import { ThemeProvider } from "@/components/theme-provider"
 
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_VERCEL_URL || "http://localhost:3000"),
-  title: {
-    default: "Härnösands HF - Handbollsklubb",
-    template: "%s | Härnösands HF",
-  },
-  description:
-    "Härnösands Handbollsförening – en handbollsklubb med stolthet, gemenskap och passion för sporten. Följ våra lag, nyheter och evenemang.",
+  title: "Härnösands HF",
+  description: "Härnösands Handbollsförening - En förening för alla som älskar handboll.",
   keywords: [
     "Härnösands HF",
     "Handboll Härnösand",
@@ -81,11 +76,11 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="sv">
-      <body className={`${inter.className} bg-white`}>
-        <Header />
-        <main>{children}</main>
-        <Footer />
+    <html lang="en" suppressHydrationWarning>
+      <body className={inter.className}>
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+          {children}
+        </ThemeProvider>
       </body>
     </html>
   )
