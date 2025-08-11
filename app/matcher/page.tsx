@@ -140,8 +140,8 @@ export default function MatcherPage() {
                 </AccordionTrigger>
                 <AccordionContent className="text-gray-700 text-base">
                   Till en början behöver du bara bekväma träningskläder, inomhusskor och en vattenflaska. Handbollar
-                  finns att låna under träningarna. När du väl bestämmer dig för att fortsätta kan du behöva en egen
-                  handboll och eventuellt klubbkläder.
+                  finns att låna under träningarna. När du väl bestämmer dig för att fortsätta kan du behöva
+                  klubbkläder.
                 </AccordionContent>
               </AccordionItem>
               <AccordionItem value="item-3">
