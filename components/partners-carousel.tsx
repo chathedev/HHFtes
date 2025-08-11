@@ -3,6 +3,7 @@
 import Image from "next/image"
 import Link from "next/link"
 import type { Partner } from "@/lib/content-types"
+import { Star, Plus, Minus } from "lucide-react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { useState, useEffect } from "react"
@@ -61,7 +62,11 @@ export default function PartnersCarousel({ partners }: PartnersCarouselProps) {
                   <div className="flex justify-between items-center mb-4 cursor-pointer">
                     <h3 className="text-3xl font-bold text-green-600">{tierName}</h3>
                     <Button variant="ghost" size="icon" aria-expanded={openTier === tierName}>
-                      <div className={`w-6 h-6 bg-green-700 ${openTier === tierName ? 'rounded' : 'rounded-full'}`}></div>
+                      {openTier === tierName ? (
+                        <Minus className="w-6 h-6 text-green-700" />
+                      ) : (
+                        <Plus className="w-6 h-6 text-green-700" />
+                      )}
                     </Button>
                   </div>
                 </CollapsibleTrigger>
@@ -78,14 +83,15 @@ export default function PartnersCarousel({ partners }: PartnersCarouselProps) {
                                 ${isDiamant ? "border-2 border-yellow-500" : "bg-white/80"}
                               `}
                             >
-                              {isDiamant && <div className="absolute top-1 right-1 w-5 h-5 bg-yellow-500 rounded-full"></div>}
+                              {isDiamant && (
+                                <Star className="absolute top-1 right-1 w-5 h-5 text-yellow-500 fill-yellow-500" />
+                              )}
                               <div className={`relative w-full mb-2 ${isHighcon ? "h-24" : "h-20"}`}>
                                 <Image
                                   src={partner.src || "/placeholder.svg"}
                                   alt={partner.alt}
                                   fill
                                   className="object-contain transition-transform duration-300 group-hover:scale-105"
-                                  sizes="(max-width: 768px) 50vw, 25vw"
                                 />
                               </div>
                               <h4 className={`text-sm font-semibold ${isDiamant ? "text-gray-900" : "text-gray-800"}`}>

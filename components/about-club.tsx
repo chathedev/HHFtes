@@ -2,6 +2,7 @@
 
 import Image from "next/image"
 import Link from "next/link"
+import { Heart, TrendingUp, Users } from "lucide-react"
 import type { AboutClubContent } from "@/lib/content-types"
 
 interface AboutClubProps {
@@ -22,19 +23,19 @@ export default function AboutClub({ content }: AboutClubProps) {
 
             <div className="grid grid-cols-3 gap-4 mb-8">
               <div className="border border-gray-200 rounded-lg p-4 text-center">
-                <div className="w-8 h-8 bg-green-600 rounded-full mx-auto mb-2"></div>
+                <Heart className="w-8 h-8 text-green-600 mx-auto mb-2" />
                 <h4 className="font-medium mb-1">Passion</h4>
                 <p className="text-xs text-gray-600">{content.passionText}</p>
               </div>
 
               <div className="border border-gray-200 rounded-lg p-4 text-center">
-                <div className="w-8 h-8 bg-orange-500 rounded-full mx-auto mb-2"></div>
+                <TrendingUp className="w-8 h-8 text-orange-500 mx-auto mb-2" />
                 <h4 className="font-medium mb-1">Utveckling</h4>
                 <p className="text-xs text-gray-600">{content.developmentText}</p>
               </div>
 
               <div className="border border-gray-200 rounded-lg p-4 text-center">
-                <div className="w-8 h-8 bg-green-600 rounded-full mx-auto mb-2"></div>
+                <Users className="w-8 h-8 text-green-600 mx-auto mb-2" />
                 <h4 className="font-medium mb-1">Gemenskap</h4>
                 <p className="text-xs text-gray-600">{content.communityText}</p>
               </div>
@@ -63,7 +64,8 @@ export default function AboutClub({ content }: AboutClubProps) {
                 alt={content.imageAlt}
                 fill
                 className="object-cover"
-                sizes="(max-width: 768px) 100vw, 50vw"
+                onContextMenu={(e) => e.preventDefault()}
+                onDragStart={(e) => e.preventDefault()}
               />
             </div>
 

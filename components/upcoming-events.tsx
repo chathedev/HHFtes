@@ -1,5 +1,6 @@
 "use client" // This component remains a client component for interactivity, but data is passed from server
 
+import { CalendarDays, Clock, ArrowRight, Goal } from "lucide-react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -31,7 +32,7 @@ export default function UpcomingEvents({ upcomingMatches, loading, error }: Upco
       <div className="container mx-auto px-4">
         <Card className="bg-white rounded-lg shadow-lg overflow-hidden max-w-2xl mx-auto">
           <CardHeader className="p-6 flex flex-col items-center text-center border-b border-gray-200">
-            <div className="w-16 h-16 bg-green-600 rounded-full mb-4"></div>
+            <Goal className="w-16 h-16 text-green-600 mb-4" />
             <CardTitle className="text-3xl font-bold text-green-600 mb-2">KOMMANDE MATCHER</CardTitle>
             <p className="text-gray-600 text-lg">Håll dig uppdaterad med våra nästa matcher!</p>
           </CardHeader>
@@ -55,13 +56,13 @@ export default function UpcomingEvents({ upcomingMatches, loading, error }: Upco
                       className="flex items-center gap-4 p-3 bg-gray-50 rounded-md border border-gray-200"
                     >
                       <div className="flex-shrink-0 text-center">
-                        <div className="w-6 h-6 bg-orange-500 rounded mx-auto"></div>
+                        <CalendarDays className="w-6 h-6 text-orange-500" />
                         <span className="block text-xs text-gray-600">{formatMatchDate(match.date)}</span>
                       </div>
                       <div className="flex-grow">
                         <h4 className="font-semibold text-gray-800">{match.title}</h4>
                         <div className="flex items-center text-sm text-gray-500 mt-1">
-                          <div className="w-4 h-4 bg-gray-500 rounded mr-1"></div>
+                          <Clock className="w-4 h-4 mr-1" />
                           <span>{match.time}</span>
                         </div>
                       </div>
@@ -78,6 +79,7 @@ export default function UpcomingEvents({ upcomingMatches, loading, error }: Upco
               >
                 <Link href="/matcher">
                   Visa Alla Matcher
+                  <ArrowRight className="ml-2 h-5 w-5" />
                 </Link>
               </Button>
             </div>
