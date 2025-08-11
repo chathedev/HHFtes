@@ -4,14 +4,12 @@ import type { FullContent } from "@/lib/content-types"
 import { defaultContent } from "@/lib/default-content"
 import Hero from "@/components/hero"
 import Stats from "@/components/stats"
-import AboutClub from "@/components/about-club"
-import { getUpcomingMatchesServer } from "@/lib/get-matches"
 import UpcomingEvents from "@/components/upcoming-events"
+import AboutClub from "@/components/about-club"
 import PartnersCarouselClient from "@/app/partners-carousel-client"
 import LazySectionWrapper from "@/components/lazy-section-wrapper"
-
+import { getUpcomingMatchesServer } from "@/lib/get-matches"
 import { Suspense } from "react"
-import type { JSX } from "react/jsx-runtime"
 
 const BACKEND_API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL || "https://api.nuredo.se"
 
@@ -57,54 +55,61 @@ export default async function HomePage() {
     console.error("Server-side fetch error for homepage upcoming matches:", e)
   }
 
-  // Define lightweight fallback components for Suspense
-  const upcomingEventsFallback = (
-    <section className="py-16 bg-gray-50">
-      <div className="container mx-auto px-4">
-        <div className="bg-white rounded-lg shadow-lg overflow-hidden max-w-2xl mx-auto p-6 text-center text-gray-600">
-          Laddar kommande matcher...
-        </div>
-      </div>
-    </section>
-  )
-
-  const partnersCarouselFallback = (
-    <section className="py-16 bg-gray-100">
-      <div className="container mx-auto px-4">
-        <div className="bg-white rounded-lg shadow-lg overflow-hidden p-6 text-center text-gray-600">
-          Laddar partners...
-        </div>
-      </div>
-    </section>
-  )
-
-  const sectionComponents: { [key: string]: JSX.Element } = {
-    hero: <Hero content={content.hero} />,
-    stats: <Stats content={content.stats} />,
-    upcomingEvents: (
-      <Suspense fallback={upcomingEventsFallback}>
-        <UpcomingEvents upcomingMatches={upcomingMatches} loading={matchesLoading} error={matchesError} />
-      </Suspense>
-    ),
-    aboutClub: <AboutClub content={content.aboutClub} />,
-    partnersCarousel: (
-      <Suspense fallback={partnersCarouselFallback}>
-        <PartnersCarouselClient partners={content.partners} />
-      </Suspense>
-    ),
-  }
-
   return (
     <div>
-      {content.sections.map((sectionKey, index) => {
-        const component = sectionComponents[sectionKey]
-        // Wrap all sections in LazySectionWrapper for consistent fade-in animation
-        return component ? (
-          <LazySectionWrapper key={sectionKey} delay={index * 100}>
-            {component}
-          </LazySectionWrapper>
-        ) : null
-      })}
+      {/* Hero loads immediately - no lazy wrapper */}
+      <Hero content={content.hero} />
+
+      {/* All other sections are lazy loaded */}
+      <LazySectionWrapper delay={0}>
+        <Stats content={content.stats} />
+      </LazySectionWrapper>
+
+      <LazySectionWrapper delay={100}>
+        <Suspense
+          fallback={
+            <div className="py-16 bg-gray-50">
+              <div className="container mx-auto px-4 text-center">
+                <div className="bg-white rounded-lg shadow-lg p-8">
+                  <div className="animate-pulse">
+                    <div className="h-8 bg-gray-200 rounded w-64 mx-auto mb-4"></div>
+                    <div className="h-4 bg-gray-200 rounded w-48 mx-auto"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          }
+        >
+          <UpcomingEvents upcomingMatches={upcomingMatches} loading={matchesLoading} error={matchesError} />
+        </Suspense>
+      </LazySectionWrapper>
+
+      <LazySectionWrapper delay={200}>
+        <AboutClub content={content.aboutClub} />
+      </LazySectionWrapper>
+
+      <LazySectionWrapper delay={300}>
+        <Suspense
+          fallback={
+            <div className="py-16 bg-gray-50">
+              <div className="container mx-auto px-4 text-center">
+                <div className="bg-white rounded-lg shadow-lg p-8">
+                  <div className="animate-pulse">
+                    <div className="h-8 bg-gray-200 rounded w-48 mx-auto mb-4"></div>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                      {[...Array(8)].map((_, i) => (
+                        <div key={i} className="h-24 bg-gray-200 rounded"></div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          }
+        >
+          <PartnersCarouselClient partners={content.partners} />
+        </Suspense>
+      </LazySectionWrapper>
     </div>
   )
 }

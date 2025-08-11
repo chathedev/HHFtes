@@ -5,9 +5,6 @@ import "./globals.css"
 import Header from "@/components/header"
 import Footer from "@/components/footer"
 
-// Opt-in to Partial Prerendering for the entire layout
-export const experimental_ppr = true
-
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {

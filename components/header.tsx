@@ -1,121 +1,81 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import Link from "next/link"
-import Image from "next/image"
-import { Menu, X } from "lucide-react"
-import { usePathname } from "next/navigation"
+import { Button } from "@/components/ui/button"
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
+import { Menu } from "lucide-react"
+import LazyImage from "@/components/lazy-image"
 
-function Header() {
-  const [isMenuOpen, setIsMenuOpen] = useState(false)
-  const [scrolled, setScrolled] = useState(false) // New state for scroll
-  const pathname = usePathname()
+export default function Header() {
+  const [isOpen, setIsOpen] = useState(false)
 
-  useEffect(() => {
-    const handleScroll = () => {
-      if (window.scrollY > 50) {
-        // Adjust scroll threshold as needed
-        setScrolled(true)
-      } else {
-        setScrolled(false)
-      }
-    }
-
-    window.addEventListener("scroll", handleScroll)
-    return () => {
-      window.removeEventListener("scroll", handleScroll)
-    }
-  }, [])
-
-  // Define paths where the header should be visible
-  const visiblePaths = ["/", "/nyheter", "/partners", "/lag", "/kontakt"]
-
-  // If the current path is not in the visiblePaths array, do not render the header
-  if (!visiblePaths.includes(pathname)) {
-    return null
-  }
-
-  const navLinks = [
+  const navigation = [
     { name: "Hem", href: "/" },
-    { name: "Nyheter", href: "/nyheter" }, // Changed from Arena to Nyheter
+    { name: "Våra Lag", href: "/lag" },
+    { name: "Nyheter", href: "/nyheter" },
+    { name: "Matcher", href: "/matcher" },
+    { name: "Kalender", href: "/kalender" },
     { name: "Partners", href: "/partners" },
-    { name: "Lag", href: "/lag" },
     { name: "Kontakt", href: "/kontakt" },
   ]
 
   return (
-    <header
-      className={`fixed top-0 left-0 w-full z-50 text-white shadow-lg transition-all duration-300
-  ${
-    pathname === "/"
-      ? scrolled
-        ? "bg-black/90 backdrop-blur-md"
-        : "bg-transparent backdrop-blur-none"
-      : "bg-black/90 backdrop-blur-md"
-  }
-`}
-    >
-      <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-        <Link href="/" className="flex items-center gap-3">
-          <div className="relative w-12 h-12">
-            <Image src="/logo.png" alt="Härnösands HF Logo" fill className="object-contain" priority />
-          </div>
-          <div>
-            <div className="font-bold text-xl">Härnösands HF</div>
-            {/* Removed "Förening" text */}
-          </div>
-        </Link>
-
-        {/* Mobile menu button */}
-        <button
-          className="md:hidden p-2"
-          onClick={() => setIsMenuOpen(!isMenuOpen)}
-          aria-label="Toggle navigation menu"
-        >
-          {isMenuOpen ? <X size={28} /> : <Menu size={28} />}
-        </button>
-
-        {/* Desktop navigation */}
-        <nav className="hidden md:flex items-center gap-8">
-          {navLinks.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              className={`relative text-lg font-medium py-2 group transition-colors duration-300
-                ${pathname === link.href ? "text-orange-500" : "text-white hover:text-gray-300"}
-              `}
-            >
-              {link.name}
-              <span
-                className={`absolute bottom-0 left-0 h-[3px] bg-orange-500 transition-all duration-300 ease-out
-                  ${pathname === link.href ? "w-full" : "w-0 group-hover:w-full"}
-                `}
+    <header className="sticky top-0 z-50 w-full border-b bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/60">
+      <div className="container mx-auto px-4">
+        <div className="flex h-16 items-center justify-between">
+          <Link href="/" className="flex items-center space-x-2">
+            <div className="relative w-10 h-10">
+              <LazyImage
+                src="/logo.png"
+                alt="Härnösands HF"
+                width={40}
+                height={40}
+                priority={true}
+                className="object-contain"
               />
-            </Link>
-          ))}
-        </nav>
-      </div>
+            </div>
+            <span className="text-xl font-bold text-green-700">Härnösands HF</span>
+          </Link>
 
-      {/* Mobile navigation */}
-      {isMenuOpen && (
-        <nav className="md:hidden bg-black/90 py-4 px-4 flex flex-col gap-4 border-t border-gray-800">
-          {navLinks.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              className={`relative text-lg font-medium py-2
-                ${pathname === link.href ? "text-orange-500" : "text-white hover:text-gray-300"}
-              `}
-              onClick={() => setIsMenuOpen(false)} // Close menu on link click
-            >
-              {link.name}
-            </Link>
-          ))}
-        </nav>
-      )}
+          {/* Desktop Navigation */}
+          <nav className="hidden md:flex items-center space-x-8">
+            {navigation.map((item) => (
+              <Link
+                key={item.name}
+                href={item.href}
+                className="text-sm font-medium text-gray-700 hover:text-green-700 transition-colors"
+              >
+                {item.name}
+              </Link>
+            ))}
+          </nav>
+
+          {/* Mobile Navigation */}
+          <Sheet open={isOpen} onOpenChange={setIsOpen}>
+            <SheetTrigger asChild className="md:hidden">
+              <Button variant="ghost" size="icon">
+                <Menu className="h-6 w-6" />
+                <span className="sr-only">Öppna meny</span>
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="right" className="w-[300px] sm:w-[400px]">
+              <div className="flex flex-col space-y-4 mt-8">
+                {navigation.map((item) => (
+                  <Link
+                    key={item.name}
+                    href={item.href}
+                    onClick={() => setIsOpen(false)}
+                    className="text-lg font-medium text-gray-700 hover:text-green-700 transition-colors py-2"
+                  >
+                    {item.name}
+                  </Link>
+                ))}
+              </div>
+            </SheetContent>
+          </Sheet>
+        </div>
+      </div>
     </header>
   )
 }
-
-export default Header
-export { Header }

@@ -1,35 +1,35 @@
 "use client"
 
 import type React from "react"
-import { useRef, useEffect, useState } from "react"
-import { cn } from "@/lib/utils" // Assuming cn utility is available
+
+import { useEffect, useRef, useState } from "react"
 
 interface LazySectionWrapperProps {
   children: React.ReactNode
-  delay?: number // Delay in milliseconds before the animation starts
-  className?: string
+  delay?: number
+  threshold?: number
 }
 
-export default function LazySectionWrapper({ children, delay = 0, className }: LazySectionWrapperProps) {
-  const sectionRef = useRef<HTMLDivElement>(null)
+export default function LazySectionWrapper({ children, delay = 0, threshold = 0.1 }: LazySectionWrapperProps) {
   const [isVisible, setIsVisible] = useState(false)
+  const [shouldRender, setShouldRender] = useState(false)
+  const sectionRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     const observer = new IntersectionObserver(
-      ([entry]) => {
+      (entries) => {
+        const [entry] = entries
         if (entry.isIntersecting) {
-          // Add a small delay before setting isVisible to true
-          const timer = setTimeout(() => {
+          setShouldRender(true)
+          setTimeout(() => {
             setIsVisible(true)
           }, delay)
-          observer.unobserve(entry.target) // Stop observing once visible
-          return () => clearTimeout(timer)
+          observer.disconnect()
         }
       },
       {
-        root: null, // viewport
-        rootMargin: "0px",
-        threshold: 0.1, // Trigger when 10% of the section is visible
+        threshold,
+        rootMargin: "50px",
       },
     )
 
@@ -38,22 +38,18 @@ export default function LazySectionWrapper({ children, delay = 0, className }: L
     }
 
     return () => {
-      if (sectionRef.current) {
-        observer.unobserve(sectionRef.current)
-      }
+      observer.disconnect()
     }
-  }, [delay])
+  }, [delay, threshold])
 
   return (
     <div
       ref={sectionRef}
-      className={cn(
-        "transition-all duration-700 ease-out",
-        isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10",
-        className,
-      )}
+      className={`transition-all duration-700 ease-out ${
+        isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
+      }`}
     >
-      {children}
+      {shouldRender ? children : <div className="h-64 bg-gray-100 animate-pulse rounded-lg" />}
     </div>
   )
 }
