@@ -11,14 +11,18 @@ interface NewsItem {
   imageUrl?: string // Optional image URL
 }
 
-// Make this a Server Component
 export default async function NyheterPage() {
-  const BACKEND_API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL || "https://api.nuredo.se"
+  // Use VERCEL_URL for server-side internal API calls, or a relative path for local development
+  // VERCEL_URL is automatically set by Vercel for deployments.
+  // For local development, a relative path like "/api/news" will work.
+  const baseUrl = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : ""
+  const apiUrl = `${baseUrl}/api/news`
+
   let news: NewsItem[] = []
   let error: string | null = null
 
   try {
-    const response = await fetch(`${BACKEND_API_URL}/api/news`, {
+    const response = await fetch(apiUrl, {
       next: { revalidate: 3600 }, // Revalidate every hour
     })
     if (!response.ok) {
