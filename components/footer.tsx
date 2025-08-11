@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { Instagram, Mail, MapPin, ExternalLink } from "lucide-react"
+import { Facebook, Instagram, Mail, MapPin, ExternalLink } from "lucide-react"
 
 export default function Footer() {
   return (
@@ -11,6 +11,14 @@ export default function Footer() {
             <h3 className="text-xl font-bold text-orange-400">Härnösands HF</h3>
             <p className="text-gray-300">Härnösands Handbollsförening - En förening för alla som älskar handboll.</p>
             <div className="flex space-x-4">
+              <Link
+                href="https://www.facebook.com/profile.php?id=61566621756014"
+                className="text-gray-400 hover:text-orange-400 transition-colors"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <Facebook size={20} />
+              </Link>
               <Link
                 href="https://www.instagram.com/harnosandshf"
                 className="text-gray-400 hover:text-orange-400 transition-colors"
