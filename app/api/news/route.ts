@@ -4,10 +4,22 @@ import { parseStringPromise } from "xml2js"
 export async function GET() {
   try {
     const rssFeedUrl = "https://www.laget.se/HarnosandsHF/Home/NewsRss"
-    const response = await fetch(rssFeedUrl, { next: { revalidate: 3600 } }) // Revalidate every hour
+    const response = await fetch(rssFeedUrl, {
+      next: { revalidate: 3600 }, // Revalidate every hour
+      headers: {
+        // Add a User-Agent header to mimic a browser request
+        "User-Agent":
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+      },
+    })
 
     if (!response.ok) {
-      throw new Error(`Failed to fetch RSS feed: ${response.statusText}`)
+      // Log the full response status and text for better debugging
+      const errorText = await response.text()
+      console.error(
+        `Failed to fetch RSS feed: ${response.status} - ${response.statusText}. Response body: ${errorText}`,
+      )
+      throw new Error(`HTTP error! status: ${response.status}`)
     }
 
     const xmlText = await response.text()
