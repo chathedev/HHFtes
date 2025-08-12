@@ -1,39 +1,159 @@
+"use client"
+
+import type React from "react"
+
 import { Header } from "@/components/header"
 import Footer from "@/components/footer"
-import { Mail, MapPin, Facebook, Instagram } from "lucide-react"
+import { Mail, Facebook, Instagram, User, MessageSquare, Send } from "lucide-react"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
+import { Label } from "@/components/ui/label"
 import Link from "next/link"
+import { useState } from "react"
 
 export default function KontaktPage() {
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    subject: "",
+    message: "",
+  })
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }))
+  }
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+
+    const emailBody = `Namn: ${formData.name}
+E-post: ${formData.email}
+
+Meddelande:
+${formData.message}`
+
+    const mailtoLink = `mailto:kontakt@harnosandshf.se?subject=${encodeURIComponent(formData.subject || "Kontakt från hemsidan")}&body=${encodeURIComponent(emailBody)}`
+
+    window.location.href = mailtoLink
+  }
+
   return (
     <>
       <Header />
-      <main className="flex-1">
+      <main className="flex-1 bg-white">
         <div className="h-24"></div> {/* Spacer for fixed header */}
         <div className="container px-4 md:px-6 py-8 md:py-12 lg:py-16 max-w-7xl mx-auto w-full">
           <h1 className="text-5xl font-bold text-green-700 mb-4 text-center">Kontakta Oss</h1>
           <p className="text-xl text-gray-700 mb-12 text-center max-w-3xl mx-auto">
-            Har du frågor eller funderingar? Tveka inte att höra av dig till uss!
+            Har du frågor eller funderingar? Tveka inte att höra av dig till oss!
           </p>
 
-          {/* Contact Cards Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto mb-12">
-            <div className="bg-white/90 shadow-lg rounded-lg p-8 flex flex-col items-center text-center">
-              <Mail className="w-12 h-12 text-orange-500 mb-4" />
+          <div className="max-w-4xl mx-auto mb-12">
+            {/* Email Contact Card */}
+            <div className="bg-white/90 shadow-lg rounded-lg p-8 text-center mb-8">
+              <Mail className="w-12 h-12 text-orange-500 mb-4 mx-auto" />
               <h2 className="text-2xl font-semibold text-gray-800 mb-2">E-post</h2>
               <p className="text-lg text-gray-700 mb-4">Skicka oss ett meddelande när som helst.</p>
-              <a href="mailto:info@harnosandshf.se" className="text-green-700 hover:underline text-lg font-medium">
-                info@harnosandshf.se
+              <a href="mailto:kontakt@harnosandshf.se" className="text-green-700 hover:underline text-lg font-medium">
+                kontakt@harnosandshf.se
               </a>
             </div>
 
-            <div className="bg-white/90 shadow-lg rounded-lg p-8 flex flex-col items-center text-center">
-              <MapPin className="w-12 h-12 text-orange-500 mb-4" />
-              <h2 className="text-2xl font-semibold text-gray-800 mb-2">Besöksadress</h2>
-              <p className="text-lg text-gray-700 mb-4">Härnösands Handbollsförening</p>
-              <p className="text-lg text-gray-700">Idrottsgatan 10</p>
-              <p className="text-lg text-gray-700">871 40 Härnösand</p>
+            {/* Contact Form */}
+            <div className="bg-white/90 shadow-lg rounded-lg p-8">
+              <div className="flex items-center justify-center mb-6">
+                <MessageSquare className="w-8 h-8 text-orange-500 mr-3" />
+                <h2 className="text-2xl font-semibold text-gray-800">Skicka meddelande</h2>
+              </div>
+
+              <form onSubmit={handleSubmit} className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <Label htmlFor="name" className="text-sm font-medium text-gray-700 mb-2 block">
+                      Namn *
+                    </Label>
+                    <div className="relative">
+                      <User className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                      <Input
+                        id="name"
+                        name="name"
+                        type="text"
+                        placeholder="Ditt namn"
+                        className="pl-10 border-gray-300 focus:border-green-500 focus:ring-green-500"
+                        value={formData.name}
+                        onChange={handleInputChange}
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="email" className="text-sm font-medium text-gray-700 mb-2 block">
+                      E-post *
+                    </Label>
+                    <div className="relative">
+                      <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                      <Input
+                        id="email"
+                        name="email"
+                        type="email"
+                        placeholder="din@email.se"
+                        className="pl-10 border-gray-300 focus:border-green-500 focus:ring-green-500"
+                        value={formData.email}
+                        onChange={handleInputChange}
+                        required
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <Label htmlFor="subject" className="text-sm font-medium text-gray-700 mb-2 block">
+                    Ämne
+                  </Label>
+                  <Input
+                    id="subject"
+                    name="subject"
+                    type="text"
+                    placeholder="Vad gäller ditt meddelande?"
+                    className="border-gray-300 focus:border-green-500 focus:ring-green-500"
+                    value={formData.subject}
+                    onChange={handleInputChange}
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="message" className="text-sm font-medium text-gray-700 mb-2 block">
+                    Meddelande *
+                  </Label>
+                  <Textarea
+                    id="message"
+                    name="message"
+                    placeholder="Skriv ditt meddelande här..."
+                    rows={5}
+                    className="border-gray-300 focus:border-green-500 focus:ring-green-500 resize-none"
+                    value={formData.message}
+                    onChange={handleInputChange}
+                    required
+                  />
+                </div>
+
+                <div className="text-center">
+                  <Button
+                    type="submit"
+                    className="bg-orange-500 hover:bg-orange-600 text-white px-8 py-3 rounded-md text-lg font-semibold transition-colors inline-flex items-center"
+                  >
+                    <Send className="w-4 h-4 mr-2" />
+                    Skicka meddelande
+                  </Button>
+                </div>
+              </form>
             </div>
           </div>
 

@@ -249,7 +249,7 @@ export default function HomePage() {
         </section>
 
         {/* About Club Section */}
-        <section className="py-16">
+        <section className="py-16 bg-white">
           <div className="container mx-auto px-4">
             <div className="grid md:grid-cols-2 gap-12 items-center">
               <div>
@@ -358,7 +358,7 @@ export default function HomePage() {
                               <div key={partner.id} className="relative group w-full h-36">
                                 <Card
                                   className={`p-4 shadow-lg rounded-lg flex flex-col items-center justify-center h-full w-full text-center
-                                ${isDiamant ? "border-2 border-yellow-500" : "bg-white/80"}
+                                ${isDiamant ? "border-2 border-yellow-500 bg-white" : "bg-white"}
                               `}
                                 >
                                   {isDiamant && (

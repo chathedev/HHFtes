@@ -63,7 +63,7 @@ export default function Footer() {
             <div className="space-y-2">
               <div className="flex items-center space-x-2 text-gray-300">
                 <Mail size={16} />
-                <span>info@harnosandshf.se</span>
+                <span>kontakt@harnosandshf.se</span>
               </div>
               <div className="flex items-center space-x-2 text-gray-300">
                 <MapPin size={16} />

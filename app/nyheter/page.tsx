@@ -67,10 +67,10 @@ export default function NyheterPage() {
   return (
     <>
       <Header />
-      <main className="flex-1">
+      <main className="flex-1 bg-white">
         <div className="h-24"></div> {/* Spacer for fixed header */}
         <div className="container px-4 md:px-6 py-8 md:py-12 lg:py-16">
-          <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl mb-8">Senaste Nyheterna</h1>
+          <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl mb-8 text-green-700">Senaste Nyheterna</h1>
           <p className="text-lg text-gray-700 mb-8">
             Här hittar du de senaste nyheterna och uppdateringarna från Härnösands HF.
           </p>

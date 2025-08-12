@@ -79,7 +79,7 @@ export default function LagPage() {
   return (
     <>
       <Header />
-      <main className="flex-1">
+      <main className="flex-1 bg-white">
         <div className="h-24"></div> {/* Spacer for fixed header */}
         <div className="container px-4 md:px-6 py-8 md:py-12 lg:py-16">
           <h1 className="text-5xl font-bold text-green-700 mb-4 text-center">VÅRA LAG</h1>

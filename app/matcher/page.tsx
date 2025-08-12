@@ -75,7 +75,7 @@ export default function MatcherPage() {
         <div className="container px-4 md:px-6 py-12 md:py-16 lg:py-20">
           {" "}
           {/* Increased vertical padding */}
-          <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl mb-4 text-center">
+          <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl mb-4 text-center text-green-700">
             Kommande Matcher
           </h1>
           {error && (
