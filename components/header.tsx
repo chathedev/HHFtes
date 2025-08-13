@@ -58,7 +58,13 @@ function Header() {
       <div className="container mx-auto px-4 py-4 flex justify-between items-center">
         <Link href="/" className="flex items-center gap-3">
           <div className="relative w-12 h-12">
-            <Image src="/logo.png" alt="Härnösands HF Logo" fill className="object-contain" priority />
+            <Image
+              src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Namnlo%CC%88s%20design%20%2868%29-ppmw1vggWy2KQ1e6LVG95obpLpHCb9.png"
+              alt="Härnösands HF Logo"
+              fill
+              className="object-contain"
+              priority
+            />
           </div>
           <div>
             <div className="font-bold text-xl">Härnösands HF</div>
@@ -74,7 +80,12 @@ function Header() {
           </SheetTrigger>
           <SheetContent side="left" className="bg-black/90 text-white border-gray-800">
             <Link className="mr-6 flex items-center gap-3 py-4" href="/" onClick={() => setIsMenuOpen(false)}>
-              <Image src="/logo.png" alt="Härnösands HF Logo" width={40} height={40} />
+              <Image
+                src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Namnlo%CC%88s%20design%20%2868%29-ppmw1vggWy2KQ1e6LVG95obpLpHCb9.png"
+                alt="Härnösands HF Logo"
+                width={40}
+                height={40}
+              />
               <span className="font-bold text-xl">Härnösands HF</span>
             </Link>
             <nav className="flex flex-col gap-4">
