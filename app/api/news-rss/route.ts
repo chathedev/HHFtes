@@ -1,140 +1,99 @@
 import { NextResponse } from "next/server"
 
+interface NewsApiResponse {
+  updatedAt: string
+  count: number
+  items: NewsItem[]
+}
+
 interface NewsItem {
-  guid: string
   title: string
   link: string
-  description: string
-  cleanDescription: string
+  guid: string
   pubDate: string
-  image?: string
+  description: string
+  enclosure: string | null
+  categories: string[]
 }
 
 function cleanHtmlContent(html: string): string {
-  try {
-    let cleanText = html
+  if (!html) return ""
 
-    console.log("=== HTML CLEANING DEBUG ===")
-    console.log("Raw HTML:", html.substring(0, 200) + "...")
+  let cleaned = html
 
-    // First, handle CDATA sections
-    cleanText = cleanText.replace(/<!\[CDATA\[(.*?)\]\]>/g, "$1")
-    console.log("After CDATA removal:", cleanText.substring(0, 200) + "...")
+  // Remove all HTML tags including self-closing ones
+  cleaned = cleaned.replace(/<[^>]*\/?>/gi, "")
 
-    // Remove all HTML tags more aggressively
-    cleanText = cleanText.replace(/<\/?[^>]+(>|$)/g, "")
-    console.log("After tag removal:", cleanText.substring(0, 200) + "...")
+  // Remove any remaining angle brackets that might be malformed
+  cleaned = cleaned.replace(/[<>]/g, "")
 
-    // Handle self-closing tags specifically
-    cleanText = cleanText.replace(/<[^>]*\/>/g, "")
-
-    // Remove any remaining < or > characters that might be malformed HTML
-    cleanText = cleanText.replace(/</g, "").replace(/>/g, "")
-
-    // Decode HTML entities
-    cleanText = cleanText
-      .replace(/&nbsp;/g, " ")
-      .replace(/&amp;/g, "&")
-      .replace(/&lt;/g, "<")
-      .replace(/&gt;/g, ">")
-      .replace(/&quot;/g, '"')
-      .replace(/&#39;/g, "'")
-      .replace(/&#x27;/g, "'")
-      .replace(/&apos;/g, "'")
-      .replace(/&hellip;/g, "...")
-      .replace(/&mdash;/g, "—")
-      .replace(/&ndash;/g, "–")
-      .replace(/&rsquo;/g, "'")
-      .replace(/&lsquo;/g, "'")
-      .replace(/&rdquo;/g, '"')
-      .replace(/&ldquo;/g, '"')
-
-    // Clean up whitespace and line breaks
-    cleanText = cleanText.replace(/\s+/g, " ").replace(/\n+/g, " ").replace(/\r+/g, " ").replace(/\t+/g, " ").trim()
-
-    console.log("Final cleaned text:", cleanText.substring(0, 200) + "...")
-    console.log("=== END DEBUG ===")
-
-    return cleanText
-  } catch (error) {
-    console.error("Error cleaning HTML content:", error)
-    // Fallback: very aggressive cleaning
-    return html
-      .replace(/<[^>]*>/g, "")
-      .replace(/</g, "")
-      .replace(/>/g, "")
-      .replace(/&[^;]+;/g, " ")
-      .replace(/\s+/g, " ")
-      .trim()
-  }
-}
-
-function parseRSSFeed(xmlText: string): NewsItem[] {
-  const items: NewsItem[] = []
-
-  // Extract all <item> blocks from the RSS feed
-  const itemRegex = /<item>([\s\S]*?)<\/item>/gi
-  let itemMatch
-
-  while ((itemMatch = itemRegex.exec(xmlText)) !== null) {
-    const itemContent = itemMatch[1]
-
-    // Extract individual fields from each item
-    const titleMatch =
-      itemContent.match(/<title><!\[CDATA\[(.*?)\]\]><\/title>/i) || itemContent.match(/<title>(.*?)<\/title>/i)
-    const linkMatch = itemContent.match(/<link>(.*?)<\/link>/i)
-    const descriptionMatch =
-      itemContent.match(/<description><!\[CDATA\[([\s\S]*?)\]\]><\/description>/i) ||
-      itemContent.match(/<description>([\s\S]*?)<\/description>/i)
-    const pubDateMatch = itemContent.match(/<pubDate>(.*?)<\/pubDate>/i)
-    const guidMatch = itemContent.match(/<guid.*?>(.*?)<\/guid>/i)
-
-    // Extract image from description if present
-    const imageMatch = descriptionMatch?.[1]?.match(/<img[^>]+src="([^"]+)"/i)
-
-    if (titleMatch && linkMatch && descriptionMatch && pubDateMatch) {
-      const rawDescription = descriptionMatch[1].trim()
-      const cleanDescription = cleanHtmlContent(rawDescription)
-
-      items.push({
-        guid: guidMatch?.[1] || `${Date.now()}-${Math.random()}`,
-        title: titleMatch[1].trim(),
-        link: linkMatch[1].trim(),
-        description: rawDescription,
-        cleanDescription: cleanDescription,
-        pubDate: pubDateMatch[1].trim(),
-        image: imageMatch?.[1],
-      })
-    }
+  // Decode HTML entities more comprehensively
+  const entities: { [key: string]: string } = {
+    "&amp;": "&",
+    "&lt;": "<",
+    "&gt;": ">",
+    "&quot;": '"',
+    "&#39;": "'",
+    "&apos;": "'",
+    "&nbsp;": " ",
+    "&hellip;": "...",
+    "&mdash;": "—",
+    "&ndash;": "–",
+    "&rsquo;": "'",
+    "&lsquo;": "'",
+    "&rdquo;": '"',
+    "&ldquo;": '"',
+    "&#8217;": "'",
+    "&#8216;": "'",
+    "&#8221;": '"',
+    "&#8220;": '"',
   }
 
-  return items
+  // Apply entity decoding
+  Object.entries(entities).forEach(([entity, char]) => {
+    cleaned = cleaned.replace(new RegExp(entity, "gi"), char)
+  })
+
+  // Clean up multiple spaces, line breaks, and trim
+  cleaned = cleaned.replace(/\s+/g, " ").trim()
+
+  // Remove any remaining HTML-like artifacts
+  cleaned = cleaned.replace(/&[a-zA-Z0-9#]+;?/g, "")
+
+  return cleaned
 }
 
 export async function GET() {
   try {
-    const response = await fetch("https://www.laget.se/HarnosandsHF/Home/NewsRss", {
+    const response = await fetch("https://api.harnosandshf.se/api/news?limit=20", {
       headers: {
         "User-Agent": "Mozilla/5.0 (compatible; HHF/1.0)",
-        Accept: "application/rss+xml, application/xml, text/xml",
+        Accept: "application/json",
       },
       next: { revalidate: 1800 }, // Revalidate every 30 minutes
     })
 
     if (!response.ok) {
-      console.error(`Failed to fetch RSS feed: ${response.statusText}`)
-      return NextResponse.json({ error: "Failed to fetch RSS feed" }, { status: 500 })
+      console.error(`Failed to fetch news: ${response.statusText}`)
+      return NextResponse.json({ error: "Failed to fetch news" }, { status: 500 })
     }
 
-    const xmlText = await response.text()
-    const newsItems = parseRSSFeed(xmlText)
+    const newsData: NewsApiResponse = await response.json()
 
-    // Sort by publication date (newest first)
-    newsItems.sort((a, b) => new Date(b.pubDate).getTime() - new Date(a.pubDate).getTime())
+    // Transform to match expected format
+    const transformedNews = newsData.items.map((item) => ({
+      guid: item.guid,
+      title: item.title,
+      link: item.link,
+      description: item.description,
+      cleanDescription: cleanHtmlContent(item.description),
+      pubDate: item.pubDate,
+      image: item.enclosure,
+    }))
 
-    return NextResponse.json(newsItems)
+    return NextResponse.json(transformedNews)
   } catch (error) {
-    console.error("Error fetching RSS feed:", error)
+    console.error("Error fetching news:", error)
     return NextResponse.json({ error: "Failed to fetch news" }, { status: 500 })
   }
 }

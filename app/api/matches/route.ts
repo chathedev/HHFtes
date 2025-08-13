@@ -8,10 +8,11 @@ interface Match {
   opponent: string
   location: string
   isHome: boolean
+  eventType: string
 }
 
 async function fetchMatchesFromAPI(): Promise<Match[]> {
-  const url = `https://api.harnosandshf.se/api/events`
+  const url = `https://api.harnosandshf.se/api/events?limit=25&days=365`
 
   try {
     const response = await fetch(url, {
@@ -35,7 +36,10 @@ async function fetchMatchesFromAPI(): Promise<Match[]> {
         (event: any) =>
           event.type === "match" ||
           event.eventType === "match" ||
-          (event.title && (event.title.toLowerCase().includes("vs") || event.title.toLowerCase().includes("mot"))),
+          (event.title &&
+            (event.title.toLowerCase().includes("vs") ||
+              event.title.toLowerCase().includes("mot") ||
+              event.title.toLowerCase().includes("-"))),
       )
       .map((event: any, index: number) => ({
         id: event.id || `match-${index}`,
@@ -45,6 +49,7 @@ async function fetchMatchesFromAPI(): Promise<Match[]> {
         opponent: extractOpponent(event.title || event.name || ""),
         location: event.location || event.venue || "",
         isHome: determineIfHome(event.title || event.name || "", event.location || ""),
+        eventType: event.type || event.eventType || "match",
       }))
       .filter((match: Match) => match.title) // Filter out matches without titles
 
@@ -60,6 +65,14 @@ function extractOpponent(title: string): string {
   const vsMatch = title.match(/vs\.?\s+(.+)/i) || title.match(/mot\s+(.+)/i)
   if (vsMatch) return vsMatch[1].trim()
 
+  // Handle dash-separated format like "Team A - Team B"
+  const dashMatch = title.match(/(.+?)\s*-\s*(.+)/)
+  if (dashMatch) {
+    const [, team1, team2] = dashMatch
+    // Assume first team is home team, second is opponent
+    return team2.trim()
+  }
+
   const parts = title.split(/\s+vs\.?\s+|\s+mot\s+/i)
   if (parts.length > 1) return parts[1].trim()
 
@@ -68,7 +81,7 @@ function extractOpponent(title: string): string {
 
 // Helper function to determine if match is home or away
 function determineIfHome(title: string, location: string): boolean {
-  const homeIndicators = ["hemma", "home", "härnösand"]
+  const homeIndicators = ["hemma", "home", "härnösand", "sporthallen"]
   const awayIndicators = ["borta", "away"]
 
   const titleLower = title.toLowerCase()
@@ -87,11 +100,14 @@ function determineIfHome(title: string, location: string): boolean {
 
 export async function GET(request: Request) {
   try {
+    const { searchParams } = new URL(request.url)
+    const filter = searchParams.get("filter") // 'home', 'away', or null for all
+
     const matches = await fetchMatchesFromAPI()
 
     // Filter out past matches and sort by date
     const now = new Date()
-    const upcomingMatches = matches
+    let upcomingMatches = matches
       .filter((match) => {
         const matchDate = new Date(
           `${match.date}T${match.time.replace("Okänd tid", "00:00").replace("Heldag", "00:00")}`,
@@ -103,7 +119,13 @@ export async function GET(request: Request) {
         const dateB = new Date(`${b.date}T${b.time.replace("Okänd tid", "00:00").replace("Heldag", "00:00")}`)
         return dateA.getTime() - dateB.getTime()
       })
-      .slice(0, 5) // Limit to next 5 matches
+
+    // Apply home/away filter if specified
+    if (filter === "home") {
+      upcomingMatches = upcomingMatches.filter((match) => match.isHome)
+    } else if (filter === "away") {
+      upcomingMatches = upcomingMatches.filter((match) => !match.isHome)
+    }
 
     return NextResponse.json(upcomingMatches)
   } catch (error) {

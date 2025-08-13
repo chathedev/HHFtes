@@ -2,17 +2,22 @@
 
 import { Header } from "@/components/header"
 import Footer from "@/components/footer"
-import { CalendarDays, Clock } from "lucide-react"
+import { CalendarDays, Clock, Home, Plane } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
-import Link from "next/link"
 import { Button } from "@/components/ui/button"
+import Link from "next/link"
 import { useEffect, useState } from "react"
 
 interface Match {
-  date: string // YYYY-MM-DD
-  time: string // HH:MM or "Heldag" or "HH:MM - HH:MM"
-  title: string // Match title
+  id: string
+  title: string
+  date: string
+  time: string
+  opponent: string
+  location: string
+  isHome: boolean
+  eventType: string
 }
 
 interface GroupedMatches {
@@ -23,25 +28,17 @@ export default function MatcherPage() {
   const [allMatches, setAllMatches] = useState<Match[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [filter, setFilter] = useState<"all" | "home" | "away">("all")
 
   useEffect(() => {
     const fetchMatches = async () => {
       try {
-        const response = await fetch("/api/kalender-events")
+        const filterParam = filter !== "all" ? `?filter=${filter}` : ""
+        const response = await fetch(`/api/matches${filterParam}`)
         if (!response.ok) {
           throw new Error("Failed to fetch matches")
         }
-        const events = await response.json()
-
-        // Filter events to only include matches
-        const matches = events.filter(
-          (event: any) =>
-            event.title &&
-            (event.title.toLowerCase().includes("vs") ||
-              event.title.toLowerCase().includes("mot") ||
-              event.title.toLowerCase().includes("match")),
-        )
-
+        const matches = await response.json()
         setAllMatches(matches)
       } catch (err) {
         setError(err instanceof Error ? err.message : "Unknown error")
@@ -51,7 +48,7 @@ export default function MatcherPage() {
     }
 
     fetchMatches()
-  }, [])
+  }, [filter])
 
   const groupedMatches: GroupedMatches = allMatches.reduce((acc, match) => {
     const matchDate = new Date(match.date)
@@ -89,15 +86,40 @@ export default function MatcherPage() {
     <>
       <Header />
       <main className="flex-1 bg-gray-50">
-        {" "}
-        {/* Added bg-gray-50 to extend background */}
-        <div className="h-24"></div> {/* Spacer for fixed header */}
+        <div className="h-24"></div>
         <div className="container px-4 md:px-6 py-12 md:py-16 lg:py-20">
-          {" "}
-          {/* Increased vertical padding */}
           <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl mb-4 text-center text-green-700">
             Kommande Matcher
           </h1>
+
+          <div className="flex justify-center mb-8">
+            <div className="bg-white rounded-lg p-1 shadow-md">
+              <Button
+                variant={filter === "all" ? "default" : "ghost"}
+                onClick={() => setFilter("all")}
+                className="px-4 py-2 rounded-md"
+              >
+                Alla matcher
+              </Button>
+              <Button
+                variant={filter === "home" ? "default" : "ghost"}
+                onClick={() => setFilter("home")}
+                className="px-4 py-2 rounded-md ml-1"
+              >
+                <Home className="w-4 h-4 mr-2" />
+                Hemma
+              </Button>
+              <Button
+                variant={filter === "away" ? "default" : "ghost"}
+                onClick={() => setFilter("away")}
+                className="px-4 py-2 rounded-md ml-1"
+              >
+                <Plane className="w-4 h-4 mr-2" />
+                Borta
+              </Button>
+            </div>
+          </div>
+
           {loading && <p className="text-center text-gray-600 mb-8">Laddar matcher...</p>}
           {error && (
             <p className="text-center text-red-500 mb-8">
@@ -109,29 +131,42 @@ export default function MatcherPage() {
           )}
           {!loading && !error && Object.keys(sortedGroupedMatches).length > 0 && (
             <div className="space-y-12 mb-16">
-              {" "}
-              {/* Added bottom margin */}
               {Object.entries(sortedGroupedMatches).map(([monthYear, matches]) => (
                 <section key={monthYear}>
                   <h2 className="text-2xl font-bold text-orange-500 mb-6 text-center md:text-left">{monthYear}</h2>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {matches.map((match) => (
                       <Card
-                        key={match.date + match.time + match.title}
-                        className="bg-white shadow-lg rounded-lg flex flex-col transition hover:shadow-xl p-6" // Added p-6 for internal padding
+                        key={match.id}
+                        className="bg-white shadow-lg rounded-lg flex flex-col transition hover:shadow-xl p-6"
                       >
                         <CardHeader className="p-0 pb-4">
-                          {" "}
-                          {/* Adjusted padding */}
-                          <CardTitle className="text-xl font-semibold text-gray-800 mb-2">{match.title}</CardTitle>
-                          <div className="flex items-center text-sm text-gray-500">
+                          <CardTitle className="text-xl font-semibold text-gray-800 mb-2 flex items-center">
+                            {match.isHome ? (
+                              <Home className="w-5 h-5 mr-2 text-green-600" />
+                            ) : (
+                              <Plane className="w-5 h-5 mr-2 text-blue-600" />
+                            )}
+                            {match.title}
+                          </CardTitle>
+                          <div className="flex items-center text-sm text-gray-500 mb-2">
                             <CalendarDays className="w-4 h-4 mr-1" />
                             <span>{formatDate(match.date)}</span>
                             <Clock className="w-4 h-4 ml-4 mr-1" />
                             <span>{match.time}</span>
                           </div>
+                          {match.opponent && (
+                            <p className="text-sm text-gray-600 mb-1">
+                              <strong>Motståndare:</strong> {match.opponent}
+                            </p>
+                          )}
+                          {match.location && (
+                            <p className="text-sm text-gray-600">
+                              <strong>Plats:</strong> {match.location}
+                            </p>
+                          )}
                         </CardHeader>
-                        <CardContent className="flex-grow flex flex-col justify-between p-0" /> {/* Adjusted padding */}
+                        <CardContent className="flex-grow flex flex-col justify-between p-0" />
                       </Card>
                     ))}
                   </div>
@@ -139,6 +174,7 @@ export default function MatcherPage() {
               ))}
             </div>
           )}
+
           {/* New FAQ Section */}
           <section className="bg-white shadow-lg rounded-lg p-8 md:p-12 max-w-4xl mx-auto">
             <h2 className="text-3xl font-bold text-green-700 mb-8 text-center">Vanliga frågor om att börja träna</h2>
