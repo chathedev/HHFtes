@@ -155,87 +155,159 @@ export default function EditorPage() {
         fields: [
           { key: "title", label: "Title", type: "input" },
           { key: "description", label: "Description", type: "textarea" },
-          { key: "primaryButton", label: "Primary Button", type: "input" },
-          { key: "secondaryButton", label: "Secondary Button", type: "input" },
+          { key: "imageUrl", label: "Hero Image URL", type: "input" },
+          { key: "button1Text", label: "Primary Button Text", type: "input" },
+          { key: "button1Link", label: "Primary Button Link", type: "input" },
+          { key: "button2Text", label: "Secondary Button Text", type: "input" },
+          { key: "button2Link", label: "Secondary Button Link", type: "input" },
         ],
       },
       {
         key: "stats",
         title: "Statistics",
         fields: [
-          { key: "title", label: "Stats Title", type: "input" },
-          { key: "members", label: "Members Count", type: "input" },
-          { key: "membersLabel", label: "Members Label", type: "input" },
-          { key: "years", label: "Years Count", type: "input" },
-          { key: "yearsLabel", label: "Years Label", type: "input" },
-          { key: "teams", label: "Teams Count", type: "input" },
-          { key: "teamsLabel", label: "Teams Label", type: "input" },
+          { key: "totalTeams", label: "Total Teams", type: "input" },
+          { key: "aTeams", label: "A Teams", type: "input" },
+          { key: "youthTeams", label: "Youth Teams", type: "input" },
+          { key: "yearsHistory", label: "Years of History", type: "input" },
         ],
       },
       {
-        key: "about",
-        title: "About Section",
+        key: "aboutClub",
+        title: "About Club Section",
         fields: [
           { key: "title", label: "About Title", type: "input" },
-          { key: "description", label: "About Description", type: "textarea" },
-          { key: "mission", label: "Mission", type: "textarea" },
-          { key: "values", label: "Values", type: "textarea" },
+          { key: "paragraph1", label: "First Paragraph", type: "textarea" },
+          { key: "paragraph2", label: "Second Paragraph", type: "textarea" },
+          { key: "passionText", label: "Passion Text", type: "input" },
+          { key: "developmentText", label: "Development Text", type: "input" },
+          { key: "communityText", label: "Community Text", type: "input" },
+          { key: "imageSrc", label: "About Image URL", type: "input" },
+          { key: "imageAlt", label: "Image Alt Text", type: "input" },
+          { key: "button1Text", label: "First Button Text", type: "input" },
+          { key: "button1Link", label: "First Button Link", type: "input" },
+          { key: "button2Text", label: "Second Button Text", type: "input" },
+          { key: "button2Link", label: "Second Button Link", type: "input" },
+          { key: "statNumber", label: "Stat Number", type: "input" },
+          { key: "statLabel", label: "Stat Label", type: "input" },
         ],
       },
       {
         key: "faq",
         title: "FAQ Section",
-        fields: [{ key: "title", label: "FAQ Title", type: "input" }],
+        fields: [], // FAQ will be handled separately as it's an array
       },
     ]
 
-    return sections.map((section) => {
-      const isExpanded = expandedSections.includes(section.key)
-      const sectionData = pageContent[section.key]
+    return (
+      <>
+        {sections.map((section) => {
+          const isExpanded = expandedSections.includes(section.key)
+          const sectionData = pageContent[section.key]
 
-      if (!sectionData) return null
+          if (!sectionData) return null
 
-      return (
-        <div key={section.key} className="border border-gray-200 rounded-lg mb-4">
-          <button
-            onClick={() => toggleSection(section.key)}
-            className="w-full px-4 py-3 flex items-center justify-between bg-gray-50 hover:bg-gray-100 rounded-t-lg"
-          >
-            <h3 className="font-semibold text-gray-800">{section.title}</h3>
-            {isExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
-          </button>
+          return (
+            <div key={section.key} className="border border-gray-200 rounded-lg mb-4">
+              <button
+                onClick={() => toggleSection(section.key)}
+                className="w-full px-4 py-3 flex items-center justify-between bg-gray-50 hover:bg-gray-100 rounded-t-lg"
+              >
+                <h3 className="font-semibold text-gray-800">{section.title}</h3>
+                {isExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+              </button>
 
-          {isExpanded && (
-            <div className="p-4 space-y-4">
-              {section.fields.map((field) => {
-                const fieldPath = `${currentPage.name}.${section.key}.${field.key}`
-                const value = getFieldValue(fieldPath)
+              {isExpanded && (
+                <div className="p-4 space-y-4">
+                  {section.key === "faq" ? (
+                    // Handle FAQ array structure
+                    <div className="space-y-4">
+                      {Array.isArray(sectionData) &&
+                        sectionData.map((faqItem: any, index: number) => (
+                          <div key={index} className="border border-gray-100 rounded p-3">
+                            <h4 className="font-medium text-gray-700 mb-2">FAQ Item {index + 1}</h4>
+                            <div className="space-y-2">
+                              <div>
+                                <label className="block text-sm font-medium text-gray-600 mb-1">Question</label>
+                                <Input
+                                  value={faqItem.question || ""}
+                                  onChange={(e) => {
+                                    const newFaq = [...sectionData]
+                                    newFaq[index] = { ...newFaq[index], question: e.target.value }
+                                    setContent({ ...content, [currentPage.name]: { ...pageContent, faq: newFaq } })
+                                  }}
+                                  className="w-full text-black bg-white border border-gray-300"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-sm font-medium text-gray-600 mb-1">Answer</label>
+                                <Textarea
+                                  value={faqItem.answer || ""}
+                                  onChange={(e) => {
+                                    const newFaq = [...sectionData]
+                                    newFaq[index] = { ...newFaq[index], answer: e.target.value }
+                                    setContent({ ...content, [currentPage.name]: { ...pageContent, faq: newFaq } })
+                                  }}
+                                  className="w-full text-black bg-white border border-gray-300"
+                                  rows={3}
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                    </div>
+                  ) : (
+                    // Regular field handling with proper field paths
+                    section.fields.map((field) => {
+                      const fieldPath = `${currentPage.name}.${section.key}.${field.key}`
+                      const value = getFieldValue(fieldPath)
 
-                return (
-                  <div key={field.key}>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">{field.label}</label>
-                    {field.type === "textarea" ? (
-                      <Textarea
-                        value={value}
-                        onChange={(e) => updateContentField(fieldPath, e.target.value)}
-                        className="w-full text-black bg-white border border-gray-300"
-                        rows={3}
-                      />
-                    ) : (
-                      <Input
-                        value={value}
-                        onChange={(e) => updateContentField(fieldPath, e.target.value)}
-                        className="w-full text-black bg-white border border-gray-300"
-                      />
-                    )}
-                  </div>
-                )
-              })}
+                      return (
+                        <div key={field.key}>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">{field.label}</label>
+                          {field.type === "textarea" ? (
+                            <Textarea
+                              value={value}
+                              onChange={(e) => updateContentField(fieldPath, e.target.value)}
+                              className="w-full text-black bg-white border border-gray-300"
+                              rows={3}
+                            />
+                          ) : (
+                            <Input
+                              value={value}
+                              onChange={(e) => updateContentField(fieldPath, e.target.value)}
+                              className="w-full text-black bg-white border border-gray-300"
+                              placeholder={
+                                field.key.includes("Url") || field.key.includes("Src")
+                                  ? "Enter image URL or upload new image"
+                                  : ""
+                              }
+                            />
+                          )}
+                          {/* Add image preview for image fields */}
+                          {(field.key.includes("Url") || field.key.includes("Src")) && value && (
+                            <div className="mt-2">
+                              <img
+                                src={value || "/placeholder.svg"}
+                                alt="Preview"
+                                className="w-full max-w-xs h-auto rounded border"
+                                onError={(e) => {
+                                  ;(e.target as HTMLImageElement).style.display = "none"
+                                }}
+                              />
+                            </div>
+                          )}
+                        </div>
+                      )
+                    })
+                  )}
+                </div>
+              )}
             </div>
-          )}
-        </div>
-      )
-    })
+          )
+        })}
+      </>
+    )
   }
 
   const hasChanges = JSON.stringify(content[currentPage.name]) !== JSON.stringify(originalContent[currentPage.name])
