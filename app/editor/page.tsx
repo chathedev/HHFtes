@@ -15,8 +15,6 @@ const PAGES = [
   { name: "home", displayName: "Hem", path: "/" },
   { name: "kontakt", displayName: "Kontakt", path: "/kontakt" },
   { name: "lag", displayName: "Lag", path: "/lag" },
-  { name: "matcher", displayName: "Matcher", path: "/matcher" },
-  { name: "nyheter", displayName: "Nyheter", path: "/nyheter" },
 ]
 
 const VIEWPORTS = {
@@ -158,39 +156,57 @@ export default function EditorPage() {
   const saveContent = async () => {
     setIsSaving(true)
     try {
-      const response = await fetch("/api/github-commit", {
-        method: "POST",
+      const response = await fetch(`/api/content/${currentPage.name}`, {
+        method: "PUT",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          filename: `public/content/${currentPage.name}.json`,
-          content: JSON.stringify(content[currentPage.name], null, 2),
-          message: `Update ${currentPage.displayName} content via editor`,
-        }),
+        body: JSON.stringify(content[currentPage.name]),
       })
 
       if (!response.ok) {
         throw new Error(`Failed to save ${currentPage.name}`)
       }
 
+      const result = await response.json()
+
       setOriginalContent((prev) => ({
         ...prev,
         [currentPage.name]: JSON.parse(JSON.stringify(content[currentPage.name])),
       }))
 
-      toast({
-        title: "✅ Changes Committed to GitHub",
-        description: `${currentPage.displayName} updated and pushed to repository`,
-        className: "bg-green-500 text-white",
-      })
+      try {
+        const revalidateResponse = await fetch(
+          `/api/revalidate?secret=${process.env.NEXT_PUBLIC_REVALIDATE_SECRET || "fallback-secret"}`,
+        )
+        if (revalidateResponse.ok) {
+          toast({
+            title: "✅ Changes Published Live",
+            description: `${currentPage.displayName} updated and live on the website`,
+            className: "bg-green-500 text-white",
+          })
+        } else {
+          toast({
+            title: "⚠️ Changes Saved",
+            description: `${currentPage.displayName} saved but may need manual refresh to go live`,
+            className: "bg-yellow-500 text-white",
+          })
+        }
+      } catch (revalidateError) {
+        console.error("Revalidation error:", revalidateError)
+        toast({
+          title: "⚠️ Changes Saved",
+          description: `${currentPage.displayName} saved but may need manual refresh to go live`,
+          className: "bg-yellow-500 text-white",
+        })
+      }
 
       refreshPreview()
     } catch (error) {
       console.error("Save error:", error)
       toast({
-        title: "❌ GitHub Commit Failed",
-        description: "Failed to commit changes to repository",
+        title: "❌ Save Failed",
+        description: "Failed to save changes",
         variant: "destructive",
       })
     } finally {
@@ -361,31 +377,6 @@ export default function EditorPage() {
           ],
         },
       ]
-    } else if (currentPage.name === "nyheter") {
-      sections = [
-        {
-          key: "page",
-          title: "Page Content",
-          fields: [
-            { key: "pageTitle", label: "Page Title", type: "input" },
-            { key: "pageDescription", label: "Page Description", type: "textarea" },
-            { key: "searchPlaceholder", label: "Search Placeholder", type: "input" },
-            { key: "loadingMessage", label: "Loading Message", type: "input" },
-            { key: "errorMessage", label: "Error Message", type: "input" },
-            { key: "noNewsMessage", label: "No News Message", type: "input" },
-          ],
-        },
-        {
-          key: "api",
-          title: "API Settings",
-          fields: [{ key: "newsApiUrl", label: "News API URL", type: "input" }],
-        },
-        {
-          key: "faq",
-          title: "FAQ Section",
-          fields: [],
-        },
-      ]
     } else if (currentPage.name === "lag") {
       sections = [
         {
@@ -400,39 +391,6 @@ export default function EditorPage() {
           key: "teamCategories",
           title: "Team Categories",
           fields: [],
-        },
-        {
-          key: "faq",
-          title: "FAQ Section",
-          fields: [],
-        },
-      ]
-    } else if (currentPage.name === "matcher") {
-      sections = [
-        {
-          key: "page",
-          title: "Page Content",
-          fields: [
-            { key: "pageTitle", label: "Page Title", type: "input" },
-            { key: "pageDescription", label: "Page Description", type: "textarea" },
-            { key: "loadingMessage", label: "Loading Message", type: "input" },
-            { key: "errorMessage", label: "Error Message", type: "input" },
-            { key: "noMatchesMessage", label: "No Matches Message", type: "input" },
-          ],
-        },
-        {
-          key: "filterLabels",
-          title: "Filter Labels",
-          fields: [
-            { key: "all", label: "All Matches Label", type: "input" },
-            { key: "home", label: "Home Matches Label", type: "input" },
-            { key: "away", label: "Away Matches Label", type: "input" },
-          ],
-        },
-        {
-          key: "api",
-          title: "API Settings",
-          fields: [{ key: "matchesApiUrl", label: "Matches API URL", type: "input" }],
         },
         {
           key: "faq",
@@ -720,28 +678,27 @@ export default function EditorPage() {
                                             className="w-full text-black bg-white border border-gray-300 text-sm"
                                           />
                                         </div>
-                                        {team.instagramLink !== undefined && (
-                                          <div>
-                                            <label className="block text-xs font-medium text-gray-500 mb-1">
-                                              Instagram Link
-                                            </label>
-                                            <Input
-                                              value={team.instagramLink || ""}
-                                              onChange={(e) => {
-                                                const newCategories = [...sectionData]
-                                                newCategories[categoryIndex].teams[teamIndex] = {
-                                                  ...newCategories[categoryIndex].teams[teamIndex],
-                                                  instagramLink: e.target.value,
-                                                }
-                                                setContent({
-                                                  ...content,
-                                                  [currentPage.name]: { ...pageContent, teamCategories: newCategories },
-                                                })
-                                              }}
-                                              className="w-full text-black bg-white border border-gray-300 text-sm"
-                                            />
-                                          </div>
-                                        )}
+                                        <div>
+                                          <label className="block text-xs font-medium text-gray-500 mb-1">
+                                            Instagram Link (leave blank to hide)
+                                          </label>
+                                          <Input
+                                            value={team.instagramLink || ""}
+                                            onChange={(e) => {
+                                              const newCategories = [...sectionData]
+                                              newCategories[categoryIndex].teams[teamIndex] = {
+                                                ...newCategories[categoryIndex].teams[teamIndex],
+                                                instagramLink: e.target.value,
+                                              }
+                                              setContent({
+                                                ...content,
+                                                [currentPage.name]: { ...pageContent, teamCategories: newCategories },
+                                              })
+                                            }}
+                                            className="w-full text-black bg-white border border-gray-300 text-sm"
+                                            placeholder="https://www.instagram.com/teamname/"
+                                          />
+                                        </div>
                                       </div>
                                     </div>
                                   ))}
@@ -750,7 +707,7 @@ export default function EditorPage() {
                           </div>
                         ))}
                     </div>
-                  ) : section.key === "page" || section.key === "api" || section.key === "filterLabels" ? (
+                  ) : (
                     section.fields.map((field) => {
                       const fieldPath =
                         section.key === "page"
@@ -774,39 +731,7 @@ export default function EditorPage() {
                               onChange={(e) => updateContentField(fieldPath, e.target.value)}
                               className="w-full text-black bg-white border border-gray-300"
                               placeholder={
-                                field.key.includes("Url") || field.key.includes("Src") || field.key.includes("Api")
-                                  ? "Enter URL"
-                                  : ""
-                              }
-                            />
-                          )}
-                        </div>
-                      )
-                    })
-                  ) : (
-                    section.fields.map((field) => {
-                      const fieldPath = `${currentPage.name}.${section.key}.${field.key}`
-                      const value = getFieldValue(fieldPath)
-
-                      return (
-                        <div key={field.key}>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">{field.label}</label>
-                          {field.type === "textarea" ? (
-                            <Textarea
-                              value={value}
-                              onChange={(e) => updateContentField(fieldPath, e.target.value)}
-                              className="w-full text-black bg-white border border-gray-300"
-                              rows={3}
-                            />
-                          ) : (
-                            <Input
-                              value={value}
-                              onChange={(e) => updateContentField(fieldPath, e.target.value)}
-                              className="w-full text-black bg-white border border-gray-300"
-                              placeholder={
-                                field.key.includes("Url") || field.key.includes("Src")
-                                  ? "Enter image URL or upload new image"
-                                  : ""
+                                field.key.includes("Url") || field.key.includes("Src") ? "Enter image URL" : ""
                               }
                             />
                           )}
@@ -981,7 +906,7 @@ export default function EditorPage() {
             {isRefreshing && (
               <div className="absolute inset-0 bg-white/80 flex items-center justify-center z-10">
                 <div className="flex items-center gap-2 text-gray-600">
-                  <Loader2 className="w-5 h-5 animate-spin" />
+                  <Loader2 className="w-5 h-5 animate-spin mr-2" />
                   <span>Refreshing preview...</span>
                 </div>
               </div>

@@ -28,99 +28,96 @@ export default function KontaktPage() {
     const editorMode = urlParams.get("editor") === "true"
     setIsEditorMode(editorMode)
 
-    if (editorMode) {
-      // Load content from JSON file when in editor mode
-      fetch("/content/kontakt.json")
-        .then((res) => res.json())
-        .then((data) => setContent(data))
-        .catch((err) => console.error("Failed to load content:", err))
-    } else {
-      // Use default content for normal viewing
-      setContent({
-        pageTitle: "Kontakta Oss",
-        pageDescription: "Har du frågor eller funderingar? Tveka inte att höra av dig till oss!",
-        departments: [
-          {
-            title: "Sponsring & Marknadsföring",
-            description: "Vill du sponsra oss eller samarbeta?",
-            email: "marknad@harnosandshf.se",
-          },
-          {
-            title: "Kommunikation",
-            description: "Media, press och kommunikation",
-            email: "kommunikation@harnosandshf.se",
-          },
-          {
-            title: "Föreningsinsats",
-            description: "Förenings- och arbetsinsatser",
-            email: "foreningsinsats@harnosandshf.se",
-          },
-          {
-            title: "Sport & Träning",
-            description: "Frågor om träning och sportverksamhet",
-            email: "sport@harnosandshf.se",
-          },
-          {
-            title: "Ekonomi",
-            description: "Ekonomiska frågor och fakturor",
-            email: "ekonomi@harnosandshf.se",
-          },
-          {
-            title: "Styrelsen",
-            description: "Kontakt med föreningens styrelse",
-            email: "styrelsen@harnosandshf.se",
-          },
-        ],
-        generalContact: {
-          title: "Allmänna frågor",
-          description: "För allmänna frågor och information",
-          email: "kontakt@harnosandshf.se",
-        },
-        contactForm: {
-          title: "Skicka meddelande",
-          nameLabel: "Namn *",
-          namePlaceholder: "Ditt namn",
-          emailLabel: "E-post *",
-          emailPlaceholder: "din@email.se",
-          subjectLabel: "Ämne",
-          subjectPlaceholder: "Vad gäller ditt meddelande?",
-          messageLabel: "Meddelande *",
-          messagePlaceholder: "Skriv ditt meddelande här...",
-          submitButton: "Skicka meddelande",
-        },
-        socialMedia: {
-          title: "Följ oss på sociala medier",
-          facebookUrl: "https://www.facebook.com/harnosandshf",
-          instagramUrl: "https://www.instagram.com/harnosandshf",
-        },
-        faq: {
-          title: "Vanliga frågor om att börja träna",
-          items: [
+    fetch("/content/kontakt.json")
+      .then((res) => res.json())
+      .then((data) => setContent(data))
+      .catch((err) => {
+        console.error("Failed to load content:", err)
+        setContent({
+          pageTitle: "Kontakta Oss",
+          pageDescription: "Har du frågor eller funderingar? Tveka inte att höra av dig till oss!",
+          departments: [
             {
-              question: "Hur börjar jag spela handboll i Härnösands HF?",
-              answer:
-                "Det enklaste sättet att börja är att kontakta oss! Vi hjälper dig att hitta rätt lag baserat på din ålder och erfarenhet. Du kan fylla i vårt kontaktformulär eller skicka ett mejl direkt till oss.",
+              title: "Sponsring & Marknadsföring",
+              description: "Vill du sponsra oss eller samarbeta?",
+              email: "marknad@harnosandshf.se",
             },
             {
-              question: "Vilken utrustning behöver jag?",
-              answer:
-                "Till en början behöver du bara bekväma träningskläder, inomhusskor och en vattenflaska. Handbollar finns att låna under träningarna. När du väl bestämmer dig för att fortsätta kan du behöva klubbkläder.",
+              title: "Kommunikation",
+              description: "Media, press och kommunikation",
+              email: "kommunikation@harnosandshf.se",
             },
             {
-              question: "Finns det provträningar?",
-              answer:
-                "Absolut! Vi erbjuder alltid några kostnadsfria provträningar så att du kan känna efter om handboll är något för dig. Detta ger dig en chans att träffa laget och tränarna innan du bestämmer dig.",
+              title: "Föreningsinsats",
+              description: "Förenings- och arbetsinsatser",
+              email: "foreningsinsats@harnosandshf.se",
             },
             {
-              question: "Hur anmäler jag mig?",
-              answer:
-                "Efter dina provträningar får du information om hur du enkelt anmäler dig och blir en fullvärdig medlem i Härnösands HF. Vi ser fram emot att välkomna dig till vår handbollsfamilj!",
+              title: "Sport & Träning",
+              description: "Frågor om träning och sportverksamhet",
+              email: "sport@harnosandshf.se",
+            },
+            {
+              title: "Ekonomi",
+              description: "Ekonomiska frågor och fakturor",
+              email: "ekonomi@harnosandshf.se",
+            },
+            {
+              title: "Styrelsen",
+              description: "Kontakt med föreningens styrelse",
+              email: "styrelsen@harnosandshf.se",
             },
           ],
-          ctaButton: "Kontakta oss för mer information",
-        },
+          generalContact: {
+            title: "Allmänna frågor",
+            description: "För allmänna frågor och information",
+            email: "kontakt@harnosandshf.se",
+          },
+          contactForm: {
+            title: "Skicka meddelande",
+            nameLabel: "Namn *",
+            namePlaceholder: "Ditt namn",
+            emailLabel: "E-post *",
+            emailPlaceholder: "din@email.se",
+            subjectLabel: "Ämne",
+            subjectPlaceholder: "Vad gäller ditt meddelande?",
+            messageLabel: "Meddelande *",
+            messagePlaceholder: "Skriv ditt meddelande här...",
+            submitButton: "Skicka meddelande",
+          },
+          socialMedia: {
+            title: "Följ oss på sociala medier",
+            facebookUrl: "https://www.facebook.com/harnosandshf",
+            instagramUrl: "https://www.instagram.com/harnosandshf",
+          },
+          faq: {
+            title: "Vanliga frågor om att börja träna",
+            items: [
+              {
+                question: "Hur börjar jag spela handboll i Härnösands HF?",
+                answer:
+                  "Det enklaste sättet att börja är att kontakta oss! Vi hjälper dig att hitta rätt lag baserat på din ålder och erfarenhet. Du kan fylla i vårt kontaktformulär eller skicka ett mejl direkt till oss.",
+              },
+              {
+                question: "Vilken utrustning behöver jag?",
+                answer:
+                  "Till en början behöver du bara bekväma träningskläder, inomhusskor och en vattenflaska. Handbollar finns att låna under träningarna. När du väl bestämmer dig för att fortsätta kan du behöva klubbkläder.",
+              },
+              {
+                question: "Finns det provträningar?",
+                answer:
+                  "Absolut! Vi erbjuder alltid några kostnadsfria provträningar så att du kan känna efter om handboll är något för dig. Detta ger dig en chans att träffa laget och tränarna innan du bestämmer dig.",
+              },
+              {
+                question: "Hur anmäler jag mig?",
+                answer:
+                  "Efter dina provträningar får du information om hur du enkelt anmäler dig och blir en fullvärdig medlem i Härnösands HF. Vi ser fram emot att välkomna dig till vår handbollsfamilj!",
+              },
+            ],
+            ctaButton: "Kontakta oss för mer information",
+          },
+        })
       })
-    }
   }, [])
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
