@@ -78,7 +78,7 @@ ${formData.message}`
               <div className="bg-white/90 shadow-lg rounded-lg p-6 text-center">
                 <Mail className="w-10 h-10 text-orange-500 mb-3 mx-auto" />
                 <h3 className="text-lg font-semibold text-gray-800 mb-2">Föreningsinsats</h3>
-                <p className="text-sm text-gray-600 mb-3">förenings- och arbetsinsatser</p>
+                <p className="text-sm text-gray-600 mb-3">Förenings- och arbetsinsatser</p>
                 <a href="mailto:foreningsinsats@harnosandshf.se" className="text-green-700 hover:underline font-medium">
                   foreningsinsats@harnosandshf.se
                 </a>
