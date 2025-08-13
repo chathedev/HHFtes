@@ -81,20 +81,18 @@ export default function HomePage() {
 
   useEffect(() => {
     const fetchData = async () => {
-      if (isEditorMode) {
-        try {
-          const response = await fetch("/content/home.json")
-          if (response.ok) {
-            const jsonContent = await response.json()
-            setContent(jsonContent)
-          }
-        } catch (error) {
-          console.error("Failed to load content from JSON:", error)
+      try {
+        const response = await fetch("/content/home.json")
+        if (response.ok) {
+          const jsonContent = await response.json()
+          setContent(jsonContent)
+        } else {
+          console.error("Failed to load content from JSON, using default content")
+          setContent(defaultContent)
         }
-      } else {
-        // Fetch dynamic content for normal mode
-        const fetchedContent = await getDynamicContent()
-        setContent(fetchedContent)
+      } catch (error) {
+        console.error("Failed to load content from JSON:", error)
+        setContent(defaultContent)
       }
 
       // Fetch upcoming matches
