@@ -6,16 +6,11 @@ import { useState, useEffect, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { toast } from "@/components/ui/use-toast"
 import { Toaster } from "@/components/ui/toaster"
 import { Save, Monitor, Tablet, Smartphone, Loader2, RefreshCw, ChevronDown, ChevronRight, LogOut } from "lucide-react"
 
-const PAGES = [
-  { name: "home", displayName: "Hem", path: "/" },
-  { name: "kontakt", displayName: "Kontakt", path: "/kontakt" },
-  { name: "lag", displayName: "Lag", path: "/lag" },
-]
+const HOME_PAGE = { name: "home", displayName: "Hem", path: "/" }
 
 const VIEWPORTS = {
   desktop: { width: "100%", height: "100%", icon: Monitor },
@@ -28,14 +23,14 @@ export default function EditorPage() {
   const [isLoggingIn, setIsLoggingIn] = useState(false)
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
-  const [currentPage, setCurrentPage] = useState(PAGES[0])
+  const [currentPage] = useState(HOME_PAGE)
   const [viewport, setViewport] = useState<keyof typeof VIEWPORTS>("desktop")
   const [isSaving, setIsSaving] = useState(false)
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [content, setContent] = useState<any>({})
   const [originalContent, setOriginalContent] = useState<any>({})
   const [iframeSrc, setIframeSrc] = useState("")
-  const [expandedSections, setExpandedSections] = useState<string[]>(["page"])
+  const [expandedSections, setExpandedSections] = useState<string[]>(["hero"])
   const [hasChanges, setHasChanges] = useState(false)
   const iframeRef = useRef<HTMLIFrameElement>(null)
 
@@ -48,13 +43,13 @@ export default function EditorPage() {
     if (isAuthenticated && typeof window !== "undefined") {
       setIframeSrc(`${window.location.origin}${currentPage.path}?editor=true&t=${Date.now()}`)
     }
-  }, [currentPage, isAuthenticated])
+  }, [isAuthenticated])
 
   useEffect(() => {
     if (isAuthenticated) {
       loadContent()
     }
-  }, [currentPage, isAuthenticated])
+  }, [isAuthenticated])
 
   useEffect(() => {
     const currentContent = content[currentPage.name]
@@ -248,139 +243,56 @@ export default function EditorPage() {
     const pageContent = content[currentPage.name]
     if (!pageContent) return null
 
-    let sections: any[] = []
-
-    if (currentPage.name === "home") {
-      sections = [
-        {
-          key: "hero",
-          title: "Hero Section",
-          fields: [
-            { key: "title", label: "Title", type: "input" },
-            { key: "description", label: "Description", type: "textarea" },
-            { key: "imageUrl", label: "Hero Image URL", type: "input" },
-            { key: "button1Text", label: "Primary Button Text", type: "input" },
-            { key: "button1Link", label: "Primary Button Link", type: "input" },
-            { key: "button2Text", label: "Secondary Button Text", type: "input" },
-            { key: "button2Link", label: "Secondary Button Link", type: "input" },
-          ],
-        },
-        {
-          key: "stats",
-          title: "Statistics",
-          fields: [
-            { key: "totalTeams", label: "Total Teams", type: "input" },
-            { key: "aTeams", label: "A Teams", type: "input" },
-            { key: "youthTeams", label: "Youth Teams", type: "input" },
-            { key: "yearsHistory", label: "Years of History", type: "input" },
-          ],
-        },
-        {
-          key: "aboutClub",
-          title: "About Club Section",
-          fields: [
-            { key: "title", label: "About Title", type: "input" },
-            { key: "paragraph1", label: "First Paragraph", type: "textarea" },
-            { key: "paragraph2", label: "Second Paragraph", type: "textarea" },
-            { key: "passionText", label: "Passion Text", type: "input" },
-            { key: "developmentText", label: "Development Text", type: "input" },
-            { key: "communityText", label: "Community Text", type: "input" },
-            { key: "imageSrc", label: "About Image URL", type: "input" },
-            { key: "imageAlt", label: "Image Alt Text", type: "input" },
-            { key: "button1Text", label: "First Button Text", type: "input" },
-            { key: "button1Link", label: "First Button Link", type: "input" },
-            { key: "button2Text", label: "Second Button Text", type: "input" },
-            { key: "button2Link", label: "Second Button Link", type: "input" },
-            { key: "statNumber", label: "Stat Number", type: "input" },
-            { key: "statLabel", label: "Stat Label", type: "input" },
-          ],
-        },
-        {
-          key: "faq",
-          title: "FAQ Section",
-          fields: [],
-        },
-      ]
-    } else if (currentPage.name === "kontakt") {
-      sections = [
-        {
-          key: "page",
-          title: "Page Content",
-          fields: [
-            { key: "pageTitle", label: "Page Title", type: "input" },
-            { key: "pageDescription", label: "Page Description", type: "textarea" },
-          ],
-        },
-        {
-          key: "generalContact",
-          title: "General Contact",
-          fields: [
-            { key: "title", label: "Title", type: "input" },
-            { key: "description", label: "Description", type: "textarea" },
-            { key: "email", label: "Email", type: "input" },
-          ],
-        },
-        {
-          key: "contactForm",
-          title: "Contact Form",
-          fields: [
-            { key: "title", label: "Form Title", type: "input" },
-            { key: "nameLabel", label: "Name Label", type: "input" },
-            { key: "namePlaceholder", label: "Name Placeholder", type: "input" },
-            { key: "emailLabel", label: "Email Label", type: "input" },
-            { key: "emailPlaceholder", label: "Email Placeholder", type: "input" },
-            { key: "subjectLabel", label: "Subject Label", type: "input" },
-            { key: "subjectPlaceholder", label: "Subject Placeholder", type: "input" },
-            { key: "messageLabel", label: "Message Label", type: "input" },
-            { key: "messagePlaceholder", label: "Message Placeholder", type: "input" },
-            { key: "submitButton", label: "Submit Button Text", type: "input" },
-          ],
-        },
-        {
-          key: "socialMedia",
-          title: "Social Media",
-          fields: [
-            { key: "title", label: "Social Media Title", type: "input" },
-            { key: "facebookUrl", label: "Facebook URL", type: "input" },
-            { key: "instagramUrl", label: "Instagram URL", type: "input" },
-          ],
-        },
-        {
-          key: "departments",
-          title: "Department Contacts",
-          fields: [],
-        },
-        {
-          key: "faq",
-          title: "FAQ Section",
-          fields: [
-            { key: "title", label: "FAQ Title", type: "input" },
-            { key: "ctaButton", label: "CTA Button Text", type: "input" },
-          ],
-        },
-      ]
-    } else if (currentPage.name === "lag") {
-      sections = [
-        {
-          key: "page",
-          title: "Page Content",
-          fields: [
-            { key: "pageTitle", label: "Page Title", type: "input" },
-            { key: "pageDescription", label: "Page Description", type: "textarea" },
-          ],
-        },
-        {
-          key: "teamCategories",
-          title: "Team Categories",
-          fields: [],
-        },
-        {
-          key: "faq",
-          title: "FAQ Section",
-          fields: [],
-        },
-      ]
-    }
+    const sections = [
+      {
+        key: "hero",
+        title: "Hero Section",
+        fields: [
+          { key: "title", label: "Title", type: "input" },
+          { key: "description", label: "Description", type: "textarea" },
+          { key: "imageUrl", label: "Hero Image URL", type: "input" },
+          { key: "button1Text", label: "Primary Button Text", type: "input" },
+          { key: "button1Link", label: "Primary Button Link", type: "input" },
+          { key: "button2Text", label: "Secondary Button Text", type: "input" },
+          { key: "button2Link", label: "Secondary Button Link", type: "input" },
+        ],
+      },
+      {
+        key: "stats",
+        title: "Statistics",
+        fields: [
+          { key: "totalTeams", label: "Total Teams", type: "input" },
+          { key: "aTeams", label: "A Teams", type: "input" },
+          { key: "youthTeams", label: "Youth Teams", type: "input" },
+          { key: "yearsHistory", label: "Years of History", type: "input" },
+        ],
+      },
+      {
+        key: "aboutClub",
+        title: "About Club Section",
+        fields: [
+          { key: "title", label: "About Title", type: "input" },
+          { key: "paragraph1", label: "First Paragraph", type: "textarea" },
+          { key: "paragraph2", label: "Second Paragraph", type: "textarea" },
+          { key: "passionText", label: "Passion Text", type: "input" },
+          { key: "developmentText", label: "Development Text", type: "input" },
+          { key: "communityText", label: "Community Text", type: "input" },
+          { key: "imageSrc", label: "About Image URL", type: "input" },
+          { key: "imageAlt", label: "Image Alt Text", type: "input" },
+          { key: "button1Text", label: "First Button Text", type: "input" },
+          { key: "button1Link", label: "First Button Link", type: "input" },
+          { key: "button2Text", label: "Second Button Text", type: "input" },
+          { key: "button2Link", label: "Second Button Link", type: "input" },
+          { key: "statNumber", label: "Stat Number", type: "input" },
+          { key: "statLabel", label: "Stat Label", type: "input" },
+        ],
+      },
+      {
+        key: "faq",
+        title: "FAQ Section",
+        fields: [],
+      },
+    ]
 
     return (
       <>
@@ -404,286 +316,36 @@ export default function EditorPage() {
                 <div className="p-4 space-y-4">
                   {section.key === "faq" ? (
                     <div className="space-y-4">
-                      {/* FAQ title and CTA button fields for kontakt page */}
-                      {currentPage.name === "kontakt" &&
-                        section.fields.map((field) => {
-                          const fieldPath = `${currentPage.name}.${section.key}.${field.key}`
-                          const value = getFieldValue(fieldPath)
-                          return (
-                            <div key={field.key}>
-                              <label className="block text-sm font-medium text-gray-700 mb-2">{field.label}</label>
-                              <Input
-                                value={value}
-                                onChange={(e) => updateContentField(fieldPath, e.target.value)}
-                                className="w-full text-black bg-white border border-gray-300"
-                              />
-                            </div>
-                          )
-                        })}
-
-                      {/* FAQ items array - works for all page types */}
-                      {Array.isArray(sectionData)
-                        ? // For home page (direct array)
-                          sectionData.map((faqItem: any, index: number) => (
-                            <div key={index} className="border border-gray-100 rounded p-3">
-                              <h4 className="font-medium text-gray-700 mb-2">FAQ Item {index + 1}</h4>
-                              <div className="space-y-2">
-                                <div>
-                                  <label className="block text-sm font-medium text-gray-600 mb-1">Question</label>
-                                  <Input
-                                    value={faqItem.question || ""}
-                                    onChange={(e) => {
-                                      const newFaq = [...sectionData]
-                                      newFaq[index] = { ...newFaq[index], question: e.target.value }
-                                      setContent({ ...content, [currentPage.name]: { ...pageContent, faq: newFaq } })
-                                    }}
-                                    className="w-full text-black bg-white border border-gray-300"
-                                  />
-                                </div>
-                                <div>
-                                  <label className="block text-sm font-medium text-gray-600 mb-1">Answer</label>
-                                  <Textarea
-                                    value={faqItem.answer || ""}
-                                    onChange={(e) => {
-                                      const newFaq = [...sectionData]
-                                      newFaq[index] = { ...newFaq[index], answer: e.target.value }
-                                      setContent({ ...content, [currentPage.name]: { ...pageContent, faq: newFaq } })
-                                    }}
-                                    className="w-full text-black bg-white border border-gray-300"
-                                    rows={3}
-                                  />
-                                </div>
-                              </div>
-                            </div>
-                          ))
-                        : // For kontakt page (object with items array)
-                          sectionData.items &&
-                          Array.isArray(sectionData.items) &&
-                          sectionData.items.map((faqItem: any, index: number) => (
-                            <div key={index} className="border border-gray-100 rounded p-3">
-                              <h4 className="font-medium text-gray-700 mb-2">FAQ Item {index + 1}</h4>
-                              <div className="space-y-2">
-                                <div>
-                                  <label className="block text-sm font-medium text-gray-600 mb-1">Question</label>
-                                  <Input
-                                    value={faqItem.question || ""}
-                                    onChange={(e) => {
-                                      const newFaq = { ...sectionData }
-                                      newFaq.items[index] = { ...newFaq.items[index], question: e.target.value }
-                                      setContent({ ...content, [currentPage.name]: { ...pageContent, faq: newFaq } })
-                                    }}
-                                    className="w-full text-black bg-white border border-gray-300"
-                                  />
-                                </div>
-                                <div>
-                                  <label className="block text-sm font-medium text-gray-600 mb-1">Answer</label>
-                                  <Textarea
-                                    value={faqItem.answer || ""}
-                                    onChange={(e) => {
-                                      const newFaq = { ...sectionData }
-                                      newFaq.items[index] = { ...newFaq.items[index], answer: e.target.value }
-                                      setContent({ ...content, [currentPage.name]: { ...pageContent, faq: newFaq } })
-                                    }}
-                                    className="w-full text-black bg-white border border-gray-300"
-                                    rows={3}
-                                  />
-                                </div>
-                              </div>
-                            </div>
-                          ))}
-                    </div>
-                  ) : section.key === "departments" ? (
-                    <div className="space-y-4">
+                      {/* FAQ items array for home page */}
                       {Array.isArray(sectionData) &&
-                        sectionData.map((dept: any, index: number) => (
+                        sectionData.map((faqItem: any, index: number) => (
                           <div key={index} className="border border-gray-100 rounded p-3">
-                            <h4 className="font-medium text-gray-700 mb-2">Department {index + 1}</h4>
+                            <h4 className="font-medium text-gray-700 mb-2">FAQ Item {index + 1}</h4>
                             <div className="space-y-2">
                               <div>
-                                <label className="block text-sm font-medium text-gray-600 mb-1">Title</label>
+                                <label className="block text-sm font-medium text-gray-600 mb-1">Question</label>
                                 <Input
-                                  value={dept.title || ""}
+                                  value={faqItem.question || ""}
                                   onChange={(e) => {
-                                    const newDepts = [...sectionData]
-                                    newDepts[index] = { ...newDepts[index], title: e.target.value }
-                                    setContent({
-                                      ...content,
-                                      [currentPage.name]: { ...pageContent, departments: newDepts },
-                                    })
+                                    const newFaq = [...sectionData]
+                                    newFaq[index] = { ...newFaq[index], question: e.target.value }
+                                    setContent({ ...content, [currentPage.name]: { ...pageContent, faq: newFaq } })
                                   }}
                                   className="w-full text-black bg-white border border-gray-300"
                                 />
                               </div>
                               <div>
-                                <label className="block text-sm font-medium text-gray-600 mb-1">Description</label>
+                                <label className="block text-sm font-medium text-gray-600 mb-1">Answer</label>
                                 <Textarea
-                                  value={dept.description || ""}
+                                  value={faqItem.answer || ""}
                                   onChange={(e) => {
-                                    const newDepts = [...sectionData]
-                                    newDepts[index] = { ...newDepts[index], description: e.target.value }
-                                    setContent({
-                                      ...content,
-                                      [currentPage.name]: { ...pageContent, departments: newDepts },
-                                    })
+                                    const newFaq = [...sectionData]
+                                    newFaq[index] = { ...newFaq[index], answer: e.target.value }
+                                    setContent({ ...content, [currentPage.name]: { ...pageContent, faq: newFaq } })
                                   }}
                                   className="w-full text-black bg-white border border-gray-300"
-                                  rows={2}
+                                  rows={3}
                                 />
-                              </div>
-                              <div>
-                                <label className="block text-sm font-medium text-gray-600 mb-1">Email</label>
-                                <Input
-                                  value={dept.email || ""}
-                                  onChange={(e) => {
-                                    const newDepts = [...sectionData]
-                                    newDepts[index] = { ...newDepts[index], email: e.target.value }
-                                    setContent({
-                                      ...content,
-                                      [currentPage.name]: { ...pageContent, departments: newDepts },
-                                    })
-                                  }}
-                                  className="w-full text-black bg-white border border-gray-300"
-                                />
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-                    </div>
-                  ) : section.key === "teamCategories" ? (
-                    <div className="space-y-4">
-                      {Array.isArray(sectionData) &&
-                        sectionData.map((category: any, categoryIndex: number) => (
-                          <div key={categoryIndex} className="border border-gray-100 rounded p-3">
-                            <h4 className="font-medium text-gray-700 mb-2">Category: {category.name}</h4>
-                            <div className="space-y-2">
-                              <div>
-                                <label className="block text-sm font-medium text-gray-600 mb-1">Category Name</label>
-                                <Input
-                                  value={category.name || ""}
-                                  onChange={(e) => {
-                                    const newCategories = [...sectionData]
-                                    newCategories[categoryIndex] = {
-                                      ...newCategories[categoryIndex],
-                                      name: e.target.value,
-                                    }
-                                    setContent({
-                                      ...content,
-                                      [currentPage.name]: { ...pageContent, teamCategories: newCategories },
-                                    })
-                                  }}
-                                  className="w-full text-black bg-white border border-gray-300"
-                                />
-                              </div>
-                              <div>
-                                <label className="block text-sm font-medium text-gray-600 mb-1">Team Count</label>
-                                <Input
-                                  type="number"
-                                  value={category.count || ""}
-                                  onChange={(e) => {
-                                    const newCategories = [...sectionData]
-                                    newCategories[categoryIndex] = {
-                                      ...newCategories[categoryIndex],
-                                      count: Number.parseInt(e.target.value) || 0,
-                                    }
-                                    setContent({
-                                      ...content,
-                                      [currentPage.name]: { ...pageContent, teamCategories: newCategories },
-                                    })
-                                  }}
-                                  className="w-full text-black bg-white border border-gray-300"
-                                />
-                              </div>
-                              <div>
-                                <label className="block text-sm font-medium text-gray-600 mb-1">Description</label>
-                                <Input
-                                  value={category.description || ""}
-                                  onChange={(e) => {
-                                    const newCategories = [...sectionData]
-                                    newCategories[categoryIndex] = {
-                                      ...newCategories[categoryIndex],
-                                      description: e.target.value,
-                                    }
-                                    setContent({
-                                      ...content,
-                                      [currentPage.name]: { ...pageContent, teamCategories: newCategories },
-                                    })
-                                  }}
-                                  className="w-full text-black bg-white border border-gray-300"
-                                />
-                              </div>
-
-                              {/* Teams within category */}
-                              <div className="mt-4">
-                                <h5 className="font-medium text-gray-600 mb-2">Teams in this category:</h5>
-                                {category.teams &&
-                                  Array.isArray(category.teams) &&
-                                  category.teams.map((team: any, teamIndex: number) => (
-                                    <div key={teamIndex} className="border border-gray-50 rounded p-2 mb-2">
-                                      <div className="space-y-2">
-                                        <div>
-                                          <label className="block text-xs font-medium text-gray-500 mb-1">
-                                            Team Name
-                                          </label>
-                                          <Input
-                                            value={team.name || ""}
-                                            onChange={(e) => {
-                                              const newCategories = [...sectionData]
-                                              newCategories[categoryIndex].teams[teamIndex] = {
-                                                ...newCategories[categoryIndex].teams[teamIndex],
-                                                name: e.target.value,
-                                              }
-                                              setContent({
-                                                ...content,
-                                                [currentPage.name]: { ...pageContent, teamCategories: newCategories },
-                                              })
-                                            }}
-                                            className="w-full text-black bg-white border border-gray-300 text-sm"
-                                          />
-                                        </div>
-                                        <div>
-                                          <label className="block text-xs font-medium text-gray-500 mb-1">
-                                            Team Link
-                                          </label>
-                                          <Input
-                                            value={team.link || ""}
-                                            onChange={(e) => {
-                                              const newCategories = [...sectionData]
-                                              newCategories[categoryIndex].teams[teamIndex] = {
-                                                ...newCategories[categoryIndex].teams[teamIndex],
-                                                link: e.target.value,
-                                              }
-                                              setContent({
-                                                ...content,
-                                                [currentPage.name]: { ...pageContent, teamCategories: newCategories },
-                                              })
-                                            }}
-                                            className="w-full text-black bg-white border border-gray-300 text-sm"
-                                          />
-                                        </div>
-                                        <div>
-                                          <label className="block text-xs font-medium text-gray-500 mb-1">
-                                            Instagram Link (leave blank to hide)
-                                          </label>
-                                          <Input
-                                            value={team.instagramLink || ""}
-                                            onChange={(e) => {
-                                              const newCategories = [...sectionData]
-                                              newCategories[categoryIndex].teams[teamIndex] = {
-                                                ...newCategories[categoryIndex].teams[teamIndex],
-                                                instagramLink: e.target.value,
-                                              }
-                                              setContent({
-                                                ...content,
-                                                [currentPage.name]: { ...pageContent, teamCategories: newCategories },
-                                              })
-                                            }}
-                                            className="w-full text-black bg-white border border-gray-300 text-sm"
-                                            placeholder="https://www.instagram.com/teamname/"
-                                          />
-                                        </div>
-                                      </div>
-                                    </div>
-                                  ))}
                               </div>
                             </div>
                           </div>
@@ -753,8 +415,8 @@ export default function EditorPage() {
       <div className="min-h-screen bg-gray-100 flex items-center justify-center">
         <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-md">
           <div className="text-center mb-6">
-            <h1 className="text-2xl font-bold text-gray-800">Editor Login</h1>
-            <p className="text-gray-600 mt-2">Enter your credentials to access the editor</p>
+            <h1 className="text-2xl font-bold text-gray-800">Home Page Editor</h1>
+            <p className="text-gray-600 mt-2">Enter your credentials to edit the home page</p>
           </div>
 
           <form onSubmit={handleLogin} className="space-y-4">
@@ -815,24 +477,7 @@ export default function EditorPage() {
       {/* Header */}
       <div className="bg-white border-b px-6 py-3 flex items-center justify-between shadow-sm">
         <div className="flex items-center gap-4">
-          <Select
-            value={currentPage.name}
-            onValueChange={(value) => {
-              const page = PAGES.find((p) => p.name === value)
-              if (page) setCurrentPage(page)
-            }}
-          >
-            <SelectTrigger className="w-48 bg-white border-gray-300">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent className="bg-white border shadow-lg">
-              {PAGES.map((page) => (
-                <SelectItem key={page.name} value={page.name} className="bg-white hover:bg-gray-100">
-                  {page.displayName}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <h1 className="text-lg font-semibold text-gray-800">Home Page Editor</h1>
 
           <div className="flex gap-1">
             {Object.entries(VIEWPORTS).map(([size, config]) => {
@@ -907,7 +552,7 @@ export default function EditorPage() {
         {/* Editing Panel */}
         <div className="w-96 bg-white border-l border-gray-200 overflow-y-auto">
           <div className="p-6">
-            <h2 className="text-xl font-bold text-gray-800 mb-6">Edit {currentPage.displayName}</h2>
+            <h2 className="text-xl font-bold text-gray-800 mb-6">Edit Home Page</h2>
 
             {content[currentPage.name] ? (
               <div className="space-y-4">{renderEditingFields()}</div>
