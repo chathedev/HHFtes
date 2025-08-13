@@ -33,7 +33,14 @@ export default function EditorPage() {
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [content, setContent] = useState<any>({})
   const [originalContent, setOriginalContent] = useState<any>({})
+  const [iframeSrc, setIframeSrc] = useState("")
   const iframeRef = useRef<HTMLIFrameElement>(null)
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      setIframeSrc(`${window.location.origin}${currentPage.path}?editor=true`)
+    }
+  }, [currentPage])
 
   useEffect(() => {
     loadContent()
@@ -94,8 +101,9 @@ export default function EditorPage() {
 
   const refreshPreview = () => {
     setIsRefreshing(true)
-    if (iframeRef.current) {
-      iframeRef.current.src = iframeRef.current.src
+    if (iframeRef.current && typeof window !== "undefined") {
+      const newSrc = `${window.location.origin}${currentPage.path}?editor=true&t=${Date.now()}`
+      setIframeSrc(newSrc)
       setTimeout(() => setIsRefreshing(false), 1000)
     }
   }
@@ -176,11 +184,24 @@ export default function EditorPage() {
       }
     }
 
-    window.addEventListener("message", handleMessage)
-    return () => window.removeEventListener("message", handleMessage)
+    if (typeof window !== "undefined") {
+      window.addEventListener("message", handleMessage)
+      return () => window.removeEventListener("message", handleMessage)
+    }
   }, [])
 
   const hasChanges = JSON.stringify(content[currentPage.name]) !== JSON.stringify(originalContent[currentPage.name])
+
+  if (!iframeSrc) {
+    return (
+      <div className="h-screen bg-gray-100 flex items-center justify-center">
+        <div className="flex items-center gap-2 text-gray-600">
+          <Loader2 className="w-5 h-5 animate-spin" />
+          <span>Loading editor...</span>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="h-screen bg-gray-100 flex flex-col">
@@ -257,7 +278,7 @@ export default function EditorPage() {
 
           <iframe
             ref={iframeRef}
-            src={`${window.location.origin}${currentPage.path}?editor=true`}
+            src={iframeSrc}
             className="w-full h-full border-0"
             title={`Preview of ${currentPage.displayName}`}
             onLoad={() => {
