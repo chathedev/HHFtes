@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Search } from "lucide-react"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import { Button } from "@/components/ui/button"
+import { useState, useEffect } from "react"
 
 function formatDate(dateStr?: string) {
   try {
@@ -26,51 +27,57 @@ function formatDate(dateStr?: string) {
   }
 }
 
-const NEWS = [
-  {
-    guid: "99b802a3-5608-da7e-a12c-d5f4bb0360d6",
-    title: "Handbollscamp 2025",
-    link: "https://www.laget.se/HarnosandsHF/News/7904135/Handbollscamp-2025",
-    description:
-      "Spelare födda 2012 - 2015 se hit!<br>I år kör vi ett handbollscamp In och anmäl er på länken!<br> <a href='https://forms.office.com/Pages/ResponsePage.aspx?id=w-9zaNc360mUkFNgRBSBcAo4fkaTJfNPhDtAxiaNejZUOTNSTUZYUU9YMlUwMjBHUlRSUlhLTDlSQi4u' target='_blank' rel='noopener noreferrer'>Anmälan</a><br/><br/><i>Publicerad: 2025-07-03 19:13</i>",
-    pubDate: "Thu, 03 Jul 2025 17:13:00 GMT",
-    image: "https://laget001.blob.core.windows.net/11571904_medium.jpg",
-  },
-  {
-    guid: "1d1a7224-4453-96b0-2e3e-eb3bdc68315e",
-    title: "Årsmöte HHF",
-    link: "https://www.laget.se/HarnosandsHF/News/7880108/Arsmote-HHF",
-    description:
-      "Hej Medlemmar,<br>Välkomna på årsmöte! Dags att summera säsongen 24/25.<br>Tid: 18:00 23 Juni.<br>Plats: House Be, Strengbergsgatan 2 (Företagshotellet)<br><br>Erforderliga handlingar kommer skickas ut i tid enligt stadgar.<br/><br/><i>Publicerad: 2025-05-23 19:51</i>",
-    pubDate: "Fri, 23 May 2025 17:51:27 GMT",
-  },
-  {
-    guid: "32611364-77df-9b2a-89c3-166316e6a3aa",
-    title: "Ny Sportchef för Herrverksamheten",
-    link: "https://www.laget.se/HarnosandsHF/News/7714033/Ny-Sportchef-for-Herrverksamheten",
-    description:
-      "Anette Norberg byter sport!<br><br>… (förkortad text – klipp från RSS) …<br/><br/><i>Publicerad: 2024-10-04 15:21</i>",
-    pubDate: "Fri, 04 Oct 2024 13:21:41 GMT",
-    image: "https://laget001.blob.core.windows.net/11238189_medium.png",
-  },
-  {
-    guid: "b6fccd06-d4a7-712c-16d1-80b73c6e704d",
-    title: "Handbollsfritids & Teknikskola startar 8/11",
-    link: "https://www.laget.se/HarnosandsHF/News/7709515/Handbollsfritids---Teknikskola-startar-8-11",
-    description: "Äntligen dags för Handbollsfritids & Teknikskola igen!<br/><br/><i>Publicerad: 2024-09-30 08:42</i>",
-    pubDate: "Mon, 30 Sep 2024 06:42:54 GMT",
-    image: "https://laget001.blob.core.windows.net/10923470_medium.jpg",
-  },
-]
+interface NewsItem {
+  guid: string
+  title: string
+  link: string
+  description: string
+  cleanDescription: string // Added cleanDescription field
+  pubDate: string
+  image?: string
+}
 
 export default function NyheterPage() {
+  const [news, setNews] = useState<NewsItem[]>([])
+  const [loading, setLoading] = useState(true)
+  const [searchTerm, setSearchTerm] = useState("")
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    async function fetchNews() {
+      try {
+        const response = await fetch("/api/news-rss")
+        if (!response.ok) {
+          throw new Error("Failed to fetch news")
+        }
+        const newsData = await response.json()
+        setNews(newsData)
+      } catch (err) {
+        console.error("Error fetching news:", err)
+        setError("Kunde inte ladda nyheter. Försök igen senare.")
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchNews()
+  }, [])
+
+  const filteredNews = news.filter(
+    (item) =>
+      item.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      item.cleanDescription.toLowerCase().includes(searchTerm.toLowerCase()),
+  )
+
   return (
     <>
       <Header />
       <main className="flex-1 bg-white">
         <div className="h-24"></div> {/* Spacer for fixed header */}
         <div className="container px-4 md:px-6 py-8 md:py-12 lg:py-16">
-          <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl mb-8 text-green-700">Senaste Nyheterna</h1>
+          <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl mb-8 text-green-700">
+            Senaste Nyheterna
+          </h1>
           <p className="text-lg text-gray-700 mb-8">
             Här hittar du de senaste nyheterna och uppdateringarna från Härnösands HF.
           </p>
@@ -80,42 +87,75 @@ export default function NyheterPage() {
               <Input
                 type="text"
                 placeholder="Sök nyheter..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-green-500"
               />
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
             </div>
           </div>
 
-          <ul className="grid sm:grid-cols-2 gap-4">
-            {NEWS.map((item) => (
-              <li key={item.guid} className="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm">
-                {item.image && (
-                  <Link href={item.link} target="_blank" rel="noopener noreferrer">
-                    <Image
-                      src={item.image || "/placeholder.svg"}
-                      alt={item.title}
-                      width={600} // Added width
-                      height={400} // Added height
-                      className="w-full h-40 object-cover"
-                      priority // Use priority for images in the initial view
-                    />
-                  </Link>
-                )}
-                <div className="p-4">
-                  <Link href={item.link} target="_blank" rel="noopener noreferrer" className="hover:underline">
-                    <h3 className="text-lg font-semibold leading-snug">{item.title}</h3>
-                  </Link>
-                  {item.pubDate && <p className="text-xs text-gray-500 mt-1">{formatDate(item.pubDate)}</p>}
-                  <div
-                    className="prose prose-sm max-w-none text-gray-700 mt-3"
-                    dangerouslySetInnerHTML={{ __html: item.description }}
-                  />
-                </div>
-              </li>
-            ))}
-          </ul>
+          {loading && (
+            <div className="text-center py-8">
+              <p className="text-gray-600">Laddar nyheter...</p>
+            </div>
+          )}
 
-          {/* FAQ Section */}
+          {error && (
+            <div className="text-center py-8">
+              <p className="text-red-600">{error}</p>
+            </div>
+          )}
+
+          {!loading && !error && (
+            <ul className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredNews.map((item) => (
+                <li
+                  key={item.guid}
+                  className="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
+                >
+                  {item.image && (
+                    <div className="relative overflow-hidden">
+                      <Image
+                        src={item.image || "/placeholder.svg"}
+                        alt={item.title}
+                        width={600}
+                        height={300}
+                        className="w-full h-48 object-cover transition-transform duration-300 hover:scale-105"
+                        priority
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
+                    </div>
+                  )}
+                  <div className="p-6">
+                    <h3 className="text-xl font-bold leading-tight text-gray-900 mb-2 line-clamp-2">{item.title}</h3>
+                    {item.pubDate && (
+                      <p className="text-sm text-green-600 font-medium mb-3">{formatDate(item.pubDate)}</p>
+                    )}
+                    <p className="text-gray-700 mb-4 line-clamp-3">{item.cleanDescription}</p>
+                    <div className="flex justify-between items-center pt-4 border-t border-gray-100">
+                      <Button
+                        asChild
+                        className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg font-semibold transition-colors duration-200"
+                      >
+                        <Link href={item.link} target="_blank" rel="noopener noreferrer">
+                          Läs mer
+                        </Link>
+                      </Button>
+                      <span className="text-xs text-gray-400">Extern länk</span>
+                    </div>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+
+          {!loading && !error && filteredNews.length === 0 && searchTerm && (
+            <div className="text-center py-8">
+              <p className="text-gray-600">Inga nyheter hittades för "{searchTerm}"</p>
+            </div>
+          )}
+
           <section className="mt-16">
             <div className="bg-white shadow-lg rounded-lg p-8 md:p-12 max-w-4xl mx-auto">
               <h2 className="text-3xl font-bold text-green-700 mb-8 text-center">Vanliga frågor om att börja träna</h2>
