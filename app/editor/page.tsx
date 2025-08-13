@@ -1,5 +1,7 @@
 "use client"
 
+import type React from "react"
+
 import { useState, useEffect, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -7,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { toast } from "@/components/ui/use-toast"
 import { Toaster } from "@/components/ui/toaster"
-import { Save, Monitor, Tablet, Smartphone, Loader2, RefreshCw, ChevronDown, ChevronRight } from "lucide-react"
+import { Save, Monitor, Tablet, Smartphone, Loader2, RefreshCw, ChevronDown, ChevronRight, LogOut } from "lucide-react"
 
 const PAGES = [
   { name: "home", displayName: "Hem", path: "/" },
@@ -25,6 +27,10 @@ const VIEWPORTS = {
 }
 
 export default function EditorPage() {
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [isLoggingIn, setIsLoggingIn] = useState(false)
+  const [email, setEmail] = useState("")
+  const [password, setPassword] = useState("")
   const [currentPage, setCurrentPage] = useState(PAGES[0])
   const [viewport, setViewport] = useState<keyof typeof VIEWPORTS>("desktop")
   const [isSaving, setIsSaving] = useState(false)
@@ -37,14 +43,21 @@ export default function EditorPage() {
   const iframeRef = useRef<HTMLIFrameElement>(null)
 
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      setIframeSrc(`${window.location.origin}${currentPage.path}?editor=true&t=${Date.now()}`)
-    }
-  }, [currentPage])
+    // Check if already authenticated
+    checkAuthStatus()
+  }, [])
 
   useEffect(() => {
-    loadContent()
-  }, [currentPage])
+    if (isAuthenticated && typeof window !== "undefined") {
+      setIframeSrc(`${window.location.origin}${currentPage.path}?editor=true&t=${Date.now()}`)
+    }
+  }, [currentPage, isAuthenticated])
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      loadContent()
+    }
+  }, [currentPage, isAuthenticated])
 
   useEffect(() => {
     const currentContent = content[currentPage.name]
@@ -57,6 +70,78 @@ export default function EditorPage() {
       setHasChanges(false)
     }
   }, [content, originalContent, currentPage.name])
+
+  const checkAuthStatus = async () => {
+    try {
+      const response = await fetch("/api/auth/check", {
+        credentials: "include",
+      })
+      if (response.ok) {
+        setIsAuthenticated(true)
+      }
+    } catch (error) {
+      console.log("Not authenticated")
+    }
+  }
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setIsLoggingIn(true)
+
+    try {
+      const response = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email, password }),
+        credentials: "include",
+      })
+
+      if (response.ok) {
+        setIsAuthenticated(true)
+        toast({
+          title: "✅ Login Successful",
+          description: "Welcome to the editor!",
+          className: "bg-green-500 text-white",
+        })
+      } else {
+        const error = await response.json()
+        toast({
+          title: "❌ Login Failed",
+          description: error.error || "Invalid credentials",
+          variant: "destructive",
+        })
+      }
+    } catch (error) {
+      toast({
+        title: "❌ Login Error",
+        description: "Failed to authenticate",
+        variant: "destructive",
+      })
+    } finally {
+      setIsLoggingIn(false)
+    }
+  }
+
+  const handleLogout = async () => {
+    try {
+      await fetch("/api/auth/logout", {
+        method: "POST",
+        credentials: "include",
+      })
+      setIsAuthenticated(false)
+      setEmail("")
+      setPassword("")
+      toast({
+        title: "✅ Logged Out",
+        description: "You have been logged out successfully",
+        className: "bg-blue-500 text-white",
+      })
+    } catch (error) {
+      console.error("Logout error:", error)
+    }
+  }
 
   const loadContent = async () => {
     try {
@@ -330,6 +415,58 @@ export default function EditorPage() {
     )
   }
 
+  // Login form if not authenticated
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+        <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-md">
+          <div className="text-center mb-6">
+            <h1 className="text-2xl font-bold text-gray-800">Editor Login</h1>
+            <p className="text-gray-600 mt-2">Enter your credentials to access the editor</p>
+          </div>
+
+          <form onSubmit={handleLogin} className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
+              <Input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full text-black bg-white border border-gray-300"
+                placeholder="Enter your email"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Password</label>
+              <Input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full text-black bg-white border border-gray-300"
+                placeholder="Enter your password"
+                required
+              />
+            </div>
+
+            <Button type="submit" disabled={isLoggingIn} className="w-full bg-blue-600 hover:bg-blue-700 text-white">
+              {isLoggingIn ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Logging in...
+                </>
+              ) : (
+                "Login"
+              )}
+            </Button>
+          </form>
+        </div>
+        <Toaster />
+      </div>
+    )
+  }
+
   if (!iframeSrc) {
     return (
       <div className="h-screen bg-gray-100 flex items-center justify-center">
@@ -386,14 +523,21 @@ export default function EditorPage() {
           </Button>
         </div>
 
-        <Button
-          onClick={saveContent}
-          disabled={isSaving || !hasChanges}
-          className={hasChanges ? "bg-green-600 hover:bg-green-700 text-white" : ""}
-        >
-          {isSaving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
-          {isSaving ? "Saving..." : hasChanges ? "Save Changes" : "No Changes"}
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            onClick={saveContent}
+            disabled={isSaving || !hasChanges}
+            className={hasChanges ? "bg-green-600 hover:bg-green-700 text-white" : ""}
+          >
+            {isSaving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
+            {isSaving ? "Saving..." : hasChanges ? "Save Changes" : "No Changes"}
+          </Button>
+
+          <Button onClick={handleLogout} size="sm" variant="outline">
+            <LogOut className="w-4 h-4 mr-2" />
+            Logout
+          </Button>
+        </div>
       </div>
 
       {/* Main Content - Two Columns */}

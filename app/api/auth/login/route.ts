@@ -5,28 +5,29 @@ import { cookies } from "next/headers"
 
 /**
  * POST /api/auth/login
- * Body: { password: string }
- * Sets a signed cookie if the password matches the env var.
+ * Body: { email: string, password: string }
+ * Sets a signed cookie if the email and password match the env vars.
  */
 export async function POST(req: NextRequest) {
   try {
-    const { password } = await req.json()
+    const { email, password } = await req.json()
 
-    // This environment variable should be set in your Vercel project settings
+    // These environment variables should be set in your Vercel project settings
     // or .env.local for local development.
-    const envPass = process.env.EDITOR_PASSWORD
+    const envEmail = process.env.AUTH_EMAIL
+    const envPassword = process.env.AUTH_PASSWORD
 
-    if (!password || password !== envPass) {
+    if (!email || !password || email !== envEmail || password !== envPassword) {
       return NextResponse.json({ success: false, error: "Invalid credentials." }, { status: 401 })
     }
 
     cookies().set({
       name: "editor-auth",
-      value: "true",
+      value: "authenticated",
       httpOnly: true,
       sameSite: "lax",
       secure: process.env.NODE_ENV === "production",
-      maxAge: 60 * 60 * 8, // 8 hours
+      maxAge: 60 * 60 * 24 * 7, // 7 days
       path: "/",
     })
     return NextResponse.json({ success: true })

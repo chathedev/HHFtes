@@ -25,23 +25,17 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next()
   }
 
-  // For the /editor route, check Cloudflare Access authentication
+  // For the /editor route, check for authentication cookie
   if (pathname.startsWith("/editor")) {
-    // Check for Cloudflare Access JWT token
-    const cfAccessJwt = request.headers.get("cf-access-jwt-assertion")
-    const cfAccessEmail = request.headers.get("cf-access-authenticated-user-email")
+    const authCookie = request.cookies.get("editor-auth")
 
-    // If no Cloudflare Access headers, redirect to Cloudflare Access login
-    if (!cfAccessJwt || !cfAccessEmail) {
-      // Cloudflare Access will handle the authentication flow
-      const accessUrl = new URL(
-        `https://${process.env.CF_TEAM_DOMAIN}/cdn-cgi/access/login/${process.env.CF_ACCESS_AUD}`,
-      )
-      accessUrl.searchParams.set("redirect_url", request.url)
-      return NextResponse.redirect(accessUrl)
+    // If no auth cookie or invalid, the editor page will handle login
+    if (!authCookie || authCookie.value !== "authenticated") {
+      // Let the editor page handle the login form
+      return NextResponse.next()
     }
 
-    // If authenticated via Cloudflare Access, allow access
+    // If authenticated, allow access
     return NextResponse.next()
   }
 
