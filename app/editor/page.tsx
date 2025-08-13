@@ -105,27 +105,41 @@ export default function EditorPage() {
   const iframeRef = useRef<HTMLIFrameElement>(null)
 
   useEffect(() => {
-    const savedContent = localStorage.getItem("editor-content")
-    if (savedContent) {
-      try {
-        const parsed = JSON.parse(savedContent)
-        setContent(parsed)
-        setOriginalContent(parsed)
-      } catch (error) {
-        console.error("Error loading saved content:", error)
-      }
-    }
+    // Load content from hardcoded DEFAULT_CONTENT
+    setContent(DEFAULT_CONTENT)
+    setOriginalContent(DEFAULT_CONTENT)
   }, [])
 
   const saveContent = async () => {
     setIsSaving(true)
     try {
-      localStorage.setItem("editor-content", JSON.stringify(content))
+      // Commit each page's content to GitHub
+      for (const page of PAGES) {
+        const pageContent = content[page.name]
+        if (pageContent) {
+          const response = await fetch("/api/github-commit", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              filename: `content/${page.name}.json`,
+              content: JSON.stringify(pageContent, null, 2),
+              message: `Update ${page.displayName} content via editor`,
+            }),
+          })
+
+          if (!response.ok) {
+            throw new Error(`Failed to save ${page.name}`)
+          }
+        }
+      }
+
       setOriginalContent(JSON.parse(JSON.stringify(content)))
 
       toast({
-        title: "✅ Changes Saved",
-        description: `${currentPage.displayName} updated successfully`,
+        title: "✅ Changes Committed to GitHub",
+        description: `${currentPage.displayName} updated and pushed to repository`,
         className: "bg-green-500 text-white",
       })
 
@@ -134,9 +148,10 @@ export default function EditorPage() {
         iframeRef.current.src = `${currentPage.path}?t=${Date.now()}`
       }
     } catch (error) {
+      console.error("Save error:", error)
       toast({
-        title: "❌ Save Failed",
-        description: "Failed to save content",
+        title: "❌ GitHub Commit Failed",
+        description: "Failed to commit changes to repository",
         variant: "destructive",
       })
     } finally {
