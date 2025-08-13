@@ -82,16 +82,10 @@ export default function HomePage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await fetch("/content/home.json")
-        if (response.ok) {
-          const jsonContent = await response.json()
-          setContent(jsonContent)
-        } else {
-          console.error("Failed to load content from JSON, using default content")
-          setContent(defaultContent)
-        }
+        const dynamicContent = await getDynamicContent()
+        setContent(dynamicContent)
       } catch (error) {
-        console.error("Failed to load content from JSON:", error)
+        console.error("Failed to load dynamic content:", error)
         setContent(defaultContent)
       }
 
