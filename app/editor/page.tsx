@@ -156,57 +156,39 @@ export default function EditorPage() {
   const saveContent = async () => {
     setIsSaving(true)
     try {
-      const response = await fetch(`/api/content/${currentPage.name}`, {
-        method: "PUT",
+      const response = await fetch("/api/github-commit", {
+        method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(content[currentPage.name]),
+        body: JSON.stringify({
+          filename: `public/content/${currentPage.name}.json`,
+          content: JSON.stringify(content[currentPage.name], null, 2),
+          message: `Update ${currentPage.displayName} content via editor`,
+        }),
       })
 
       if (!response.ok) {
         throw new Error(`Failed to save ${currentPage.name}`)
       }
 
-      const result = await response.json()
-
       setOriginalContent((prev) => ({
         ...prev,
         [currentPage.name]: JSON.parse(JSON.stringify(content[currentPage.name])),
       }))
 
-      try {
-        const revalidateResponse = await fetch(
-          `/api/revalidate?secret=${process.env.NEXT_PUBLIC_REVALIDATE_SECRET || "fallback-secret"}`,
-        )
-        if (revalidateResponse.ok) {
-          toast({
-            title: "✅ Changes Published Live",
-            description: `${currentPage.displayName} updated and live on the website`,
-            className: "bg-green-500 text-white",
-          })
-        } else {
-          toast({
-            title: "⚠️ Changes Saved",
-            description: `${currentPage.displayName} saved but may need manual refresh to go live`,
-            className: "bg-yellow-500 text-white",
-          })
-        }
-      } catch (revalidateError) {
-        console.error("Revalidation error:", revalidateError)
-        toast({
-          title: "⚠️ Changes Saved",
-          description: `${currentPage.displayName} saved but may need manual refresh to go live`,
-          className: "bg-yellow-500 text-white",
-        })
-      }
+      toast({
+        title: "✅ Changes Committed to GitHub",
+        description: `${currentPage.displayName} updated and pushed to repository`,
+        className: "bg-green-500 text-white",
+      })
 
       refreshPreview()
     } catch (error) {
       console.error("Save error:", error)
       toast({
-        title: "❌ Save Failed",
-        description: "Failed to save changes",
+        title: "❌ GitHub Commit Failed",
+        description: "Failed to commit changes to repository",
         variant: "destructive",
       })
     } finally {
@@ -906,7 +888,7 @@ export default function EditorPage() {
             {isRefreshing && (
               <div className="absolute inset-0 bg-white/80 flex items-center justify-center z-10">
                 <div className="flex items-center gap-2 text-gray-600">
-                  <Loader2 className="w-5 h-5 animate-spin mr-2" />
+                  <Loader2 className="w-5 h-5 animate-spin" />
                   <span>Refreshing preview...</span>
                 </div>
               </div>

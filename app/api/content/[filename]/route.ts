@@ -1,6 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { loadContent, saveContent } from "@/lib/content-loader"
-import { revalidatePath } from "next/cache"
 
 export async function GET(request: NextRequest, { params }: { params: { filename: string } }) {
   try {
@@ -97,13 +96,8 @@ export async function PUT(request: NextRequest, { params }: { params: { filename
       // Also save locally as backup
       await saveContent(jsonFilename, content)
 
-      // Revalidate the specific page path
-      const pagePath = baseFilename === "home" ? "/" : `/${baseFilename}`
-      revalidatePath(pagePath)
-      console.log(`✅ Revalidated path: ${pagePath}`)
-
       return NextResponse.json({
-        message: "Content saved, committed to GitHub, and published live",
+        message: "Content saved and committed to GitHub successfully",
         commit: commitResult.commit,
       })
     } catch (githubError) {
@@ -113,12 +107,8 @@ export async function PUT(request: NextRequest, { params }: { params: { filename
       const success = await saveContent(jsonFilename, content)
 
       if (success) {
-        const pagePath = baseFilename === "home" ? "/" : `/${baseFilename}`
-        revalidatePath(pagePath)
-        console.log(`✅ Revalidated path: ${pagePath}`)
-
         return NextResponse.json({
-          message: "Content saved locally and published live (GitHub commit failed)",
+          message: "Content saved locally (GitHub commit failed)",
           warning: "Changes not committed to repository",
         })
       } else {
