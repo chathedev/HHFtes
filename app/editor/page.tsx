@@ -1,13 +1,13 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
+import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { toast } from "@/components/ui/use-toast"
 import { Toaster } from "@/components/ui/toaster"
-import { Save, Monitor, Tablet, Smartphone, Loader2, X, Check, Edit } from "lucide-react"
+import { Save, Monitor, Tablet, Smartphone, Loader2, X, Check } from "lucide-react"
 
 const PAGES = [
   { name: "home", displayName: "Hem", path: "/" },
@@ -32,6 +32,7 @@ const DEFAULT_CONTENT = {
       description: "Välkommen till Härnösands HF - där passion möter prestation",
       primaryButton: "Bli Medlem",
       secondaryButton: "Se Matcher",
+      backgroundImage: "/placeholder.svg?height=600&width=1200",
     },
     stats: {
       members: "200+",
@@ -62,35 +63,6 @@ const DEFAULT_CONTENT = {
       },
     ],
   },
-  lag: {
-    title: "Våra Lag",
-    description: "Härnösands HF har lag för alla åldrar och nivåer",
-    teams: [
-      {
-        name: "Herrar A-lag",
-        description: "Vårt herrlag som spelar i division 2",
-        ageGroup: "Senior",
-      },
-      {
-        name: "Damer A-lag",
-        description: "Vårt damlag som spelar i division 3",
-        ageGroup: "Senior",
-      },
-    ],
-  },
-  matcher: {
-    title: "Kommande Matcher",
-    description: "Se våra kommande matcher och resultat",
-    filters: ["Alla", "Hemma", "Borta"],
-  },
-  nyheter: {
-    title: "Nyheter",
-    description: "Håll dig uppdaterad med det senaste från föreningen",
-  },
-  partners: {
-    title: "Våra Partners",
-    description: "Tack till alla våra fantastiska partners som stödjer föreningen",
-  },
 }
 
 export default function EditorPage() {
@@ -101,38 +73,24 @@ export default function EditorPage() {
   const [editingField, setEditingField] = useState<string | null>(null)
   const [editingValue, setEditingValue] = useState("")
   const [isSaving, setIsSaving] = useState(false)
-  const [isEditMode, setIsEditMode] = useState(false)
-  const iframeRef = useRef<HTMLIFrameElement>(null)
-
-  useEffect(() => {
-    // Load content from hardcoded DEFAULT_CONTENT
-    setContent(DEFAULT_CONTENT)
-    setOriginalContent(DEFAULT_CONTENT)
-  }, [])
 
   const saveContent = async () => {
     setIsSaving(true)
     try {
-      // Commit each page's content to GitHub
-      for (const page of PAGES) {
-        const pageContent = content[page.name]
-        if (pageContent) {
-          const response = await fetch("/api/github-commit", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              filename: `content/${page.name}.json`,
-              content: JSON.stringify(pageContent, null, 2),
-              message: `Update ${page.displayName} content via editor`,
-            }),
-          })
+      const response = await fetch("/api/github-commit", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          filename: `content/${currentPage.name}.json`,
+          content: JSON.stringify(content[currentPage.name], null, 2),
+          message: `Update ${currentPage.displayName} content via editor`,
+        }),
+      })
 
-          if (!response.ok) {
-            throw new Error(`Failed to save ${page.name}`)
-          }
-        }
+      if (!response.ok) {
+        throw new Error(`Failed to save ${currentPage.name}`)
       }
 
       setOriginalContent(JSON.parse(JSON.stringify(content)))
@@ -142,11 +100,6 @@ export default function EditorPage() {
         description: `${currentPage.displayName} updated and pushed to repository`,
         className: "bg-green-500 text-white",
       })
-
-      // Refresh preview
-      if (iframeRef.current) {
-        iframeRef.current.src = `${currentPage.path}?t=${Date.now()}`
-      }
     } catch (error) {
       console.error("Save error:", error)
       toast({
@@ -159,12 +112,11 @@ export default function EditorPage() {
     }
   }
 
-  const handleFieldEdit = (fieldPath: string, currentValue: string) => {
+  const handleEdit = (fieldPath: string, currentValue: string) => {
     setEditingField(fieldPath)
     setEditingValue(currentValue)
   }
 
-  // Save field edit
   const saveField = () => {
     if (!editingField) return
 
@@ -183,87 +135,204 @@ export default function EditorPage() {
 
     toast({
       title: "Field Updated",
-      description: "Click Save Changes to persist all edits",
+      description: "Click Save Changes to commit to GitHub",
       className: "bg-blue-500 text-white",
     })
   }
 
-  // Cancel editing
   const cancelEdit = () => {
     setEditingField(null)
     setEditingValue("")
   }
 
-  const renderEditableFields = () => {
+  const renderPageContent = () => {
     const pageContent = content[currentPage.name] || {}
 
-    const renderField = (obj: any, path = "", level = 0) => {
-      return Object.entries(obj).map(([key, value]) => {
-        const fieldPath = path ? `${path}.${key}` : key
-        const fullPath = `${currentPage.name}.${fieldPath}`
-
-        if (typeof value === "object" && value !== null && !Array.isArray(value)) {
-          return (
-            <div key={fieldPath} className={`ml-${level * 4} mb-2`}>
-              <h4 className="font-medium text-gray-700 mb-1 capitalize">{key}</h4>
-              {renderField(value, fieldPath, level + 1)}
-            </div>
-          )
-        }
-
-        if (Array.isArray(value)) {
-          return (
-            <div key={fieldPath} className={`ml-${level * 4} mb-2`}>
-              <h4 className="font-medium text-gray-700 mb-1 capitalize">{key}</h4>
-              {value.map((item, index) => {
-                if (typeof item === "object") {
-                  return (
-                    <div key={index} className="ml-4 mb-2 p-2 border rounded">
-                      <span className="text-sm text-gray-500">Item {index + 1}</span>
-                      {renderField(item, `${fieldPath}.${index}`, level + 1)}
-                    </div>
-                  )
-                }
-                return (
-                  <div key={index} className="ml-4 mb-1">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleFieldEdit(`${fullPath}.${index}`, item)}
-                      className="text-left justify-start w-full"
-                    >
-                      <Edit className="w-3 h-3 mr-2" />
-                      {item.length > 50 ? `${item.substring(0, 50)}...` : item}
-                    </Button>
-                  </div>
-                )
-              })}
-            </div>
-          )
-        }
-
-        if (typeof value === "string") {
-          return (
-            <div key={fieldPath} className={`ml-${level * 4} mb-2`}>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => handleFieldEdit(fullPath, value)}
-                className="text-left justify-start w-full"
+    if (currentPage.name === "home") {
+      return (
+        <div className="min-h-screen">
+          {/* Hero Section */}
+          <section className="relative h-screen flex items-center justify-center text-white">
+            <div
+              className="absolute inset-0 bg-cover bg-center"
+              style={{ backgroundImage: `url(${pageContent.hero?.backgroundImage})` }}
+              onClick={() => handleEdit("home.hero.backgroundImage", pageContent.hero?.backgroundImage || "")}
+            />
+            <div className="absolute inset-0 bg-black/50" />
+            <div className="relative z-10 text-center max-w-4xl mx-auto px-4">
+              <h1
+                className="text-6xl font-bold mb-4 cursor-pointer hover:bg-white/10 p-2 rounded transition-colors"
+                onClick={() => handleEdit("home.hero.title", pageContent.hero?.title || "")}
               >
-                <Edit className="w-3 h-3 mr-2" />
-                <span className="font-medium mr-2 capitalize">{key}:</span>
-                {value.length > 50 ? `${value.substring(0, 50)}...` : value}
-              </Button>
+                {pageContent.hero?.title}
+              </h1>
+              <h2
+                className="text-2xl mb-6 cursor-pointer hover:bg-white/10 p-2 rounded transition-colors"
+                onClick={() => handleEdit("home.hero.subtitle", pageContent.hero?.subtitle || "")}
+              >
+                {pageContent.hero?.subtitle}
+              </h2>
+              <p
+                className="text-xl mb-8 cursor-pointer hover:bg-white/10 p-2 rounded transition-colors"
+                onClick={() => handleEdit("home.hero.description", pageContent.hero?.description || "")}
+              >
+                {pageContent.hero?.description}
+              </p>
+              <div className="flex gap-4 justify-center">
+                <button
+                  className="bg-green-600 hover:bg-green-700 px-8 py-3 rounded-lg font-semibold cursor-pointer hover:bg-white/10 transition-colors"
+                  onClick={() => handleEdit("home.hero.primaryButton", pageContent.hero?.primaryButton || "")}
+                >
+                  {pageContent.hero?.primaryButton}
+                </button>
+                <button
+                  className="border-2 border-white hover:bg-white hover:text-black px-8 py-3 rounded-lg font-semibold cursor-pointer hover:bg-white/10 transition-colors"
+                  onClick={() => handleEdit("home.hero.secondaryButton", pageContent.hero?.secondaryButton || "")}
+                >
+                  {pageContent.hero?.secondaryButton}
+                </button>
+              </div>
             </div>
-          )
-        }
+          </section>
 
-        return null
-      })
+          {/* Stats Section */}
+          <section className="py-16 bg-green-600 text-white">
+            <div className="container mx-auto px-4">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+                <div>
+                  <div
+                    className="text-4xl font-bold mb-2 cursor-pointer hover:bg-white/10 p-2 rounded transition-colors"
+                    onClick={() => handleEdit("home.stats.members", pageContent.stats?.members || "")}
+                  >
+                    {pageContent.stats?.members}
+                  </div>
+                  <div className="text-lg">Medlemmar</div>
+                </div>
+                <div>
+                  <div
+                    className="text-4xl font-bold mb-2 cursor-pointer hover:bg-white/10 p-2 rounded transition-colors"
+                    onClick={() => handleEdit("home.stats.teams", pageContent.stats?.teams || "")}
+                  >
+                    {pageContent.stats?.teams}
+                  </div>
+                  <div className="text-lg">Lag</div>
+                </div>
+                <div>
+                  <div
+                    className="text-4xl font-bold mb-2 cursor-pointer hover:bg-white/10 p-2 rounded transition-colors"
+                    onClick={() => handleEdit("home.stats.years", pageContent.stats?.years || "")}
+                  >
+                    {pageContent.stats?.years}
+                  </div>
+                  <div className="text-lg">År</div>
+                </div>
+                <div>
+                  <div
+                    className="text-4xl font-bold mb-2 cursor-pointer hover:bg-white/10 p-2 rounded transition-colors"
+                    onClick={() => handleEdit("home.stats.titles", pageContent.stats?.titles || "")}
+                  >
+                    {pageContent.stats?.titles}
+                  </div>
+                  <div className="text-lg">Titlar</div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* About Section */}
+          <section className="py-16 bg-white">
+            <div className="container mx-auto px-4">
+              <div className="max-w-4xl mx-auto text-center">
+                <h2
+                  className="text-4xl font-bold mb-6 cursor-pointer hover:bg-gray-100 p-2 rounded transition-colors"
+                  onClick={() => handleEdit("home.about.title", pageContent.about?.title || "")}
+                >
+                  {pageContent.about?.title}
+                </h2>
+                <p
+                  className="text-xl mb-8 cursor-pointer hover:bg-gray-100 p-2 rounded transition-colors"
+                  onClick={() => handleEdit("home.about.description", pageContent.about?.description || "")}
+                >
+                  {pageContent.about?.description}
+                </p>
+                <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+                  {pageContent.about?.features?.map((feature: string, index: number) => (
+                    <div
+                      key={index}
+                      className="p-4 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors"
+                      onClick={() => handleEdit(`home.about.features.${index}`, feature)}
+                    >
+                      {feature}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </section>
+        </div>
+      )
     }
 
-    return renderField(pageContent)
+    if (currentPage.name === "kontakt") {
+      return (
+        <div className="min-h-screen py-16 bg-gray-50">
+          <div className="container mx-auto px-4">
+            <div className="max-w-4xl mx-auto">
+              <h1
+                className="text-4xl font-bold text-center mb-6 cursor-pointer hover:bg-white/50 p-2 rounded transition-colors"
+                onClick={() => handleEdit("kontakt.title", pageContent.title || "")}
+              >
+                {pageContent.title}
+              </h1>
+              <p
+                className="text-xl text-center mb-12 cursor-pointer hover:bg-white/50 p-2 rounded transition-colors"
+                onClick={() => handleEdit("kontakt.description", pageContent.description || "")}
+              >
+                {pageContent.description}
+              </p>
+
+              <div className="grid md:grid-cols-2 gap-8">
+                {pageContent.departments?.map((dept: any, index: number) => (
+                  <div key={index} className="bg-white p-6 rounded-lg shadow-lg">
+                    <h3
+                      className="text-xl font-semibold mb-2 cursor-pointer hover:bg-gray-100 p-2 rounded transition-colors"
+                      onClick={() => handleEdit(`kontakt.departments.${index}.name`, dept.name)}
+                    >
+                      {dept.name}
+                    </h3>
+                    <p
+                      className="text-gray-600 mb-4 cursor-pointer hover:bg-gray-100 p-2 rounded transition-colors"
+                      onClick={() => handleEdit(`kontakt.departments.${index}.description`, dept.description)}
+                    >
+                      {dept.description}
+                    </p>
+                    <a
+                      href={`mailto:${dept.email}`}
+                      className="text-green-600 font-semibold cursor-pointer hover:bg-gray-100 p-2 rounded transition-colors inline-block"
+                      onClick={(e) => {
+                        e.preventDefault()
+                        handleEdit(`kontakt.departments.${index}.email`, dept.email)
+                      }}
+                    >
+                      {dept.email}
+                    </a>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )
+    }
+
+    return (
+      <div className="min-h-screen py-16 bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-4xl font-bold mb-4">{currentPage.displayName}</h1>
+          <p className="text-gray-600">Click elements to edit them</p>
+        </div>
+      </div>
+    )
   }
 
   const hasChanges = JSON.stringify(content) !== JSON.stringify(originalContent)
@@ -282,7 +351,7 @@ export default function EditorPage() {
             <SelectTrigger className="w-48 bg-white">
               <SelectValue />
             </SelectTrigger>
-            <SelectContent className="bg-white border shadow-lg">
+            <SelectContent className="bg-white border shadow-lg z-50">
               {PAGES.map((page) => (
                 <SelectItem key={page.name} value={page.name} className="bg-white hover:bg-gray-100">
                   {page.displayName}
@@ -306,11 +375,6 @@ export default function EditorPage() {
               )
             })}
           </div>
-
-          <Button variant={isEditMode ? "default" : "outline"} size="sm" onClick={() => setIsEditMode(!isEditMode)}>
-            <Edit className="w-4 h-4 mr-2" />
-            {isEditMode ? "Hide Editor" : "Show Editor"}
-          </Button>
         </div>
 
         <Button
@@ -323,34 +387,21 @@ export default function EditorPage() {
         </Button>
       </div>
 
-      <div className="flex-1 flex">
-        {isEditMode && (
-          <div className="w-80 bg-white border-r p-4 overflow-y-auto">
-            <h3 className="font-semibold mb-4">Edit {currentPage.displayName}</h3>
-            <div className="space-y-2">{renderEditableFields()}</div>
-          </div>
-        )}
-
-        <div className="flex-1 p-4 flex items-center justify-center">
-          <div
-            className="bg-white rounded-lg shadow-xl overflow-hidden"
-            style={{
-              width: VIEWPORTS[viewport].width,
-              height: VIEWPORTS[viewport].height,
-              maxWidth: "100%",
-              maxHeight: "100%",
-            }}
-          >
-            <iframe
-              ref={iframeRef}
-              src={`${currentPage.path}?t=${Date.now()}`}
-              className="w-full h-full border-0"
-              title="Live Preview"
-            />
-          </div>
+      <div className="flex-1 p-4 flex items-center justify-center overflow-auto">
+        <div
+          className="bg-white rounded-lg shadow-xl overflow-hidden overflow-y-auto"
+          style={{
+            width: VIEWPORTS[viewport].width,
+            height: VIEWPORTS[viewport].height,
+            maxWidth: "100%",
+            maxHeight: "100%",
+          }}
+        >
+          {renderPageContent()}
         </div>
       </div>
 
+      {/* Edit Modal */}
       {editingField && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 w-full max-w-md shadow-xl">
