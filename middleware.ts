@@ -14,7 +14,6 @@ export async function middleware(request: NextRequest) {
     pathname.startsWith("/opengraph-image.png") ||
     pathname.startsWith("/robots.txt") ||
     pathname.startsWith("/sitemap.xml") ||
-    pathname === "/login" || // Allow login page
     pathname === "/" ||
     pathname === "/nyheter" ||
     pathname === "/partners" ||
@@ -26,23 +25,26 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next()
   }
 
-  // For the /editor route, check for authentication token
+  // For the /editor route, check Cloudflare Access authentication
   if (pathname.startsWith("/editor")) {
-    const token = request.cookies.get("auth_token")?.value
+    // Check for Cloudflare Access JWT token
+    const cfAccessJwt = request.headers.get("cf-access-jwt-assertion")
+    const cfAccessEmail = request.headers.get("cf-access-authenticated-user-email")
 
-    if (!token) {
-      // Redirect to login page if no token is found
-      const loginUrl = new URL("/login", request.url)
-      loginUrl.searchParams.set("redirect", pathname) // Pass current path as redirect param
-      return NextResponse.redirect(loginUrl)
+    // If no Cloudflare Access headers, redirect to Cloudflare Access login
+    if (!cfAccessJwt || !cfAccessEmail) {
+      // Cloudflare Access will handle the authentication flow
+      const accessUrl = new URL(
+        `https://${process.env.CF_TEAM_DOMAIN}/cdn-cgi/access/login/${process.env.CF_ACCESS_AUD}`,
+      )
+      accessUrl.searchParams.set("redirect_url", request.url)
+      return NextResponse.redirect(accessUrl)
     }
 
-    // If token exists, allow access to /editor
+    // If authenticated via Cloudflare Access, allow access
     return NextResponse.next()
   }
 
-  // For any other path not explicitly handled, allow access (or redirect to home)
-  // You might want to add more specific routing logic here if needed
   return NextResponse.next()
 }
 
