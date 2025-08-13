@@ -89,7 +89,7 @@ export const defaultContent: FullContent = {
       tier: "Diamantpartner",
       benefits: ["Huvudsponsor", "Logotyp på matchställ", "Exklusiva event"],
       visibleInCarousel: true,
-      linkUrl: "https://jjbygg.se",
+      linkUrl: "https://jjbyggab.com",
     },
     {
       id: "ohmy",
