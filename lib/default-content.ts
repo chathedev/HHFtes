@@ -133,7 +133,7 @@ export const defaultContent: FullContent = {
       tier: "Platinapartner",
       benefits: ["Logotyp på hemsida", "Synlighet vid hemmamatcher"],
       visibleInCarousel: true,
-      linkUrl: "https://forsakringskonsult.se",
+      linkUrl: "https://forsakringskonsult.com",
     },
     {
       id: "bargab",
@@ -144,7 +144,7 @@ export const defaultContent: FullContent = {
       tier: "Guldpartner",
       benefits: ["Logotyp på hemsida", "Synlighet vid hemmamatcher"],
       visibleInCarousel: true,
-      linkUrl: "https://www.bargab.se",
+      linkUrl: undefined,
     },
     {
       id: "mekonomen",
@@ -155,7 +155,7 @@ export const defaultContent: FullContent = {
       tier: "Guldpartner",
       benefits: ["Logotyp på hemsida", "Synlighet vid hemmamatcher"],
       visibleInCarousel: true,
-      linkUrl: "https://www.mekonomen.se",
+      linkUrl: undefined,
     },
     {
       id: "sca",
@@ -166,7 +166,7 @@ export const defaultContent: FullContent = {
       tier: "Guldpartner",
       benefits: ["Logotyp på hemsida", "Synlighet vid hemmamatcher"],
       visibleInCarousel: true,
-      linkUrl: "https://www.sca.com",
+      linkUrl: undefined,
     },
     {
       id: "coop",
