@@ -63,6 +63,31 @@ const DEFAULT_CONTENT = {
       },
     ],
   },
+  lag: {
+    title: "Våra Lag",
+    teams: [
+      {
+        name: "Lag 1",
+        description: "Beskrivning av Lag 1",
+      },
+      {
+        name: "Lag 2",
+        description: "Beskrivning av Lag 2",
+      },
+    ],
+  },
+  matcher: {
+    title: "Kommande Matcher",
+    description: "Se våra kommande matcher och resultat",
+  },
+  nyheter: {
+    title: "Nyheter",
+    description: "Senaste nyheterna från föreningen",
+  },
+  partners: {
+    title: "Våra Partners",
+    description: "Tack till alla våra fantastiska partners",
+  },
 }
 
 export default function EditorPage() {
@@ -117,6 +142,39 @@ export default function EditorPage() {
     setEditingValue(currentValue)
   }
 
+  const handleImageEdit = (fieldPath: string, currentValue: string) => {
+    const input = document.createElement("input")
+    input.type = "file"
+    input.accept = "image/*"
+    input.onchange = (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0]
+      if (file) {
+        const reader = new FileReader()
+        reader.onload = (e) => {
+          const imageUrl = e.target?.result as string
+          const keys = fieldPath.split(".")
+          let obj = content
+
+          for (let i = 0; i < keys.length - 1; i++) {
+            if (!obj[keys[i]]) obj[keys[i]] = {}
+            obj = obj[keys[i]]
+          }
+
+          obj[keys[keys.length - 1]] = imageUrl
+          setContent({ ...content })
+
+          toast({
+            title: "Image Updated",
+            description: "Click Save Changes to commit to GitHub",
+            className: "bg-blue-500 text-white",
+          })
+        }
+        reader.readAsDataURL(file)
+      }
+    }
+    input.click()
+  }
+
   const saveField = () => {
     if (!editingField) return
 
@@ -154,9 +212,10 @@ export default function EditorPage() {
           {/* Hero Section */}
           <section className="relative h-screen flex items-center justify-center text-white">
             <div
-              className="absolute inset-0 bg-cover bg-center"
+              className="absolute inset-0 bg-cover bg-center cursor-pointer hover:opacity-80 transition-opacity"
               style={{ backgroundImage: `url(${pageContent.hero?.backgroundImage})` }}
-              onClick={() => handleEdit("home.hero.backgroundImage", pageContent.hero?.backgroundImage || "")}
+              onClick={() => handleImageEdit("home.hero.backgroundImage", pageContent.hero?.backgroundImage || "")}
+              title="Click to change background image"
             />
             <div className="absolute inset-0 bg-black/50" />
             <div className="relative z-10 text-center max-w-4xl mx-auto px-4">
@@ -325,6 +384,121 @@ export default function EditorPage() {
       )
     }
 
+    if (currentPage.name === "lag") {
+      return (
+        <div className="min-h-screen py-16 bg-gray-50">
+          <div className="container mx-auto px-4">
+            <h1
+              className="text-4xl font-bold text-center mb-12 cursor-pointer hover:bg-white/50 p-2 rounded transition-colors"
+              onClick={() => handleEdit("lag.title", pageContent.title || "Våra Lag")}
+            >
+              {pageContent.title || "Våra Lag"}
+            </h1>
+
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {pageContent.teams?.map((team: any, index: number) => (
+                <div key={index} className="bg-white p-6 rounded-lg shadow-lg">
+                  <h3
+                    className="text-xl font-semibold mb-2 cursor-pointer hover:bg-gray-100 p-2 rounded transition-colors"
+                    onClick={() => handleEdit(`lag.teams.${index}.name`, team.name)}
+                  >
+                    {team.name}
+                  </h3>
+                  <p
+                    className="text-gray-600 mb-4 cursor-pointer hover:bg-gray-100 p-2 rounded transition-colors"
+                    onClick={() => handleEdit(`lag.teams.${index}.description`, team.description)}
+                  >
+                    {team.description}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )
+    }
+
+    if (currentPage.name === "matcher") {
+      return (
+        <div className="min-h-screen py-16 bg-gray-50">
+          <div className="container mx-auto px-4">
+            <h1
+              className="text-4xl font-bold text-center mb-6 cursor-pointer hover:bg-white/50 p-2 rounded transition-colors"
+              onClick={() => handleEdit("matcher.title", pageContent.title || "Kommande Matcher")}
+            >
+              {pageContent.title || "Kommande Matcher"}
+            </h1>
+            <p
+              className="text-xl text-center mb-12 cursor-pointer hover:bg-white/50 p-2 rounded transition-colors"
+              onClick={() =>
+                handleEdit("matcher.description", pageContent.description || "Se våra kommande matcher och resultat")
+              }
+            >
+              {pageContent.description || "Se våra kommande matcher och resultat"}
+            </p>
+            <div className="text-center text-gray-600">
+              <p>Matcher hämtas dynamiskt från API (ej redigerbart)</p>
+            </div>
+          </div>
+        </div>
+      )
+    }
+
+    if (currentPage.name === "nyheter") {
+      return (
+        <div className="min-h-screen py-16 bg-gray-50">
+          <div className="container mx-auto px-4">
+            <h1
+              className="text-4xl font-bold text-center mb-6 cursor-pointer hover:bg-white/50 p-2 rounded transition-colors"
+              onClick={() => handleEdit("nyheter.title", pageContent.title || "Nyheter")}
+            >
+              {pageContent.title || "Nyheter"}
+            </h1>
+            <p
+              className="text-xl text-center mb-12 cursor-pointer hover:bg-white/50 p-2 rounded transition-colors"
+              onClick={() =>
+                handleEdit("nyheter.description", pageContent.description || "Senaste nyheterna från föreningen")
+              }
+            >
+              {pageContent.description || "Senaste nyheterna från föreningen"}
+            </p>
+            <div className="text-center text-gray-600">
+              <p>Nyheter hämtas dynamiskt från API (ej redigerbart)</p>
+            </div>
+          </div>
+        </div>
+      )
+    }
+
+    if (currentPage.name === "partners") {
+      return (
+        <div className="min-h-screen py-16 bg-gray-50">
+          <div className="container mx-auto px-4">
+            <h1
+              className="text-4xl font-bold text-center mb-6 cursor-pointer hover:bg-white/50 p-2 rounded transition-colors"
+              onClick={() => handleEdit("partners.title", pageContent.title || "Våra Partners")}
+            >
+              {pageContent.title || "Våra Partners"}
+            </h1>
+            <p
+              className="text-xl text-center mb-12 cursor-pointer hover:bg-white/50 p-2 rounded transition-colors"
+              onClick={() =>
+                handleEdit(
+                  "partners.description",
+                  pageContent.description || "Tack till alla våra fantastiska partners",
+                )
+              }
+            >
+              {pageContent.description || "Tack till alla våra fantastiska partners"}
+            </p>
+            <div className="text-center text-gray-600">
+              <p>Partners visas dynamiskt från konfiguration (ej redigerbart)</p>
+            </div>
+          </div>
+        </div>
+      )
+    }
+
     return (
       <div className="min-h-screen py-16 bg-gray-50 flex items-center justify-center">
         <div className="text-center">
@@ -405,21 +579,21 @@ export default function EditorPage() {
       {editingField && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 w-full max-w-md shadow-xl">
-            <h3 className="font-semibold mb-4">Edit: {editingField.split(".").pop()}</h3>
+            <h3 className="font-semibold mb-4 text-black">Edit: {editingField.split(".").pop()}</h3>
 
             {editingValue.length > 100 ? (
               <Textarea
                 value={editingValue}
                 onChange={(e) => setEditingValue(e.target.value)}
                 rows={4}
-                className="mb-4"
+                className="mb-4 text-black bg-white border border-gray-300"
                 placeholder="Enter your text here..."
               />
             ) : (
               <Input
                 value={editingValue}
                 onChange={(e) => setEditingValue(e.target.value)}
-                className="mb-4"
+                className="mb-4 text-black bg-white border border-gray-300"
                 placeholder="Enter your text here..."
               />
             )}
