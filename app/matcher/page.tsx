@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
+import { useEffect, useState } from "react"
 
 interface Match {
   date: string // YYYY-MM-DD
@@ -18,20 +19,39 @@ interface GroupedMatches {
   [monthYear: string]: Match[]
 }
 
-// Mock data for client-side rendering
-const mockMatches: Match[] = [
-  { date: "2025-08-20", time: "19:00", title: "Härnösands HF vs. Gästriklands HK" },
-  { date: "2025-08-27", time: "18:30", title: "Sundsvalls HK vs. Härnösands HF" },
-  { date: "2025-09-03", time: "20:00", title: "Härnösands HF vs. Umeå IK" },
-  { date: "2025-09-10", time: "Heldag", title: "Bortamatch mot Luleå HF" },
-  { date: "2025-10-05", time: "17:00 - 19:00", title: "Träningsmatch mot Örnsköldsvik HF" },
-]
-
 export default function MatcherPage() {
-  // In a real application, you would fetch this data from an API or server action
-  // For now, we'll use mock data or an empty array to demonstrate the "no matches" message.
-  const allMatches: Match[] = [] // Or mockMatches to test with matches
-  const error: string | null = null // Simulate no error for now
+  const [allMatches, setAllMatches] = useState<Match[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    const fetchMatches = async () => {
+      try {
+        const response = await fetch("/api/kalender-events")
+        if (!response.ok) {
+          throw new Error("Failed to fetch matches")
+        }
+        const events = await response.json()
+
+        // Filter events to only include matches
+        const matches = events.filter(
+          (event: any) =>
+            event.title &&
+            (event.title.toLowerCase().includes("vs") ||
+              event.title.toLowerCase().includes("mot") ||
+              event.title.toLowerCase().includes("match")),
+        )
+
+        setAllMatches(matches)
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Unknown error")
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchMatches()
+  }, [])
 
   const groupedMatches: GroupedMatches = allMatches.reduce((acc, match) => {
     const matchDate = new Date(match.date)
@@ -78,15 +98,16 @@ export default function MatcherPage() {
           <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl mb-4 text-center text-green-700">
             Kommande Matcher
           </h1>
+          {loading && <p className="text-center text-gray-600 mb-8">Laddar matcher...</p>}
           {error && (
             <p className="text-center text-red-500 mb-8">
               Fel: {error}. Detta kan bero på problem med att hämta data från källan.
             </p>
           )}
-          {!error && Object.keys(sortedGroupedMatches).length === 0 && (
+          {!loading && !error && Object.keys(sortedGroupedMatches).length === 0 && (
             <p className="text-lg text-gray-700 text-center mb-12">Inga matcher planerade för närvarande.</p>
           )}
-          {!error && Object.keys(sortedGroupedMatches).length > 0 && (
+          {!loading && !error && Object.keys(sortedGroupedMatches).length > 0 && (
             <div className="space-y-12 mb-16">
               {" "}
               {/* Added bottom margin */}

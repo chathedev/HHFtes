@@ -6,96 +6,45 @@ interface Event {
   title: string // Event description
 }
 
-async function fetchEventsForMonth(year: number, month: number): Promise<Event[]> {
-  const paddedMonth = month.toString().padStart(2, "0")
-  const url = `https://www.laget.se/HarnosandsHF/Event/FilterEvents?Year=${year}&Month=${paddedMonth}&PrintMode=False&SiteType=Club&Visibility=2&types=2&types=4&types=6&types=7`
+async function fetchEventsFromAPI(): Promise<Event[]> {
+  const url = `https://api.harnosandshf.se/api/events`
 
   try {
     const response = await fetch(url, {
-      headers: { "User-Agent": "Mozilla/5.0 (compatible; HHF/1.0)" },
+      headers: {
+        "User-Agent": "Mozilla/5.0 (compatible; HHF/1.0)",
+        Accept: "application/json",
+      },
       next: { revalidate: 3600 }, // Revalidate every hour
     })
+
     if (!response.ok) {
-      console.warn(`Failed to fetch events for ${year}-${month}: ${response.statusText}`)
+      console.warn(`Failed to fetch events from API: ${response.statusText}`)
       return []
     }
 
-    const html = await response.text()
-    const events: Event[] = []
+    const data = await response.json()
 
-    // Regex to find each day-group block and extract its date
-    const dayGroupRegex =
-      /<div[^>]+class="day-group"[^>]+data-day="(?<date>\d{4}-\d{2}-\d{2})"[^>]*>[\s\S]*?<\/div>\s*<\/div>/gi
-
-    let dayGroupMatch
-    while ((dayGroupMatch = dayGroupRegex.exec(html)) !== null) {
-      const { date, content: dayContent } = dayGroupMatch.groups as { date: string; content: string }
-
-      // Regex to find each event item within the day group
-      const eventItemRegex = /<li[^>]+class="event-item"[^>]*>(?<eventContent>[\s\S]*?)<\/li>/gi
-      let eventItemMatch
-
-      while ((eventItemMatch = eventItemRegex.exec(dayContent)) !== null) {
-        const eventHtml = eventItemMatch.groups!.eventContent
-
-        let time = "Okänd tid"
-        let title = ""
-
-        // Check for "Heldag" (Full day) events first
-        if (eventHtml.includes("Heldag")) {
-          time = "Heldag"
-          // Extract title by removing "Heldag" and any HTML tags
-          title = eventHtml
-            .replace(/<[^>]*>/g, " ")
-            .replace(/Heldag/i, "")
-            .replace(/\s+/g, " ")
-            .trim()
-        } else {
-          // Extract time from <time> tag
-          const timeMatch = eventHtml.match(/<time[^>]*>(\d{2}:\d{2})<\/time>/i)
-          time = timeMatch ? timeMatch[1] : "Okänd tid"
-
-          // Extract title: get all text, then remove time and other known unwanted strings
-          title = eventHtml
-            .replace(/<[^>]*>/g, " ") // Remove all HTML tags
-            .replace(time, "") // Remove the time string
-            .replace(/Läs mer/i, "") // Remove "Läs mer"
-            .replace(/v\.\d+/i, "") // Remove week numbers like "v.14"
-            .replace(/\s+/g, " ") // Replace multiple spaces with single space
-            .trim()
-        }
-
-        if (title) {
-          events.push({ date, time, title })
-        }
-      }
-    }
+    // Transform the API response to match our Event interface
+    // Assuming the API returns an array of events with similar structure
+    const events: Event[] = data
+      .map((event: any) => ({
+        date: event.date || event.startDate || event.eventDate,
+        time: event.time || event.startTime || "Okänd tid",
+        title: event.title || event.name || event.description || "",
+      }))
+      .filter((event: Event) => event.title) // Filter out events without titles
 
     return events
   } catch (err) {
-    console.error(`Error fetching ${url}:`, err)
+    console.error(`Error fetching from API ${url}:`, err)
     return []
   }
 }
 
 export async function GET(request: Request) {
   try {
-    const now = new Date()
-    const allEvents: Event[] = []
-
-    // Loop over the current month and the next 5 months (total 6 months)
-    for (let i = 0; i < 6; i++) {
-      let currentYear = now.getFullYear()
-      let currentMonth = now.getMonth() + 1 + i // 1-indexed month
-
-      if (currentMonth > 12) {
-        currentMonth -= 12
-        currentYear++
-      }
-
-      const monthEvents = await fetchEventsForMonth(currentYear, currentMonth)
-      allEvents.push(...monthEvents)
-    }
+    const allEvents = await fetchEventsFromAPI()
 
     // Sort all events by date and time
     allEvents.sort((a, b) => {

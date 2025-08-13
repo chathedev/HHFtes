@@ -12,10 +12,27 @@ interface NewsItem {
 
 function cleanHtmlContent(html: string): string {
   try {
-    const cleanText = html
-      // Remove all HTML tags
-      .replace(/<[^>]*>/g, "")
-      // Decode HTML entities
+    let cleanText = html
+
+    console.log("=== HTML CLEANING DEBUG ===")
+    console.log("Raw HTML:", html.substring(0, 200) + "...")
+
+    // First, handle CDATA sections
+    cleanText = cleanText.replace(/<!\[CDATA\[(.*?)\]\]>/g, "$1")
+    console.log("After CDATA removal:", cleanText.substring(0, 200) + "...")
+
+    // Remove all HTML tags more aggressively
+    cleanText = cleanText.replace(/<\/?[^>]+(>|$)/g, "")
+    console.log("After tag removal:", cleanText.substring(0, 200) + "...")
+
+    // Handle self-closing tags specifically
+    cleanText = cleanText.replace(/<[^>]*\/>/g, "")
+
+    // Remove any remaining < or > characters that might be malformed HTML
+    cleanText = cleanText.replace(/</g, "").replace(/>/g, "")
+
+    // Decode HTML entities
+    cleanText = cleanText
       .replace(/&nbsp;/g, " ")
       .replace(/&amp;/g, "&")
       .replace(/&lt;/g, "<")
@@ -24,15 +41,31 @@ function cleanHtmlContent(html: string): string {
       .replace(/&#39;/g, "'")
       .replace(/&#x27;/g, "'")
       .replace(/&apos;/g, "'")
-      // Clean up whitespace
-      .replace(/\s+/g, " ")
-      .replace(/\n+/g, " ")
-      .trim()
+      .replace(/&hellip;/g, "...")
+      .replace(/&mdash;/g, "—")
+      .replace(/&ndash;/g, "–")
+      .replace(/&rsquo;/g, "'")
+      .replace(/&lsquo;/g, "'")
+      .replace(/&rdquo;/g, '"')
+      .replace(/&ldquo;/g, '"')
+
+    // Clean up whitespace and line breaks
+    cleanText = cleanText.replace(/\s+/g, " ").replace(/\n+/g, " ").replace(/\r+/g, " ").replace(/\t+/g, " ").trim()
+
+    console.log("Final cleaned text:", cleanText.substring(0, 200) + "...")
+    console.log("=== END DEBUG ===")
 
     return cleanText
   } catch (error) {
     console.error("Error cleaning HTML content:", error)
-    return html.replace(/<[^>]*>/g, "").trim()
+    // Fallback: very aggressive cleaning
+    return html
+      .replace(/<[^>]*>/g, "")
+      .replace(/</g, "")
+      .replace(/>/g, "")
+      .replace(/&[^;]+;/g, " ")
+      .replace(/\s+/g, " ")
+      .trim()
   }
 }
 
