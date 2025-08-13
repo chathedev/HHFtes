@@ -4,11 +4,9 @@ import { loadContent, saveContent } from "@/lib/content-loader"
 export async function GET(request: NextRequest, { params }: { params: { filename: string } }) {
   try {
     const filename = params.filename
-    if (!filename.endsWith(".json")) {
-      return NextResponse.json({ error: "Invalid file type" }, { status: 400 })
-    }
+    const jsonFilename = filename.endsWith(".json") ? filename : `${filename}.json`
 
-    const content = await loadContent(filename)
+    const content = await loadContent(jsonFilename)
     return NextResponse.json(content)
   } catch (error) {
     console.error("Error loading content:", error)
@@ -86,18 +84,17 @@ async function commitToGitHub(filename: string, content: any) {
 export async function PUT(request: NextRequest, { params }: { params: { filename: string } }) {
   try {
     const filename = params.filename
-    if (!filename.endsWith(".json")) {
-      return NextResponse.json({ error: "Invalid file type" }, { status: 400 })
-    }
+    const baseFilename = filename.replace(".json", "")
+    const jsonFilename = filename.endsWith(".json") ? filename : `${filename}.json`
 
     const content = await request.json()
 
     // Try to commit to GitHub first
     try {
-      const commitResult = await commitToGitHub(filename.replace(".json", ""), content)
+      const commitResult = await commitToGitHub(baseFilename, content)
 
       // Also save locally as backup
-      await saveContent(filename, content)
+      await saveContent(jsonFilename, content)
 
       return NextResponse.json({
         message: "Content saved and committed to GitHub successfully",
@@ -107,7 +104,7 @@ export async function PUT(request: NextRequest, { params }: { params: { filename
       console.error("GitHub commit failed:", githubError)
 
       // Fallback to local save only
-      const success = await saveContent(filename, content)
+      const success = await saveContent(jsonFilename, content)
 
       if (success) {
         return NextResponse.json({
