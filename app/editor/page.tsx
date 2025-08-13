@@ -1,13 +1,13 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { toast } from "@/components/ui/use-toast"
 import { Toaster } from "@/components/ui/toaster"
-import { Save, Monitor, Tablet, Smartphone, Loader2, X, Check } from "lucide-react"
+import { Save, Monitor, Tablet, Smartphone, Loader2, X, Check, RefreshCw } from "lucide-react"
 
 const PAGES = [
   { name: "home", displayName: "Hem", path: "/" },
@@ -24,80 +24,33 @@ const VIEWPORTS = {
   mobile: { width: "375px", height: "667px", icon: Smartphone },
 }
 
-const DEFAULT_CONTENT = {
-  home: {
-    hero: {
-      title: "LAGET FÖRE ALLT",
-      subtitle: "Härnösands Handbollsförening",
-      description: "Välkommen till Härnösands HF - där passion möter prestation",
-      primaryButton: "Bli Medlem",
-      secondaryButton: "Se Matcher",
-      backgroundImage: "/placeholder.svg?height=600&width=1200",
-    },
-    stats: {
-      members: "200+",
-      teams: "12",
-      years: "25+",
-      titles: "15",
-    },
-    about: {
-      title: "Om Härnösands HF",
-      description:
-        "Vi är en handbollsförening som brinner för sporten och gemenskapen. Sedan 1999 har vi varit en del av Härnösands idrottsliv.",
-      features: ["Professionell träning", "Stark gemenskap", "Alla åldrar välkomna", "Moderna faciliteter"],
-    },
-  },
-  kontakt: {
-    title: "Kontakta Oss",
-    description: "Har du frågor eller vill veta mer om föreningen? Hör av dig till oss!",
-    departments: [
-      {
-        name: "Allmän Information",
-        email: "kontakt@harnosandshf.se",
-        description: "För allmänna frågor om föreningen",
-      },
-      {
-        name: "Marknadsföring",
-        email: "marknad@harnosandshf.se",
-        description: "Vill du sponsra oss eller samarbeta?",
-      },
-    ],
-  },
-  lag: {
-    title: "Våra Lag",
-    teams: [
-      {
-        name: "Lag 1",
-        description: "Beskrivning av Lag 1",
-      },
-      {
-        name: "Lag 2",
-        description: "Beskrivning av Lag 2",
-      },
-    ],
-  },
-  matcher: {
-    title: "Kommande Matcher",
-    description: "Se våra kommande matcher och resultat",
-  },
-  nyheter: {
-    title: "Nyheter",
-    description: "Senaste nyheterna från föreningen",
-  },
-  partners: {
-    title: "Våra Partners",
-    description: "Tack till alla våra fantastiska partners",
-  },
-}
-
 export default function EditorPage() {
   const [currentPage, setCurrentPage] = useState(PAGES[0])
   const [viewport, setViewport] = useState<keyof typeof VIEWPORTS>("desktop")
-  const [content, setContent] = useState<any>(DEFAULT_CONTENT)
-  const [originalContent, setOriginalContent] = useState<any>(DEFAULT_CONTENT)
   const [editingField, setEditingField] = useState<string | null>(null)
   const [editingValue, setEditingValue] = useState("")
   const [isSaving, setIsSaving] = useState(false)
+  const [isRefreshing, setIsRefreshing] = useState(false)
+  const [content, setContent] = useState<any>({})
+  const [originalContent, setOriginalContent] = useState<any>({})
+  const iframeRef = useRef<HTMLIFrameElement>(null)
+
+  useEffect(() => {
+    loadContent()
+  }, [currentPage])
+
+  const loadContent = async () => {
+    try {
+      const response = await fetch(`/content/${currentPage.name}.json`)
+      if (response.ok) {
+        const data = await response.json()
+        setContent({ ...content, [currentPage.name]: data })
+        setOriginalContent({ ...originalContent, [currentPage.name]: data })
+      }
+    } catch (error) {
+      console.error("Failed to load content:", error)
+    }
+  }
 
   const saveContent = async () => {
     setIsSaving(true)
@@ -118,13 +71,15 @@ export default function EditorPage() {
         throw new Error(`Failed to save ${currentPage.name}`)
       }
 
-      setOriginalContent(JSON.parse(JSON.stringify(content)))
+      setOriginalContent({ ...originalContent, [currentPage.name]: content[currentPage.name] })
 
       toast({
         title: "✅ Changes Committed to GitHub",
         description: `${currentPage.displayName} updated and pushed to repository`,
         className: "bg-green-500 text-white",
       })
+
+      refreshPreview()
     } catch (error) {
       console.error("Save error:", error)
       toast({
@@ -137,12 +92,20 @@ export default function EditorPage() {
     }
   }
 
+  const refreshPreview = () => {
+    setIsRefreshing(true)
+    if (iframeRef.current) {
+      iframeRef.current.src = iframeRef.current.src
+      setTimeout(() => setIsRefreshing(false), 1000)
+    }
+  }
+
   const handleEdit = (fieldPath: string, currentValue: string) => {
     setEditingField(fieldPath)
     setEditingValue(currentValue)
   }
 
-  const handleImageEdit = (fieldPath: string, currentValue: string) => {
+  const handleImageEdit = (fieldPath: string) => {
     const input = document.createElement("input")
     input.type = "file"
     input.accept = "image/*"
@@ -152,16 +115,7 @@ export default function EditorPage() {
         const reader = new FileReader()
         reader.onload = (e) => {
           const imageUrl = e.target?.result as string
-          const keys = fieldPath.split(".")
-          let obj = content
-
-          for (let i = 0; i < keys.length - 1; i++) {
-            if (!obj[keys[i]]) obj[keys[i]] = {}
-            obj = obj[keys[i]]
-          }
-
-          obj[keys[keys.length - 1]] = imageUrl
-          setContent({ ...content })
+          updateContentField(fieldPath, imageUrl)
 
           toast({
             title: "Image Updated",
@@ -175,19 +129,27 @@ export default function EditorPage() {
     input.click()
   }
 
+  const updateContentField = (fieldPath: string, value: string) => {
+    const keys = fieldPath.split(".")
+    const pageKey = keys[0]
+    const fieldKeys = keys.slice(1)
+
+    const obj = content[pageKey] || {}
+    let current = obj
+
+    for (let i = 0; i < fieldKeys.length - 1; i++) {
+      if (!current[fieldKeys[i]]) current[fieldKeys[i]] = {}
+      current = current[fieldKeys[i]]
+    }
+
+    current[fieldKeys[fieldKeys.length - 1]] = value
+    setContent({ ...content, [pageKey]: obj })
+  }
+
   const saveField = () => {
     if (!editingField) return
 
-    const keys = editingField.split(".")
-    let obj = content
-
-    for (let i = 0; i < keys.length - 1; i++) {
-      if (!obj[keys[i]]) obj[keys[i]] = {}
-      obj = obj[keys[i]]
-    }
-
-    obj[keys[keys.length - 1]] = editingValue
-    setContent({ ...content })
+    updateContentField(editingField, editingValue)
     setEditingField(null)
     setEditingValue("")
 
@@ -203,313 +165,22 @@ export default function EditorPage() {
     setEditingValue("")
   }
 
-  const renderPageContent = () => {
-    const pageContent = content[currentPage.name] || {}
-
-    if (currentPage.name === "home") {
-      return (
-        <div className="min-h-screen">
-          {/* Hero Section */}
-          <section className="relative h-screen flex items-center justify-center text-white">
-            <div
-              className="absolute inset-0 bg-cover bg-center cursor-pointer hover:opacity-80 transition-opacity"
-              style={{ backgroundImage: `url(${pageContent.hero?.backgroundImage})` }}
-              onClick={() => handleImageEdit("home.hero.backgroundImage", pageContent.hero?.backgroundImage || "")}
-              title="Click to change background image"
-            />
-            <div className="absolute inset-0 bg-black/50" />
-            <div className="relative z-10 text-center max-w-4xl mx-auto px-4">
-              <h1
-                className="text-6xl font-bold mb-4 cursor-pointer hover:bg-white/10 p-2 rounded transition-colors"
-                onClick={() => handleEdit("home.hero.title", pageContent.hero?.title || "")}
-              >
-                {pageContent.hero?.title}
-              </h1>
-              <h2
-                className="text-2xl mb-6 cursor-pointer hover:bg-white/10 p-2 rounded transition-colors"
-                onClick={() => handleEdit("home.hero.subtitle", pageContent.hero?.subtitle || "")}
-              >
-                {pageContent.hero?.subtitle}
-              </h2>
-              <p
-                className="text-xl mb-8 cursor-pointer hover:bg-white/10 p-2 rounded transition-colors"
-                onClick={() => handleEdit("home.hero.description", pageContent.hero?.description || "")}
-              >
-                {pageContent.hero?.description}
-              </p>
-              <div className="flex gap-4 justify-center">
-                <button
-                  className="bg-green-600 hover:bg-green-700 px-8 py-3 rounded-lg font-semibold cursor-pointer hover:bg-white/10 transition-colors"
-                  onClick={() => handleEdit("home.hero.primaryButton", pageContent.hero?.primaryButton || "")}
-                >
-                  {pageContent.hero?.primaryButton}
-                </button>
-                <button
-                  className="border-2 border-white hover:bg-white hover:text-black px-8 py-3 rounded-lg font-semibold cursor-pointer hover:bg-white/10 transition-colors"
-                  onClick={() => handleEdit("home.hero.secondaryButton", pageContent.hero?.secondaryButton || "")}
-                >
-                  {pageContent.hero?.secondaryButton}
-                </button>
-              </div>
-            </div>
-          </section>
-
-          {/* Stats Section */}
-          <section className="py-16 bg-green-600 text-white">
-            <div className="container mx-auto px-4">
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
-                <div>
-                  <div
-                    className="text-4xl font-bold mb-2 cursor-pointer hover:bg-white/10 p-2 rounded transition-colors"
-                    onClick={() => handleEdit("home.stats.members", pageContent.stats?.members || "")}
-                  >
-                    {pageContent.stats?.members}
-                  </div>
-                  <div className="text-lg">Medlemmar</div>
-                </div>
-                <div>
-                  <div
-                    className="text-4xl font-bold mb-2 cursor-pointer hover:bg-white/10 p-2 rounded transition-colors"
-                    onClick={() => handleEdit("home.stats.teams", pageContent.stats?.teams || "")}
-                  >
-                    {pageContent.stats?.teams}
-                  </div>
-                  <div className="text-lg">Lag</div>
-                </div>
-                <div>
-                  <div
-                    className="text-4xl font-bold mb-2 cursor-pointer hover:bg-white/10 p-2 rounded transition-colors"
-                    onClick={() => handleEdit("home.stats.years", pageContent.stats?.years || "")}
-                  >
-                    {pageContent.stats?.years}
-                  </div>
-                  <div className="text-lg">År</div>
-                </div>
-                <div>
-                  <div
-                    className="text-4xl font-bold mb-2 cursor-pointer hover:bg-white/10 p-2 rounded transition-colors"
-                    onClick={() => handleEdit("home.stats.titles", pageContent.stats?.titles || "")}
-                  >
-                    {pageContent.stats?.titles}
-                  </div>
-                  <div className="text-lg">Titlar</div>
-                </div>
-              </div>
-            </div>
-          </section>
-
-          {/* About Section */}
-          <section className="py-16 bg-white">
-            <div className="container mx-auto px-4">
-              <div className="max-w-4xl mx-auto text-center">
-                <h2
-                  className="text-4xl font-bold mb-6 cursor-pointer hover:bg-gray-100 p-2 rounded transition-colors"
-                  onClick={() => handleEdit("home.about.title", pageContent.about?.title || "")}
-                >
-                  {pageContent.about?.title}
-                </h2>
-                <p
-                  className="text-xl mb-8 cursor-pointer hover:bg-gray-100 p-2 rounded transition-colors"
-                  onClick={() => handleEdit("home.about.description", pageContent.about?.description || "")}
-                >
-                  {pageContent.about?.description}
-                </p>
-                <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-                  {pageContent.about?.features?.map((feature: string, index: number) => (
-                    <div
-                      key={index}
-                      className="p-4 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors"
-                      onClick={() => handleEdit(`home.about.features.${index}`, feature)}
-                    >
-                      {feature}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </section>
-        </div>
-      )
+  useEffect(() => {
+    const handleMessage = (event: MessageEvent) => {
+      if (event.data.type === "EDIT_REQUEST") {
+        const { fieldPath, currentValue } = event.data
+        handleEdit(fieldPath, currentValue)
+      } else if (event.data.type === "IMAGE_EDIT_REQUEST") {
+        const { fieldPath } = event.data
+        handleImageEdit(fieldPath)
+      }
     }
 
-    if (currentPage.name === "kontakt") {
-      return (
-        <div className="min-h-screen py-16 bg-gray-50">
-          <div className="container mx-auto px-4">
-            <div className="max-w-4xl mx-auto">
-              <h1
-                className="text-4xl font-bold text-center mb-6 cursor-pointer hover:bg-white/50 p-2 rounded transition-colors"
-                onClick={() => handleEdit("kontakt.title", pageContent.title || "")}
-              >
-                {pageContent.title}
-              </h1>
-              <p
-                className="text-xl text-center mb-12 cursor-pointer hover:bg-white/50 p-2 rounded transition-colors"
-                onClick={() => handleEdit("kontakt.description", pageContent.description || "")}
-              >
-                {pageContent.description}
-              </p>
+    window.addEventListener("message", handleMessage)
+    return () => window.removeEventListener("message", handleMessage)
+  }, [])
 
-              <div className="grid md:grid-cols-2 gap-8">
-                {pageContent.departments?.map((dept: any, index: number) => (
-                  <div key={index} className="bg-white p-6 rounded-lg shadow-lg">
-                    <h3
-                      className="text-xl font-semibold mb-2 cursor-pointer hover:bg-gray-100 p-2 rounded transition-colors"
-                      onClick={() => handleEdit(`kontakt.departments.${index}.name`, dept.name)}
-                    >
-                      {dept.name}
-                    </h3>
-                    <p
-                      className="text-gray-600 mb-4 cursor-pointer hover:bg-gray-100 p-2 rounded transition-colors"
-                      onClick={() => handleEdit(`kontakt.departments.${index}.description`, dept.description)}
-                    >
-                      {dept.description}
-                    </p>
-                    <a
-                      href={`mailto:${dept.email}`}
-                      className="text-green-600 font-semibold cursor-pointer hover:bg-gray-100 p-2 rounded transition-colors inline-block"
-                      onClick={(e) => {
-                        e.preventDefault()
-                        handleEdit(`kontakt.departments.${index}.email`, dept.email)
-                      }}
-                    >
-                      {dept.email}
-                    </a>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      )
-    }
-
-    if (currentPage.name === "lag") {
-      return (
-        <div className="min-h-screen py-16 bg-gray-50">
-          <div className="container mx-auto px-4">
-            <h1
-              className="text-4xl font-bold text-center mb-12 cursor-pointer hover:bg-white/50 p-2 rounded transition-colors"
-              onClick={() => handleEdit("lag.title", pageContent.title || "Våra Lag")}
-            >
-              {pageContent.title || "Våra Lag"}
-            </h1>
-
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {pageContent.teams?.map((team: any, index: number) => (
-                <div key={index} className="bg-white p-6 rounded-lg shadow-lg">
-                  <h3
-                    className="text-xl font-semibold mb-2 cursor-pointer hover:bg-gray-100 p-2 rounded transition-colors"
-                    onClick={() => handleEdit(`lag.teams.${index}.name`, team.name)}
-                  >
-                    {team.name}
-                  </h3>
-                  <p
-                    className="text-gray-600 mb-4 cursor-pointer hover:bg-gray-100 p-2 rounded transition-colors"
-                    onClick={() => handleEdit(`lag.teams.${index}.description`, team.description)}
-                  >
-                    {team.description}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      )
-    }
-
-    if (currentPage.name === "matcher") {
-      return (
-        <div className="min-h-screen py-16 bg-gray-50">
-          <div className="container mx-auto px-4">
-            <h1
-              className="text-4xl font-bold text-center mb-6 cursor-pointer hover:bg-white/50 p-2 rounded transition-colors"
-              onClick={() => handleEdit("matcher.title", pageContent.title || "Kommande Matcher")}
-            >
-              {pageContent.title || "Kommande Matcher"}
-            </h1>
-            <p
-              className="text-xl text-center mb-12 cursor-pointer hover:bg-white/50 p-2 rounded transition-colors"
-              onClick={() =>
-                handleEdit("matcher.description", pageContent.description || "Se våra kommande matcher och resultat")
-              }
-            >
-              {pageContent.description || "Se våra kommande matcher och resultat"}
-            </p>
-            <div className="text-center text-gray-600">
-              <p>Matcher hämtas dynamiskt från API (ej redigerbart)</p>
-            </div>
-          </div>
-        </div>
-      )
-    }
-
-    if (currentPage.name === "nyheter") {
-      return (
-        <div className="min-h-screen py-16 bg-gray-50">
-          <div className="container mx-auto px-4">
-            <h1
-              className="text-4xl font-bold text-center mb-6 cursor-pointer hover:bg-white/50 p-2 rounded transition-colors"
-              onClick={() => handleEdit("nyheter.title", pageContent.title || "Nyheter")}
-            >
-              {pageContent.title || "Nyheter"}
-            </h1>
-            <p
-              className="text-xl text-center mb-12 cursor-pointer hover:bg-white/50 p-2 rounded transition-colors"
-              onClick={() =>
-                handleEdit("nyheter.description", pageContent.description || "Senaste nyheterna från föreningen")
-              }
-            >
-              {pageContent.description || "Senaste nyheterna från föreningen"}
-            </p>
-            <div className="text-center text-gray-600">
-              <p>Nyheter hämtas dynamiskt från API (ej redigerbart)</p>
-            </div>
-          </div>
-        </div>
-      )
-    }
-
-    if (currentPage.name === "partners") {
-      return (
-        <div className="min-h-screen py-16 bg-gray-50">
-          <div className="container mx-auto px-4">
-            <h1
-              className="text-4xl font-bold text-center mb-6 cursor-pointer hover:bg-white/50 p-2 rounded transition-colors"
-              onClick={() => handleEdit("partners.title", pageContent.title || "Våra Partners")}
-            >
-              {pageContent.title || "Våra Partners"}
-            </h1>
-            <p
-              className="text-xl text-center mb-12 cursor-pointer hover:bg-white/50 p-2 rounded transition-colors"
-              onClick={() =>
-                handleEdit(
-                  "partners.description",
-                  pageContent.description || "Tack till alla våra fantastiska partners",
-                )
-              }
-            >
-              {pageContent.description || "Tack till alla våra fantastiska partners"}
-            </p>
-            <div className="text-center text-gray-600">
-              <p>Partners visas dynamiskt från konfiguration (ej redigerbart)</p>
-            </div>
-          </div>
-        </div>
-      )
-    }
-
-    return (
-      <div className="min-h-screen py-16 bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-4xl font-bold mb-4">{currentPage.displayName}</h1>
-          <p className="text-gray-600">Click elements to edit them</p>
-        </div>
-      </div>
-    )
-  }
-
-  const hasChanges = JSON.stringify(content) !== JSON.stringify(originalContent)
+  const hasChanges = JSON.stringify(content[currentPage.name]) !== JSON.stringify(originalContent[currentPage.name])
 
   return (
     <div className="h-screen bg-gray-100 flex flex-col">
@@ -522,7 +193,7 @@ export default function EditorPage() {
               if (page) setCurrentPage(page)
             }}
           >
-            <SelectTrigger className="w-48 bg-white">
+            <SelectTrigger className="w-48 bg-white border-gray-300">
               <SelectValue />
             </SelectTrigger>
             <SelectContent className="bg-white border shadow-lg z-50">
@@ -549,6 +220,10 @@ export default function EditorPage() {
               )
             })}
           </div>
+
+          <Button onClick={refreshPreview} disabled={isRefreshing} size="sm" variant="outline">
+            <RefreshCw className={`w-4 h-4 ${isRefreshing ? "animate-spin" : ""}`} />
+          </Button>
         </div>
 
         <Button
@@ -561,9 +236,9 @@ export default function EditorPage() {
         </Button>
       </div>
 
-      <div className="flex-1 p-4 flex items-center justify-center overflow-auto">
+      <div className="flex-1 p-4 flex items-center justify-center overflow-hidden">
         <div
-          className="bg-white rounded-lg shadow-xl overflow-hidden overflow-y-auto"
+          className="bg-white rounded-lg shadow-xl overflow-hidden relative"
           style={{
             width: VIEWPORTS[viewport].width,
             height: VIEWPORTS[viewport].height,
@@ -571,11 +246,87 @@ export default function EditorPage() {
             maxHeight: "100%",
           }}
         >
-          {renderPageContent()}
+          {isRefreshing && (
+            <div className="absolute inset-0 bg-white/80 flex items-center justify-center z-10">
+              <div className="flex items-center gap-2 text-gray-600">
+                <Loader2 className="w-5 h-5 animate-spin" />
+                <span>Refreshing preview...</span>
+              </div>
+            </div>
+          )}
+
+          <iframe
+            ref={iframeRef}
+            src={`${window.location.origin}${currentPage.path}?editor=true`}
+            className="w-full h-full border-0"
+            title={`Preview of ${currentPage.displayName}`}
+            onLoad={() => {
+              setIsRefreshing(false)
+              if (iframeRef.current?.contentWindow) {
+                const script = `
+                  document.addEventListener('click', function(e) {
+                    if (e.target.dataset.editable) {
+                      e.preventDefault()
+                      e.stopPropagation()
+                      
+                      const fieldPath = e.target.dataset.fieldPath
+                      const currentValue = e.target.textContent || e.target.value || e.target.src || ''
+                      
+                      if (e.target.tagName === 'IMG') {
+                        parent.postMessage({
+                          type: 'IMAGE_EDIT_REQUEST',
+                          fieldPath: fieldPath
+                        }, '*')
+                      } else {
+                        parent.postMessage({
+                          type: 'EDIT_REQUEST',
+                          fieldPath: fieldPath,
+                          currentValue: currentValue
+                        }, '*')
+                      }
+                    }
+                  })
+                  
+                  const style = document.createElement('style')
+                  style.textContent = \`
+                    [data-editable] {
+                      cursor: pointer !important;
+                      transition: all 0.2s ease !important;
+                      position: relative !important;
+                    }
+                    [data-editable]:hover {
+                      background-color: rgba(59, 130, 246, 0.1) !important;
+                      outline: 2px dashed #3b82f6 !important;
+                      outline-offset: 2px !important;
+                    }
+                    [data-editable]:hover::after {
+                      content: "Click to edit" !important;
+                      position: absolute !important;
+                      top: -25px !important;
+                      left: 0 !important;
+                      background: #3b82f6 !important;
+                      color: white !important;
+                      padding: 2px 6px !important;
+                      border-radius: 3px !important;
+                      font-size: 11px !important;
+                      white-space: nowrap !important;
+                      z-index: 1000 !important;
+                    }
+                  \`
+                  document.head.appendChild(style)
+                `
+
+                try {
+                  iframeRef.current.contentWindow.eval(script)
+                } catch (error) {
+                  console.log("Could not inject editor script:", error)
+                }
+              }
+            }}
+          />
         </div>
       </div>
 
-      {/* Edit Modal */}
       {editingField && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 w-full max-w-md shadow-xl">
