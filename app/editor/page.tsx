@@ -33,6 +33,7 @@ export default function EditorPage() {
   const [originalContent, setOriginalContent] = useState<any>({})
   const [iframeSrc, setIframeSrc] = useState("")
   const [expandedSections, setExpandedSections] = useState<string[]>(["hero"])
+  const [hasChanges, setHasChanges] = useState(false)
   const iframeRef = useRef<HTMLIFrameElement>(null)
 
   useEffect(() => {
@@ -45,13 +46,25 @@ export default function EditorPage() {
     loadContent()
   }, [currentPage])
 
+  useEffect(() => {
+    const currentContent = content[currentPage.name]
+    const originalContentForPage = originalContent[currentPage.name]
+
+    if (currentContent && originalContentForPage) {
+      const hasContentChanged = JSON.stringify(currentContent) !== JSON.stringify(originalContentForPage)
+      setHasChanges(hasContentChanged)
+    } else {
+      setHasChanges(false)
+    }
+  }, [content, originalContent, currentPage.name])
+
   const loadContent = async () => {
     try {
       const response = await fetch(`/content/${currentPage.name}.json`)
       if (response.ok) {
         const data = await response.json()
-        setContent({ ...content, [currentPage.name]: data })
-        setOriginalContent({ ...originalContent, [currentPage.name]: data })
+        setContent((prev) => ({ ...prev, [currentPage.name]: data }))
+        setOriginalContent((prev) => ({ ...prev, [currentPage.name]: JSON.parse(JSON.stringify(data)) }))
       }
     } catch (error) {
       console.error("Failed to load content:", error)
@@ -77,7 +90,10 @@ export default function EditorPage() {
         throw new Error(`Failed to save ${currentPage.name}`)
       }
 
-      setOriginalContent({ ...originalContent, [currentPage.name]: content[currentPage.name] })
+      setOriginalContent((prev) => ({
+        ...prev,
+        [currentPage.name]: JSON.parse(JSON.stringify(content[currentPage.name])),
+      }))
 
       toast({
         title: "✅ Changes Committed to GitHub",
@@ -112,8 +128,10 @@ export default function EditorPage() {
     const pageKey = keys[0]
     const fieldKeys = keys.slice(1)
 
-    const obj = { ...content[pageKey] } || {}
-    let current = obj
+    const newContent = JSON.parse(JSON.stringify(content))
+
+    if (!newContent[pageKey]) newContent[pageKey] = {}
+    let current = newContent[pageKey]
 
     for (let i = 0; i < fieldKeys.length - 1; i++) {
       if (!current[fieldKeys[i]]) current[fieldKeys[i]] = {}
@@ -121,7 +139,7 @@ export default function EditorPage() {
     }
 
     current[fieldKeys[fieldKeys.length - 1]] = value
-    setContent({ ...content, [pageKey]: obj })
+    setContent(newContent)
   }
 
   const getFieldValue = (fieldPath: string): string => {
@@ -220,7 +238,6 @@ export default function EditorPage() {
               {isExpanded && (
                 <div className="p-4 space-y-4">
                   {section.key === "faq" ? (
-                    // Handle FAQ array structure
                     <div className="space-y-4">
                       {Array.isArray(sectionData) &&
                         sectionData.map((faqItem: any, index: number) => (
@@ -257,7 +274,6 @@ export default function EditorPage() {
                         ))}
                     </div>
                   ) : (
-                    // Regular field handling with proper field paths
                     section.fields.map((field) => {
                       const fieldPath = `${currentPage.name}.${section.key}.${field.key}`
                       const value = getFieldValue(fieldPath)
@@ -284,7 +300,6 @@ export default function EditorPage() {
                               }
                             />
                           )}
-                          {/* Add image preview for image fields */}
                           {(field.key.includes("Url") || field.key.includes("Src")) && value && (
                             <div className="mt-2">
                               <img
@@ -292,7 +307,12 @@ export default function EditorPage() {
                                 alt="Preview"
                                 className="w-full max-w-xs h-auto rounded border"
                                 onError={(e) => {
-                                  ;(e.target as HTMLImageElement).style.display = "none"
+                                  console.error("Failed to load image:", value)
+                                  ;(e.target as HTMLImageElement).src =
+                                    "/placeholder.svg?height=200&width=300&text=Image+Not+Found"
+                                }}
+                                onLoad={() => {
+                                  console.log("Successfully loaded image:", value)
                                 }}
                               />
                             </div>
@@ -309,8 +329,6 @@ export default function EditorPage() {
       </>
     )
   }
-
-  const hasChanges = JSON.stringify(content[currentPage.name]) !== JSON.stringify(originalContent[currentPage.name])
 
   if (!iframeSrc) {
     return (
