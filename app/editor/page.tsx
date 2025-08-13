@@ -68,7 +68,7 @@ export default function EditorPage() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          filename: `content/${currentPage.name}.json`,
+          filename: `public/content/${currentPage.name}.json`,
           content: JSON.stringify(content[currentPage.name], null, 2),
           message: `Update ${currentPage.displayName} content via editor`,
         }),
@@ -173,14 +173,278 @@ export default function EditorPage() {
     setEditingValue("")
   }
 
+  const injectEditorScript = () => {
+    if (!iframeRef.current?.contentWindow) {
+      console.log("No iframe contentWindow available, retrying...")
+      setTimeout(injectEditorScript, 500)
+      return
+    }
+
+    try {
+      const iframeDoc = iframeRef.current.contentDocument || iframeRef.current.contentWindow.document
+
+      if (!iframeDoc) {
+        console.log("No iframe document available, retrying...")
+        setTimeout(injectEditorScript, 500)
+        return
+      }
+
+      // Wait for the page to be fully loaded
+      if (iframeDoc.readyState !== "complete") {
+        console.log("Iframe document not ready, waiting...")
+        setTimeout(injectEditorScript, 500)
+        return
+      }
+
+      // Remove existing editor script if present
+      const existingScript = iframeDoc.getElementById("editor-script")
+      if (existingScript) {
+        existingScript.remove()
+      }
+
+      // Remove existing styles
+      const existingStyle = iframeDoc.getElementById("editor-styles")
+      if (existingStyle) {
+        existingStyle.remove()
+      }
+
+      console.log("🚀 Injecting enhanced editor script...")
+
+      // Create and inject the enhanced editor script
+      const script = iframeDoc.createElement("script")
+      script.id = "editor-script"
+      script.textContent = `
+        (function() {
+          console.log('🎯 Enhanced Editor script starting injection...');
+          
+          // Remove existing event listeners
+          if (window.editorClickHandler) {
+            document.removeEventListener('click', window.editorClickHandler, true);
+            document.removeEventListener('mousedown', window.editorClickHandler, true);
+            console.log('Removed existing handlers');
+          }
+          
+          // Enhanced click handler with multiple event types
+          window.editorClickHandler = function(e) {
+            console.log('🖱️ Event detected:', e.type, 'on:', e.target);
+            
+            const target = e.target.closest('[data-editable]');
+            if (target) {
+              e.preventDefault();
+              e.stopPropagation();
+              e.stopImmediatePropagation();
+              
+              const fieldPath = target.dataset.fieldPath;
+              const currentValue = target.textContent || target.value || target.src || target.alt || target.innerText || '';
+              
+              console.log('✅ Editable element found!');
+              console.log('Field path:', fieldPath);
+              console.log('Current value:', currentValue);
+              console.log('Element type:', target.tagName);
+              console.log('Element classes:', target.className);
+              
+              // Enhanced visual feedback
+              const originalBg = target.style.backgroundColor;
+              const originalColor = target.style.color;
+              const originalBorder = target.style.border;
+              
+              target.style.backgroundColor = '#3b82f6';
+              target.style.color = 'white';
+              target.style.border = '2px solid #1d4ed8';
+              target.style.transform = 'scale(1.02)';
+              target.style.transition = 'all 0.2s ease';
+              
+              setTimeout(() => {
+                target.style.backgroundColor = originalBg;
+                target.style.color = originalColor;
+                target.style.border = originalBorder;
+                target.style.transform = '';
+              }, 300);
+              
+              if (target.tagName === 'IMG') {
+                console.log('📸 Image edit request for:', fieldPath);
+                parent.postMessage({
+                  type: 'IMAGE_EDIT_REQUEST',
+                  fieldPath: fieldPath
+                }, '*');
+              } else {
+                console.log('📝 Text edit request for:', fieldPath);
+                parent.postMessage({
+                  type: 'EDIT_REQUEST',
+                  fieldPath: fieldPath,
+                  currentValue: currentValue
+                }, '*');
+              }
+              
+              return false;
+            } else {
+              console.log('❌ No editable element found for:', e.type);
+            }
+          };
+          
+          // Add multiple event listeners for better coverage
+          document.addEventListener('click', window.editorClickHandler, true);
+          document.addEventListener('mousedown', window.editorClickHandler, true);
+          console.log('✅ Enhanced click handlers attached');
+          
+          // Enhanced styles for editable elements
+          const style = document.createElement('style');
+          style.id = 'editor-styles';
+          style.textContent = \`
+            [data-editable] {
+              cursor: pointer !important;
+              transition: all 0.3s ease !important;
+              position: relative !important;
+              border: 2px solid transparent !important;
+              outline: none !important;
+              user-select: none !important;
+            }
+            [data-editable]:hover {
+              background-color: rgba(59, 130, 246, 0.15) !important;
+              border: 2px dashed #3b82f6 !important;
+              border-radius: 6px !important;
+              box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2) !important;
+              transform: scale(1.01) !important;
+            }
+            [data-editable]:hover::before {
+              content: "✏️ Click to edit" !important;
+              position: absolute !important;
+              top: -40px !important;
+              left: 50% !important;
+              transform: translateX(-50%) !important;
+              background: linear-gradient(135deg, #3b82f6, #1d4ed8) !important;
+              color: white !important;
+              padding: 8px 16px !important;
+              border-radius: 8px !important;
+              font-size: 13px !important;
+              white-space: nowrap !important;
+              z-index: 10000 !important;
+              font-family: system-ui, -apple-system, sans-serif !important;
+              font-weight: 600 !important;
+              box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2) !important;
+              animation: fadeInScale 0.2s ease-out !important;
+            }
+            [data-editable]:hover::after {
+              content: "" !important;
+              position: absolute !important;
+              top: -12px !important;
+              left: 50% !important;
+              transform: translateX(-50%) !important;
+              width: 0 !important;
+              height: 0 !important;
+              border-left: 8px solid transparent !important;
+              border-right: 8px solid transparent !important;
+              border-top: 8px solid #3b82f6 !important;
+              z-index: 10000 !important;
+            }
+            @keyframes fadeInScale {
+              from {
+                opacity: 0;
+                transform: translateX(-50%) scale(0.8);
+              }
+              to {
+                opacity: 1;
+                transform: translateX(-50%) scale(1);
+              }
+            }
+            [data-editable]:active {
+              transform: scale(0.98) !important;
+            }
+          \`;
+          document.head.appendChild(style);
+          console.log('✅ Enhanced editor styles added');
+          
+          // Enhanced element detection and logging
+          const editableElements = document.querySelectorAll('[data-editable]');
+          console.log(\`🎯 Found \${editableElements.length} editable elements:\`);
+          
+          if (editableElements.length === 0) {
+            console.warn('⚠️ NO EDITABLE ELEMENTS FOUND!');
+            console.warn('Make sure the page has ?editor=true parameter');
+            console.warn('Check if data-editable attributes are being added to elements');
+          } else {
+            editableElements.forEach((el, i) => {
+              const fieldPath = el.dataset.fieldPath;
+              const content = (el.textContent || el.alt || el.src || '').substring(0, 50);
+              console.log(\`  \${i + 1}. \${el.tagName}[\${el.className}] - \${fieldPath} - "\${content}..."\`);
+              
+              // Add a pulsing indicator for 3 seconds
+              el.style.boxShadow = '0 0 0 2px rgba(59, 130, 246, 0.5)';
+              el.style.animation = 'pulse 2s infinite';
+              
+              setTimeout(() => {
+                el.style.boxShadow = '';
+                el.style.animation = '';
+              }, 3000);
+            });
+            
+            console.log('✅ Enhanced editor script injection complete!');
+            console.log('👆 Click on any highlighted element to edit it');
+            console.log('🔍 Elements will pulse for 3 seconds to show they are editable');
+          }
+          
+          // Add pulse animation
+          const pulseStyle = document.createElement('style');
+          pulseStyle.textContent = \`
+            @keyframes pulse {
+              0%, 100% { box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5); }
+              50% { box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.8); }
+            }
+          \`;
+          document.head.appendChild(pulseStyle);
+          
+          // Test message to parent
+          parent.postMessage({
+            type: 'EDITOR_READY',
+            editableCount: editableElements.length
+          }, '*');
+          
+        })();
+      `
+
+      iframeDoc.head.appendChild(script)
+      console.log("✅ Enhanced editor script injected successfully")
+
+      // Verification with detailed logging
+      setTimeout(() => {
+        const injectedScript = iframeDoc.getElementById("editor-script")
+        if (injectedScript) {
+          console.log("✅ Script injection verified - editor is ready!")
+        } else {
+          console.error("❌ Script injection failed - retrying...")
+          setTimeout(injectEditorScript, 1000)
+        }
+      }, 200)
+    } catch (error) {
+      console.error("❌ Failed to inject editor script:", error)
+      setTimeout(() => {
+        console.log("🔄 Retrying enhanced script injection...")
+        injectEditorScript()
+      }, 1000)
+    }
+  }
+
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
+      console.log("📨 Message received:", event.data)
+
       if (event.data.type === "EDIT_REQUEST") {
         const { fieldPath, currentValue } = event.data
+        console.log("✏️ Edit request received:", fieldPath, currentValue)
         handleEdit(fieldPath, currentValue)
       } else if (event.data.type === "IMAGE_EDIT_REQUEST") {
         const { fieldPath } = event.data
+        console.log("🖼️ Image edit request received:", fieldPath)
         handleImageEdit(fieldPath)
+      } else if (event.data.type === "EDITOR_READY") {
+        const { editableCount } = event.data
+        console.log(`🎉 Editor ready with ${editableCount} editable elements`)
+
+        toast({
+          title: "🎯 Editor Ready",
+          description: `Found ${editableCount} editable elements. Click on highlighted content to edit.`,
+          className: "bg-green-500 text-white",
+        })
       }
     }
 
@@ -283,66 +547,9 @@ export default function EditorPage() {
             title={`Preview of ${currentPage.displayName}`}
             onLoad={() => {
               setIsRefreshing(false)
-              if (iframeRef.current?.contentWindow) {
-                const script = `
-                  document.addEventListener('click', function(e) {
-                    if (e.target.dataset.editable) {
-                      e.preventDefault()
-                      e.stopPropagation()
-                      
-                      const fieldPath = e.target.dataset.fieldPath
-                      const currentValue = e.target.textContent || e.target.value || e.target.src || ''
-                      
-                      if (e.target.tagName === 'IMG') {
-                        parent.postMessage({
-                          type: 'IMAGE_EDIT_REQUEST',
-                          fieldPath: fieldPath
-                        }, '*')
-                      } else {
-                        parent.postMessage({
-                          type: 'EDIT_REQUEST',
-                          fieldPath: fieldPath,
-                          currentValue: currentValue
-                        }, '*')
-                      }
-                    }
-                  })
-                  
-                  const style = document.createElement('style')
-                  style.textContent = \`
-                    [data-editable] {
-                      cursor: pointer !important;
-                      transition: all 0.2s ease !important;
-                      position: relative !important;
-                    }
-                    [data-editable]:hover {
-                      background-color: rgba(59, 130, 246, 0.1) !important;
-                      outline: 2px dashed #3b82f6 !important;
-                      outline-offset: 2px !important;
-                    }
-                    [data-editable]:hover::after {
-                      content: "Click to edit" !important;
-                      position: absolute !important;
-                      top: -25px !important;
-                      left: 0 !important;
-                      background: #3b82f6 !important;
-                      color: white !important;
-                      padding: 2px 6px !important;
-                      border-radius: 3px !important;
-                      font-size: 11px !important;
-                      white-space: nowrap !important;
-                      z-index: 1000 !important;
-                    }
-                  \`
-                  document.head.appendChild(style)
-                `
-
-                try {
-                  iframeRef.current.contentWindow.eval(script)
-                } catch (error) {
-                  console.log("Could not inject editor script:", error)
-                }
-              }
+              setTimeout(() => {
+                injectEditorScript()
+              }, 100)
             }}
           />
         </div>

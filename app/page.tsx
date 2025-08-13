@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react"
 import Image from "next/image"
 import Link from "next/link"
+import { useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
@@ -69,6 +70,9 @@ async function getDynamicContent(): Promise<FullContent> {
 }
 
 export default function HomePage() {
+  const searchParams = useSearchParams()
+  const isEditorMode = searchParams?.get("editor") === "true"
+
   const [content, setContent] = useState<FullContent>(defaultContent)
   const [upcomingMatches, setUpcomingMatches] = useState<Match[]>([])
   const [matchesLoading, setMatchesLoading] = useState(true)
@@ -77,9 +81,21 @@ export default function HomePage() {
 
   useEffect(() => {
     const fetchData = async () => {
-      // Fetch dynamic content
-      const fetchedContent = await getDynamicContent()
-      setContent(fetchedContent)
+      if (isEditorMode) {
+        try {
+          const response = await fetch("/content/home.json")
+          if (response.ok) {
+            const jsonContent = await response.json()
+            setContent(jsonContent)
+          }
+        } catch (error) {
+          console.error("Failed to load content from JSON:", error)
+        }
+      } else {
+        // Fetch dynamic content for normal mode
+        const fetchedContent = await getDynamicContent()
+        setContent(fetchedContent)
+      }
 
       // Fetch upcoming matches
       try {
@@ -94,7 +110,7 @@ export default function HomePage() {
     }
 
     fetchData()
-  }, [])
+  }, [isEditorMode])
 
   const partnersForDisplay = Array.isArray(content.partners) ? content.partners.filter((p) => p.visibleInCarousel) : []
 
@@ -124,14 +140,30 @@ export default function HomePage() {
             quality={90}
             priority
             className="object-cover z-0"
+            {...(isEditorMode && {
+              "data-editable": "true",
+              "data-field-path": "home.hero.imageUrl",
+            })}
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/40 to-transparent z-10" />
           <div className="relative z-20 text-white text-center px-4 max-w-5xl mx-auto">
-            <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-extrabold mb-4 leading-tight tracking-tight animate-fade-in-up text-shadow-outline">
+            <h1
+              className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-extrabold mb-4 leading-tight tracking-tight animate-fade-in-up text-shadow-outline"
+              {...(isEditorMode && {
+                "data-editable": "true",
+                "data-field-path": "home.hero.title",
+              })}
+            >
               {content.hero.title.split(" ")[0]}{" "}
               <span className="text-orange-400">{content.hero.title.split(" ").slice(1).join(" ")}</span>
             </h1>
-            <p className="text-lg sm:text-xl md:text-2xl mb-10 max-w-3xl mx-auto animate-fade-in-up delay-200 text-shadow-md">
+            <p
+              className="text-lg sm:text-xl md:text-2xl mb-10 max-w-3xl mx-auto animate-fade-in-up delay-200 text-shadow-md"
+              {...(isEditorMode && {
+                "data-editable": "true",
+                "data-field-path": "home.hero.description",
+              })}
+            >
               {content.hero.description}
             </p>
             <div className="flex flex-col sm:flex-row justify-center gap-6 animate-fade-in-up delay-400">
@@ -140,7 +172,14 @@ export default function HomePage() {
                 className="bg-orange-500 hover:bg-orange-600 text-white px-10 py-4 rounded-full text-lg font-semibold shadow-lg transition-transform duration-300 hover:scale-105 focus:outline-none focus:ring-4 focus:ring-orange-300"
               >
                 <Link href={content.hero.button1Link}>
-                  {content.hero.button1Text}
+                  <span
+                    {...(isEditorMode && {
+                      "data-editable": "true",
+                      "data-field-path": "home.hero.button1Text",
+                    })}
+                  >
+                    {content.hero.button1Text}
+                  </span>
                   <ArrowRight className="ml-3 h-5 w-5" />
                 </Link>
               </Button>
@@ -148,7 +187,16 @@ export default function HomePage() {
                 asChild
                 className="bg-green-700 hover:bg-green-800 text-white px-10 py-4 rounded-full text-lg font-semibold shadow-lg transition-transform duration-300 hover:scale-105 focus:outline-none focus:ring-4 focus:ring-green-300"
               >
-                <Link href={content.hero.button2Link}>{content.hero.button2Text}</Link>
+                <Link href={content.hero.button2Link}>
+                  <span
+                    {...(isEditorMode && {
+                      "data-editable": "true",
+                      "data-field-path": "home.hero.button2Text",
+                    })}
+                  >
+                    {content.hero.button2Text}
+                  </span>
+                </Link>
               </Button>
             </div>
           </div>
@@ -160,25 +208,57 @@ export default function HomePage() {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
               <div className="flex flex-col items-center">
                 <Users className="w-12 h-12 mb-2" />
-                <div className="text-4xl font-bold">{content.stats.totalTeams}</div>
+                <div
+                  className="text-4xl font-bold"
+                  {...(isEditorMode && {
+                    "data-editable": "true",
+                    "data-field-path": "home.stats.totalTeams",
+                  })}
+                >
+                  {content.stats.totalTeams}
+                </div>
                 <div className="text-sm">Totalt Lag</div>
               </div>
 
               <div className="flex flex-col items-center">
                 <Trophy className="w-12 h-12 mb-2" />
-                <div className="text-4xl font-bold">{content.stats.aTeams}</div>
+                <div
+                  className="text-4xl font-bold"
+                  {...(isEditorMode && {
+                    "data-editable": "true",
+                    "data-field-path": "home.stats.aTeams",
+                  })}
+                >
+                  {content.stats.aTeams}
+                </div>
                 <div className="text-sm">A-lag</div>
               </div>
 
               <div className="flex flex-col items-center">
                 <Award className="w-12 h-12 mb-2" />
-                <div className="text-4xl font-bold">{content.stats.youthTeams}</div>
+                <div
+                  className="text-4xl font-bold"
+                  {...(isEditorMode && {
+                    "data-editable": "true",
+                    "data-field-path": "home.stats.youthTeams",
+                  })}
+                >
+                  {content.stats.youthTeams}
+                </div>
                 <div className="text-sm">Ungdomslag</div>
               </div>
 
               <div className="flex flex-col items-center">
                 <History className="w-12 h-12 mb-2" />
-                <div className="text-4xl font-bold">{content.stats.yearsHistory}</div>
+                <div
+                  className="text-4xl font-bold"
+                  {...(isEditorMode && {
+                    "data-editable": "true",
+                    "data-field-path": "home.stats.yearsHistory",
+                  })}
+                >
+                  {content.stats.yearsHistory}
+                </div>
                 <div className="text-sm">År av Historia</div>
               </div>
             </div>
@@ -253,29 +333,77 @@ export default function HomePage() {
           <div className="container mx-auto px-4">
             <div className="grid md:grid-cols-2 gap-12 items-center">
               <div>
-                <h2 className="text-4xl font-bold text-green-600 mb-2">{content.aboutClub.title}</h2>
+                <h2
+                  className="text-4xl font-bold text-green-600 mb-2"
+                  {...(isEditorMode && {
+                    "data-editable": "true",
+                    "data-field-path": "home.aboutClub.title",
+                  })}
+                >
+                  {content.aboutClub.title}
+                </h2>
 
-                <p className="text-gray-700 mb-6">{content.aboutClub.paragraph1}</p>
+                <p
+                  className="text-gray-700 mb-6"
+                  {...(isEditorMode && {
+                    "data-editable": "true",
+                    "data-field-path": "home.aboutClub.paragraph1",
+                  })}
+                >
+                  {content.aboutClub.paragraph1}
+                </p>
 
-                <p className="text-gray-700 mb-8">{content.aboutClub.paragraph2}</p>
+                <p
+                  className="text-gray-700 mb-8"
+                  {...(isEditorMode && {
+                    "data-editable": "true",
+                    "data-field-path": "home.aboutClub.paragraph2",
+                  })}
+                >
+                  {content.aboutClub.paragraph2}
+                </p>
 
                 <div className="grid grid-cols-3 gap-4 mb-8">
                   <div className="border border-gray-200 rounded-lg p-4 text-center">
                     <Heart className="w-8 h-8 text-green-600 mx-auto mb-2" />
                     <h4 className="font-medium mb-1">Passion</h4>
-                    <p className="text-xs text-gray-600">{content.aboutClub.passionText}</p>
+                    <p
+                      className="text-xs text-gray-600"
+                      {...(isEditorMode && {
+                        "data-editable": "true",
+                        "data-field-path": "home.aboutClub.passionText",
+                      })}
+                    >
+                      {content.aboutClub.passionText}
+                    </p>
                   </div>
 
                   <div className="border border-gray-200 rounded-lg p-4 text-center">
                     <TrendingUp className="w-8 h-8 text-orange-500 mx-auto mb-2" />
                     <h4 className="font-medium mb-1">Utveckling</h4>
-                    <p className="text-xs text-gray-600">{content.aboutClub.developmentText}</p>
+                    <p
+                      className="text-xs text-gray-600"
+                      {...(isEditorMode && {
+                        "data-editable": "true",
+                        "data-field-path": "home.aboutClub.developmentText",
+                      })}
+                    >
+                      {content.aboutClub.developmentText}
+                    </p>
                   </div>
 
                   <div className="border border-gray-200 rounded-lg p-4 text-center">
                     <Users className="w-8 h-8 text-green-600 mx-auto mb-2" />
                     <h4 className="font-medium mb-1">Gemenskap</h4>
-                    <p className="text-xs text-gray-600">{content.aboutClub.communityText}</p>
+                    <p
+                      className="text-xs text-gray-600"
+                      {...(isEditorMode && {
+                        "data-editable": "true",
+                        "data-field-path": "home.aboutClub.communityText",
+                      })}
+                    >
+                      {content.aboutClub.communityText}
+                    </p>
                   </div>
                 </div>
 
@@ -284,13 +412,27 @@ export default function HomePage() {
                     href={content.aboutClub.button1Link}
                     className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-2 rounded-md font-medium transition-colors"
                   >
-                    {content.aboutClub.button1Text}
+                    <span
+                      {...(isEditorMode && {
+                        "data-editable": "true",
+                        "data-field-path": "home.aboutClub.button1Text",
+                      })}
+                    >
+                      {content.aboutClub.button1Text}
+                    </span>
                   </Link>
                   <Link
                     href={content.aboutClub.button2Link}
                     className="bg-white border border-gray-300 hover:bg-gray-100 text-gray-800 px-6 py-2 rounded-md font-medium transition-colors"
                   >
-                    {content.aboutClub.button2Text}
+                    <span
+                      {...(isEditorMode && {
+                        "data-editable": "true",
+                        "data-field-path": "home.aboutClub.button2Text",
+                      })}
+                    >
+                      {content.aboutClub.button2Text}
+                    </span>
                   </Link>
                 </div>
               </div>
@@ -304,12 +446,32 @@ export default function HomePage() {
                     className="object-cover"
                     onContextMenu={(e) => e.preventDefault()}
                     onDragStart={(e) => e.preventDefault()}
+                    {...(isEditorMode && {
+                      "data-editable": "true",
+                      "data-field-path": "home.aboutClub.imageSrc",
+                    })}
                   />
                 </div>
 
                 <div className="absolute -top-4 -right-4 bg-orange-500 text-white rounded-lg p-4 shadow-lg">
-                  <div className="text-3xl font-bold">{content.aboutClub.statNumber}</div>
-                  <div className="text-sm">{content.aboutClub.statLabel}</div>
+                  <div
+                    className="text-3xl font-bold"
+                    {...(isEditorMode && {
+                      "data-editable": "true",
+                      "data-field-path": "home.aboutClub.statNumber",
+                    })}
+                  >
+                    {content.aboutClub.statNumber}
+                  </div>
+                  <div
+                    className="text-sm"
+                    {...(isEditorMode && {
+                      "data-editable": "true",
+                      "data-field-path": "home.aboutClub.statLabel",
+                    })}
+                  >
+                    {content.aboutClub.statLabel}
+                  </div>
                 </div>
               </div>
             </div>
