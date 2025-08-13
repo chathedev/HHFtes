@@ -54,12 +54,69 @@ ${formData.message}`
             Har du frågor eller funderingar? Tveka inte att höra av dig till oss!
           </p>
 
-          <div className="max-w-4xl mx-auto mb-12">
-            {/* Email Contact Card */}
+          <div className="max-w-6xl mx-auto mb-12">
+            {/* Department Email Contacts */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+              <div className="bg-white/90 shadow-lg rounded-lg p-6 text-center">
+                <Mail className="w-10 h-10 text-orange-500 mb-3 mx-auto" />
+                <h3 className="text-lg font-semibold text-gray-800 mb-2">Sponsring & Marknadsföring</h3>
+                <p className="text-sm text-gray-600 mb-3">Vill du sponsra oss eller samarbeta?</p>
+                <a href="mailto:marknad@harnosandshf.se" className="text-green-700 hover:underline font-medium">
+                  marknad@harnosandshf.se
+                </a>
+              </div>
+
+              <div className="bg-white/90 shadow-lg rounded-lg p-6 text-center">
+                <Mail className="w-10 h-10 text-orange-500 mb-3 mx-auto" />
+                <h3 className="text-lg font-semibold text-gray-800 mb-2">Kommunikation</h3>
+                <p className="text-sm text-gray-600 mb-3">Media, press och kommunikation</p>
+                <a href="mailto:kommunikation@harnosandshf.se" className="text-green-700 hover:underline font-medium">
+                  kommunikation@harnosandshf.se
+                </a>
+              </div>
+
+              <div className="bg-white/90 shadow-lg rounded-lg p-6 text-center">
+                <Mail className="w-10 h-10 text-orange-500 mb-3 mx-auto" />
+                <h3 className="text-lg font-semibold text-gray-800 mb-2">Föreningsinsats</h3>
+                <p className="text-sm text-gray-600 mb-3">Volontärarbete och föreningsengagemang</p>
+                <a href="mailto:foreningsinsats@harnosandshf.se" className="text-green-700 hover:underline font-medium">
+                  foreningsinsats@harnosandshf.se
+                </a>
+              </div>
+
+              <div className="bg-white/90 shadow-lg rounded-lg p-6 text-center">
+                <Mail className="w-10 h-10 text-orange-500 mb-3 mx-auto" />
+                <h3 className="text-lg font-semibold text-gray-800 mb-2">Sport & Träning</h3>
+                <p className="text-sm text-gray-600 mb-3">Frågor om träning och sportverksamhet</p>
+                <a href="mailto:sport@harnosandshf.se" className="text-green-700 hover:underline font-medium">
+                  sport@harnosandshf.se
+                </a>
+              </div>
+
+              <div className="bg-white/90 shadow-lg rounded-lg p-6 text-center">
+                <Mail className="w-10 h-10 text-orange-500 mb-3 mx-auto" />
+                <h3 className="text-lg font-semibold text-gray-800 mb-2">Ekonomi</h3>
+                <p className="text-sm text-gray-600 mb-3">Ekonomiska frågor och fakturor</p>
+                <a href="mailto:ekonomi@harnosandshf.se" className="text-green-700 hover:underline font-medium">
+                  ekonomi@harnosandshf.se
+                </a>
+              </div>
+
+              <div className="bg-white/90 shadow-lg rounded-lg p-6 text-center">
+                <Mail className="w-10 h-10 text-orange-500 mb-3 mx-auto" />
+                <h3 className="text-lg font-semibold text-gray-800 mb-2">Styrelsen</h3>
+                <p className="text-sm text-gray-600 mb-3">Kontakt med föreningens styrelse</p>
+                <a href="mailto:styrelsen@harnosandshf.se" className="text-green-700 hover:underline font-medium">
+                  styrelsen@harnosandshf.se
+                </a>
+              </div>
+            </div>
+
+            {/* General Email Contact Card */}
             <div className="bg-white/90 shadow-lg rounded-lg p-8 text-center mb-8">
               <Mail className="w-12 h-12 text-orange-500 mb-4 mx-auto" />
-              <h2 className="text-2xl font-semibold text-gray-800 mb-2">E-post</h2>
-              <p className="text-lg text-gray-700 mb-4">Skicka oss ett meddelande när som helst.</p>
+              <h2 className="text-2xl font-semibold text-gray-800 mb-2">Allmänna frågor</h2>
+              <p className="text-lg text-gray-700 mb-4">För allmänna frågor och information</p>
               <a href="mailto:kontakt@harnosandshf.se" className="text-green-700 hover:underline text-lg font-medium">
                 kontakt@harnosandshf.se
               </a>
