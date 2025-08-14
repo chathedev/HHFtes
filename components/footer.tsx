@@ -72,8 +72,19 @@ export default function Footer() {
             </div>
           </div>
 
-          {/* This column will now be empty or can be repurposed */}
-          <div className="space-y-4">{/* This section was removed as per user request */}</div>
+          {/* Tips & Idéer */}
+          <div className="space-y-4">
+            <h3 className="text-xl font-bold text-orange-400">Tips & Idéer</h3>
+            <div className="space-y-2">
+              <p className="text-gray-300 text-sm">Har du förslag eller idéer för hemsidan?</p>
+              <div className="flex items-center space-x-2 text-gray-300">
+                <Mail size={16} />
+                <a href="mailto:styrelsen@harnosandshf.se" className="hover:text-orange-400 transition-colors">
+                  styrelsen@harnosandshf.se
+                </a>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Bottom Section */}
