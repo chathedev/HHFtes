@@ -14,15 +14,19 @@ function Header() {
   const pathname = usePathname()
 
   useEffect(() => {
+    let ticking = false
+
     const handleScroll = () => {
-      if (window.scrollY > 50) {
-        setScrolled(true)
-      } else {
-        setScrolled(false)
+      if (!ticking) {
+        requestAnimationFrame(() => {
+          setScrolled(window.scrollY > 50)
+          ticking = false
+        })
+        ticking = true
       }
     }
 
-    window.addEventListener("scroll", handleScroll)
+    window.addEventListener("scroll", handleScroll, { passive: true })
     return () => {
       window.removeEventListener("scroll", handleScroll)
     }
@@ -45,7 +49,7 @@ function Header() {
 
   return (
     <header
-      className={`fixed top-0 left-0 w-full z-50 text-white shadow-lg transition-all duration-300
+      className={`fixed top-0 left-0 w-full z-50 text-white shadow-lg transition-all duration-300 gpu-accelerated
         ${
           pathname === "/"
             ? scrolled
@@ -56,9 +60,9 @@ function Header() {
       `}
     >
       <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-        <Link href="/" className="flex items-center gap-3">
+        <Link href="/" className="flex items-center gap-3 smooth-transform">
           <div className="relative w-12 h-12">
-            <Image src="/logo.png" alt="Härnösands HF Logo" fill className="object-contain" priority />
+            <Image src="/logo.png" alt="Härnösands HF Logo" fill className="object-contain" priority sizes="48px" />
           </div>
           <div>
             <div className="font-bold text-xl">Härnösands HF</div>
@@ -100,13 +104,13 @@ function Header() {
             <Link
               key={link.href}
               href={link.href}
-              className={`relative text-lg font-medium py-2 group transition-colors duration-300
+              className={`relative text-lg font-medium py-2 group transition-colors duration-300 smooth-transform
                 ${pathname === link.href ? "text-orange-500" : "text-white hover:text-gray-300"}
               `}
             >
               {link.name}
               <span
-                className={`absolute bottom-0 left-0 h-[3px] bg-orange-500 transition-all duration-300 ease-out
+                className={`absolute bottom-0 left-0 h-[3px] bg-orange-500 transition-all duration-300 ease-out gpu-accelerated
                   ${pathname === link.href ? "w-full" : "w-0 group-hover:w-full"}
                 `}
               />
@@ -114,11 +118,21 @@ function Header() {
           ))}
           {/* Social links moved inside this flex container for right alignment */}
           <div className="flex items-center space-x-4">
-            <Link href="https://www.instagram.com/harnosandshf/" target="_blank" rel="noopener noreferrer">
-              <Instagram className="h-6 w-6 text-gray-400 hover:text-white" />
+            <Link
+              href="https://www.instagram.com/harnosandshf/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="smooth-transform"
+            >
+              <Instagram className="h-6 w-6 text-gray-400 hover:text-white transition-colors duration-200" />
             </Link>
-            <Link href="https://www.facebook.com/harnosandshf/" target="_blank" rel="noopener noreferrer">
-              <Facebook className="h-6 w-6 text-gray-400 hover:text-white" />
+            <Link
+              href="https://www.facebook.com/harnosandshf/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="smooth-transform"
+            >
+              <Facebook className="h-6 w-6 text-gray-400 hover:text-white transition-colors duration-200" />
             </Link>
           </div>
         </nav>
