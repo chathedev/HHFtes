@@ -74,7 +74,7 @@ function Header() {
           </SheetTrigger>
           <SheetContent side="left" className="bg-black/90 text-white border-gray-800">
             <Link className="mr-6 flex items-center gap-3 py-4" href="/" onClick={() => setIsMenuOpen(false)}>
-              <Image src="/logo.png" alt="Härnösands HF Logo" width={40} height={40} />
+              <Image src="/logo.png" alt="Härnösands HF Logo" width={40} height={40} priority />
               <span className="font-bold text-xl">Härnösands HF</span>
             </Link>
             <nav className="flex flex-col gap-4">
