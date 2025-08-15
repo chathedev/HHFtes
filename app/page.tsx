@@ -195,7 +195,7 @@ export default function HomePage() {
         </section>
 
         {/* Stats Section */}
-        <section className="bg-green-600 text-white py-12">
+        <section className="text-white py-12 bg-green-600/90">
           <div className="container mx-auto px-4">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
               <div className="flex flex-col items-center">
@@ -258,7 +258,7 @@ export default function HomePage() {
         </section>
 
         {/* Upcoming Events Section */}
-        <section className="py-16 bg-gray-50">
+        <section className="py-16">
           <div className="container mx-auto px-4">
             <Card className="bg-white rounded-lg shadow-lg overflow-hidden max-w-2xl mx-auto">
               <CardHeader className="p-6 flex flex-col items-center text-center border-b border-gray-200">
@@ -321,7 +321,7 @@ export default function HomePage() {
         </section>
 
         {/* About Club Section */}
-        <section className="py-16 bg-white">
+        <section className="py-16">
           <div className="container mx-auto px-4">
             <div className="grid md:grid-cols-2 gap-12 items-center">
               <div>
@@ -471,7 +471,7 @@ export default function HomePage() {
         </section>
 
         {/* Partners Carousel Section */}
-        <section className="py-16 bg-gray-50">
+        <section className="py-16">
           <div className="container mx-auto px-4">
             <h2 className="text-4xl font-bold text-center mb-2">
               Våra <span className="text-orange-500">Partners</span>
@@ -596,7 +596,7 @@ export default function HomePage() {
         </section>
 
         {/* FAQ Section */}
-        <section className="py-16 bg-white">
+        <section className="py-16">
           <div className="container mx-auto px-4">
             <div className="bg-white shadow-lg rounded-lg p-8 md:p-12 max-w-4xl mx-auto">
               <h2 className="text-3xl font-bold text-green-700 mb-8 text-center">Vanliga frågor om att börja träna</h2>
