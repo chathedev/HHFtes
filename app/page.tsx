@@ -161,7 +161,7 @@ export default function HomePage() {
             <div className="flex flex-col sm:flex-row justify-center gap-6 animate-fade-in-up delay-400">
               <Button
                 asChild
-                className="bg-orange-500 hover:bg-orange-600 text-white px-10 py-4 rounded-full text-lg font-semibold shadow-lg transition-transform duration-300 hover:scale-105 focus:outline-none focus:ring-4 focus:ring-orange-300"
+                className="bg-orange-500 hover:bg-orange-600 text-white px-10 py-4 rounded-md text-lg font-semibold shadow-lg transition-transform duration-300 hover:scale-105 focus:outline-none focus:ring-4 focus:ring-orange-300"
               >
                 <Link href={content.hero.button1Link}>
                   <span
@@ -177,7 +177,7 @@ export default function HomePage() {
               </Button>
               <Button
                 asChild
-                className="bg-green-700 hover:bg-green-800 text-white px-10 py-4 rounded-full text-lg font-semibold shadow-lg transition-transform duration-300 hover:scale-105 focus:outline-none focus:ring-4 focus:ring-green-300"
+                className="bg-green-700 hover:bg-green-800 text-white px-10 py-4 rounded-md text-lg font-semibold shadow-lg transition-transform duration-300 hover:scale-105 focus:outline-none focus:ring-4 focus:ring-green-300"
               >
                 <Link href={content.hero.button2Link}>
                   <span
@@ -358,7 +358,7 @@ export default function HomePage() {
                 <div className="grid grid-cols-3 gap-4 mb-8">
                   <div className="border border-gray-200 rounded-lg p-4 text-center">
                     <Heart className="w-8 h-8 text-green-600 mx-auto mb-2" />
-                    <h4 className="font-medium mb-1">Passion</h4>
+                    <h4 className="font-medium mb-1 text-black">Passion</h4>
                     <p
                       className="text-xs text-gray-600"
                       {...(isEditorMode && {
@@ -372,7 +372,7 @@ export default function HomePage() {
 
                   <div className="border border-gray-200 rounded-lg p-4 text-center">
                     <TrendingUp className="w-8 h-8 text-orange-500 mx-auto mb-2" />
-                    <h4 className="font-medium mb-1">Utveckling</h4>
+                    <h4 className="font-medium mb-1 text-black">Utveckling</h4>
                     <p
                       className="text-xs text-gray-600"
                       {...(isEditorMode && {
@@ -386,7 +386,7 @@ export default function HomePage() {
 
                   <div className="border border-gray-200 rounded-lg p-4 text-center">
                     <Users className="w-8 h-8 text-green-600 mx-auto mb-2" />
-                    <h4 className="font-medium mb-1">Gemenskap</h4>
+                    <h4 className="font-medium mb-1 text-black">Gemenskap</h4>
                     <p
                       className="text-xs text-gray-600"
                       {...(isEditorMode && {

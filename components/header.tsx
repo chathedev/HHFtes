@@ -55,13 +55,21 @@ function Header() {
         }
       `}
     >
-      <div className="container mx-auto px-4 py-4 flex justify-between items-center">
+      <div className="container mx-auto px-4 py-2 flex justify-between items-center">
         <Link href="/" className="flex items-center gap-3">
-          <div className="relative w-12 h-12">
-            <Image src="/logo.png" alt="Härnösands HF Logo" fill className="object-contain" priority />
+          <div className="relative w-16 h-16">
+            <Image
+              src="/logo.png"
+              alt="Härnösands HF Logo"
+              fill
+              className="object-contain"
+              priority
+              quality={100}
+              sizes="56px"
+            />
           </div>
           <div>
-            <div className="font-bold text-xl">Härnösands HF</div>
+            <div className="font-bold text-lg">Härnösands HF</div>
           </div>
         </Link>
 
@@ -74,8 +82,18 @@ function Header() {
           </SheetTrigger>
           <SheetContent side="left" className="bg-black/90 text-white border-gray-800">
             <Link className="mr-6 flex items-center gap-3 py-4" href="/" onClick={() => setIsMenuOpen(false)}>
-              <Image src="/logo.png" alt="Härnösands HF Logo" width={40} height={40} priority />
-              <span className="font-bold text-xl">Härnösands HF</span>
+              <div className="relative w-14 h-14">
+                <Image
+                  src="/logo.png"
+                  alt="Härnösands HF Logo"
+                  fill
+                  className="object-contain"
+                  priority
+                  quality={100}
+                  sizes="48px"
+                />
+              </div>
+              <span className="font-bold text-lg">Härnösands HF</span>
             </Link>
             <nav className="flex flex-col gap-4">
               {navLinks.map((link) => (
@@ -95,12 +113,12 @@ function Header() {
         </Sheet>
 
         {/* Desktop navigation */}
-        <nav className="hidden md:flex items-center gap-8 ml-auto">
+        <nav className="hidden md:flex items-center gap-6 ml-auto">
           {navLinks.map((link) => (
             <Link
               key={link.href}
               href={link.href}
-              className={`relative text-lg font-medium py-2 group transition-colors duration-300
+              className={`relative text-base font-medium py-2 group transition-colors duration-300
                 ${pathname === link.href ? "text-orange-500" : "text-white hover:text-gray-300"}
               `}
             >
