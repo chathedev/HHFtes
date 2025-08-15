@@ -188,18 +188,26 @@ export default function MatcherPage() {
           </h1>
 
           <div className="flex justify-center mb-8">
-            <div className="bg-white rounded-lg p-1 shadow-md">
+            <div className="inline-flex bg-white rounded-xl p-1 shadow-lg border border-gray-200">
               <Button
                 variant={filter === "all" ? "default" : "ghost"}
                 onClick={() => setFilter("all")}
-                className="px-4 py-2 rounded-md"
+                className={`px-6 py-2.5 rounded-lg font-medium transition-all duration-200 ${
+                  filter === "all"
+                    ? "bg-green-600 text-white shadow-md"
+                    : "text-gray-600 hover:text-gray-800 hover:bg-gray-50"
+                }`}
               >
                 {content.filterLabels.all}
               </Button>
               <Button
                 variant={filter === "home" ? "default" : "ghost"}
                 onClick={() => setFilter("home")}
-                className="px-4 py-2 rounded-md ml-1"
+                className={`px-6 py-2.5 rounded-lg font-medium transition-all duration-200 ml-1 ${
+                  filter === "home"
+                    ? "bg-green-600 text-white shadow-md"
+                    : "text-gray-600 hover:text-gray-800 hover:bg-gray-50"
+                }`}
               >
                 <Home className="w-4 h-4 mr-2" />
                 {content.filterLabels.home}
@@ -207,7 +215,11 @@ export default function MatcherPage() {
               <Button
                 variant={filter === "away" ? "default" : "ghost"}
                 onClick={() => setFilter("away")}
-                className="px-4 py-2 rounded-md ml-1"
+                className={`px-6 py-2.5 rounded-lg font-medium transition-all duration-200 ml-1 ${
+                  filter === "away"
+                    ? "bg-green-600 text-white shadow-md"
+                    : "text-gray-600 hover:text-gray-800 hover:bg-gray-50"
+                }`}
               >
                 <Plane className="w-4 h-4 mr-2" />
                 {content.filterLabels.away}
@@ -296,7 +308,7 @@ export default function MatcherPage() {
                 asChild
                 className="bg-orange-500 hover:bg-orange-600 text-white px-8 py-3 rounded-md text-lg font-semibold transition-colors"
               >
-                <Link href="/kontakt">Kontakta oss för mer information</Link>
+                <a href="/kontakt">Kontakta oss för mer information</a>
               </Button>
             </div>
           </section>
