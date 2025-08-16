@@ -10,6 +10,32 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { Button } from "@/components/ui/button"
 import { useState, useEffect } from "react"
 
+interface NewsApiResponse {
+  updatedAt: string
+  count: number
+  items: NewsApiItem[]
+}
+
+interface NewsApiItem {
+  title: string
+  link: string
+  guid: string
+  pubDate: string
+  description: string
+  enclosure: string | null
+  categories: string[]
+}
+
+interface NewsItem {
+  guid: string
+  title: string
+  link: string
+  description: string
+  cleanDescription: string
+  pubDate: string
+  image?: string
+}
+
 function formatDate(dateStr?: string) {
   try {
     if (!dateStr) return ""
@@ -27,14 +53,51 @@ function formatDate(dateStr?: string) {
   }
 }
 
-interface NewsItem {
-  guid: string
-  title: string
-  link: string
-  description: string
-  cleanDescription: string // Added cleanDescription field
-  pubDate: string
-  image?: string
+function cleanHtmlContent(html: string): string {
+  if (!html) return ""
+
+  let cleaned = html
+
+  // Remove all HTML tags including self-closing ones
+  cleaned = cleaned.replace(/<[^>]*\/?>/gi, "")
+
+  // Remove any remaining angle brackets that might be malformed
+  cleaned = cleaned.replace(/[<>]/g, "")
+
+  // Decode HTML entities more comprehensively
+  const entities: { [key: string]: string } = {
+    "&amp;": "&",
+    "&lt;": "<",
+    "&gt;": ">",
+    "&quot;": '"',
+    "&#39;": "'",
+    "&apos;": "'",
+    "&nbsp;": " ",
+    "&hellip;": "...",
+    "&mdash;": "—",
+    "&ndash;": "–",
+    "&rsquo;": "'",
+    "&lsquo;": "'",
+    "&rdquo;": '"',
+    "&ldquo;": '"',
+    "&#8217;": "'",
+    "&#8216;": "'",
+    "&#8221;": '"',
+    "&#8220;": '"',
+  }
+
+  // Apply entity decoding
+  Object.entries(entities).forEach(([entity, char]) => {
+    cleaned = cleaned.replace(new RegExp(entity, "gi"), char)
+  })
+
+  // Clean up multiple spaces, line breaks, and trim
+  cleaned = cleaned.replace(/\s+/g, " ").trim()
+
+  // Remove any remaining HTML-like artifacts
+  cleaned = cleaned.replace(/&[a-zA-Z0-9#]+;?/g, "")
+
+  return cleaned
 }
 
 export default function NyheterPage() {
@@ -46,14 +109,36 @@ export default function NyheterPage() {
   useEffect(() => {
     async function fetchNews() {
       try {
-        const response = await fetch("/api/news-rss")
+        console.log("[v0] Fetching news directly from API...")
+        const response = await fetch("https://api.harnosandshf.se/api/news?limit=20", {
+          headers: {
+            "User-Agent": "Mozilla/5.0 (compatible; HHF/1.0)",
+            Accept: "application/json",
+          },
+          cache: "no-store", // Disable caching for fresh data
+        })
+
         if (!response.ok) {
-          throw new Error("Failed to fetch news")
+          throw new Error(`Failed to fetch news: ${response.statusText}`)
         }
-        const newsData = await response.json()
-        setNews(newsData)
+
+        const newsData: NewsApiResponse = await response.json()
+        console.log("[v0] Received news data:", newsData.count, "items")
+
+        const transformedNews = newsData.items.map((item) => ({
+          guid: item.guid,
+          title: item.title,
+          link: item.link,
+          description: item.description,
+          cleanDescription: cleanHtmlContent(item.description),
+          pubDate: item.pubDate,
+          image: item.enclosure,
+        }))
+
+        console.log("[v0] Transformed news:", transformedNews.length, "items")
+        setNews(transformedNews)
       } catch (err) {
-        console.error("Error fetching news:", err)
+        console.error("[v0] Error fetching news:", err)
         setError("Kunde inte ladda nyheter. Försök igen senare.")
       } finally {
         setLoading(false)
@@ -117,12 +202,12 @@ export default function NyheterPage() {
                   {item.image && (
                     <div className="relative overflow-hidden">
                       <Image
-                        src={item.image || "/placeholder.svg"}
+                        src={item.image || "/placeholder.svg?height=300&width=600"}
                         alt={item.title}
                         width={600}
                         height={300}
                         className="w-full h-48 object-cover transition-transform duration-300 hover:scale-105"
-                        loading="lazy" // Added lazy loading for news images
+                        loading="lazy"
                         placeholder="blur"
                         blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q=="
                       />
