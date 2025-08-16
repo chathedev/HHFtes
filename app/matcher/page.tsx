@@ -2,8 +2,8 @@
 
 import { Header } from "@/components/header"
 import Footer from "@/components/footer"
-import { CalendarDays, Clock, Home, Plane } from "lucide-react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { CalendarDays, Clock } from "lucide-react"
+import { Card, CardHeader, CardTitle } from "@/components/ui/card"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
@@ -24,13 +24,15 @@ interface GroupedMatches {
   [monthYear: string]: Match[]
 }
 
+type FilterType = "all" | "home" | "away"
+
 export default function MatcherPage() {
   const [content, setContent] = useState<any>(null)
   const [contentLoading, setContentLoading] = useState(true)
   const [allMatches, setAllMatches] = useState<Match[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [filter, setFilter] = useState<"all" | "home" | "away">("all")
+  const [filter, setFilter] = useState<FilterType>("all")
 
   // Load static content from JSON
   useEffect(() => {
@@ -41,7 +43,6 @@ export default function MatcherPage() {
           const data = await response.json()
           setContent(data)
         } else {
-          // Fallback to default content if JSON fails
           setContent(getDefaultContent())
         }
       } catch (error) {
@@ -55,7 +56,6 @@ export default function MatcherPage() {
     loadContent()
   }, [])
 
-  // Fetch matches from API
   useEffect(() => {
     const fetchMatches = async () => {
       try {
@@ -66,7 +66,7 @@ export default function MatcherPage() {
 
         const response = await fetch("https://api.harnosandshf.se/api/events?days=365&limit=500", {
           method: "GET",
-          mode: "cors", // Explicitly set CORS mode
+          mode: "cors",
           cache: "no-store",
           headers: {
             "Cache-Control": "no-cache",
@@ -74,120 +74,48 @@ export default function MatcherPage() {
           },
         })
 
-        console.log("[v0] Response status:", response.status)
-        console.log("[v0] Response ok:", response.ok)
+        console.log("[v0] Response status:", response.status, "ok:", response.ok)
 
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`)
         }
 
         const data = await response.json()
-        console.log("[v0] Raw API response:", data)
-        console.log("[v0] Type of response:", typeof data)
-        console.log("[v0] Is array:", Array.isArray(data))
+        console.log("[v0] API response data:", data)
 
-        let events = data
+        const events = data.events || []
+        console.log("[v0] Events array length:", events.length)
 
-        // Check if the response is wrapped in an object
-        if (data && typeof data === "object" && !Array.isArray(data)) {
-          // Try common property names for event arrays
-          if (Array.isArray(data.events)) {
-            events = data.events
-          } else if (Array.isArray(data.data)) {
-            events = data.data
-          } else if (Array.isArray(data.items)) {
-            events = data.items
-          } else if (Array.isArray(data.results)) {
-            events = data.results
-          } else {
-            console.log("[v0] Response object keys:", Object.keys(data))
-            throw new Error("API response does not contain a recognizable events array")
-          }
-        }
-
-        // Ensure events is an array
         if (!Array.isArray(events)) {
-          console.log("[v0] Events is not an array:", events)
-          throw new Error("API response is not in expected format")
+          throw new Error("No events found")
         }
-
-        console.log("[v0] Processing", events.length, "events")
 
         const transformedMatches: Match[] = events.map((event: any, index: number) => {
-          // Extract date and time from ISO datetime string
           const startDate = new Date(event.start || new Date())
-          const date = startDate.toISOString().split("T")[0] // YYYY-MM-DD format
-          const time = startDate.toLocaleTimeString("sv-SE", {
-            hour: "2-digit",
-            minute: "2-digit",
-            timeZone: "Europe/Stockholm",
-          })
+          const date = startDate.toISOString().split("T")[0]
+          const timeString = event.start || new Date().toISOString()
+          const time = timeString.split("T")[1]?.split(".")[0]?.substring(0, 5) || "00:00"
 
-          // Clean up title to extract readable team names
-          let cleanTitle = event.title || "Okänd match"
-          if (cleanTitle.includes("alt='Logo' class/>")) {
-            // Remove HTML-like logo references and clean up
-            cleanTitle = cleanTitle
-              .replace(/s\/gklubb\/\d+(_\d+)?'\s*alt='Logo'\s*class\/>/g, "Lag")
-              .replace(/\s*-\s*/, " vs ")
-              .trim()
-
-            // If we still have generic "Lag vs Lag", try to extract from location
-            if (cleanTitle === "Lag vs Lag" || cleanTitle === "Lag") {
-              cleanTitle = event.location ? `Match i ${event.location}` : "Handbollsmatch"
-            }
-          }
-
-          // Determine if it's a home game based on location
-          const isHome = event.location?.toLowerCase().includes("härnösand") || false
-
-          // Extract opponent from title or use location info
-          let opponent = ""
-          if (event.title && event.title.includes(" - ")) {
-            const parts = event.title.split(" - ")
-            // Try to determine which part is the opponent (not Härnösands HF)
-            opponent = parts.find((part) => !part.includes("26031")) || ""
-            if (opponent.includes("alt='Logo' class/>")) {
-              opponent = event.location || "Okänd motståndare"
-            }
-          } else {
-            opponent = event.location || ""
-          }
+          const isHome = event.home?.toLowerCase().includes("härnösand") || false
+          const opponent = isHome ? event.away : event.home
 
           return {
             id: event.id || `event-${index}`,
-            title: cleanTitle,
+            title: event.title, // Keep original title from API
             date: date,
             time: time,
-            opponent: opponent,
+            opponent: opponent || "Okänd motståndare",
             location: event.location || "",
             isHome: isHome,
-            eventType: event.eventType || "match",
+            eventType: "match",
           }
         })
 
         console.log("[v0] Transformed matches:", transformedMatches.length)
-
-        let filteredMatches = transformedMatches
-        if (filter === "home") {
-          filteredMatches = transformedMatches.filter((match) => match.isHome)
-        } else if (filter === "away") {
-          filteredMatches = transformedMatches.filter((match) => !match.isHome)
-        }
-
-        console.log("[v0] Filtered matches:", filteredMatches.length)
-        setAllMatches(filteredMatches)
+        setAllMatches(transformedMatches)
       } catch (err) {
         console.error("[v0] Failed to fetch matches:", err)
-        let errorMessage = "Kunde inte ladda matcher. Försök igen senare."
-
-        if (err instanceof TypeError && err.message.includes("Failed to fetch")) {
-          errorMessage = "Kunde inte ansluta till servern. Kontrollera din internetanslutning."
-        } else if (err instanceof Error) {
-          errorMessage = `Fel vid hämtning av matcher: ${err.message}`
-        }
-
-        setError(errorMessage)
+        setError("Kunde inte ladda matcher. Försök igen senare.")
         setAllMatches([])
       } finally {
         setLoading(false)
@@ -195,7 +123,7 @@ export default function MatcherPage() {
     }
 
     fetchMatches()
-  }, [filter])
+  }, []) // Only fetch once, no dependency on filter
 
   const getDefaultContent = () => ({
     pageTitle: "Kommande Matcher",
@@ -232,32 +160,23 @@ export default function MatcherPage() {
     ],
   })
 
-  const groupedMatches: GroupedMatches = allMatches.reduce((acc, match) => {
+  const extractTeamFromTitle = (title: string): string => {
+    return ""
+  }
+
+  const filteredMatches = allMatches.filter((match) => {
+    if (filter === "home") return match.isHome
+    if (filter === "away") return !match.isHome
+    return true // "all"
+  })
+
+  const groupedMatches: GroupedMatches = filteredMatches.reduce((acc, match) => {
     const matchDate = new Date(match.date)
     const monthYearKey = matchDate.toLocaleDateString("sv-SE", { year: "numeric", month: "long" })
     if (!acc[monthYearKey]) acc[monthYearKey] = []
     acc[monthYearKey].push(match)
     return acc
   }, {} as GroupedMatches)
-
-  // Sort months chronologically
-  const sortedGroupedMatches: GroupedMatches = Object.keys(groupedMatches)
-    .sort((a, b) => {
-      const parseMonthYear = (str: string) => {
-        const [monthName, year] = str.split(" ")
-        const monthIndex = new Date(Date.parse(`${monthName} 1, 2000`)).getMonth()
-        return new Date(Number(year), monthIndex, 1)
-      }
-      return parseMonthYear(a).getTime() - parseMonthYear(b).getTime()
-    })
-    .reduce((sorted, key) => {
-      sorted[key] = groupedMatches[key].sort((a, b) => {
-        const dateTimeA = new Date(`${a.date}T${a.time.replace("Okänd tid", "00:00").replace("Heldag", "00:00")}`)
-        const dateTimeB = new Date(`${b.date}T${b.time.replace("Okänd tid", "00:00").replace("Heldag", "00:00")}`)
-        return dateTimeA.getTime() - dateTimeB.getTime()
-      })
-      return sorted
-    }, {} as GroupedMatches)
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString)
@@ -305,97 +224,97 @@ export default function MatcherPage() {
         <div className="h-24"></div>
         <div className="container px-4 md:px-6 py-12 md:py-16 lg:py-20">
           <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl mb-4 text-center text-green-700">
-            {content.pageTitle}
+            {content?.pageTitle || "Kommande Matcher"}
           </h1>
 
           <div className="flex justify-center mb-8">
-            <div className="inline-flex bg-white rounded-xl p-1 shadow-lg border border-gray-200">
-              <Button
-                variant={filter === "all" ? "default" : "ghost"}
-                onClick={() => setFilter("all")}
-                className={`px-6 py-2.5 rounded-lg font-medium transition-all duration-200 ${
-                  filter === "all"
-                    ? "bg-green-600 text-white shadow-md"
-                    : "text-gray-600 hover:text-gray-800 hover:bg-gray-50"
-                }`}
-              >
-                {content.filterLabels.all}
-              </Button>
-              <Button
-                variant={filter === "home" ? "default" : "ghost"}
-                onClick={() => setFilter("home")}
-                className={`px-6 py-2.5 rounded-lg font-medium transition-all duration-200 ml-1 ${
-                  filter === "home"
-                    ? "bg-green-600 text-white shadow-md"
-                    : "text-gray-600 hover:text-gray-800 hover:bg-gray-50"
-                }`}
-              >
-                <Home className="w-4 h-4 mr-2" />
-                {content.filterLabels.home}
-              </Button>
-              <Button
-                variant={filter === "away" ? "default" : "ghost"}
-                onClick={() => setFilter("away")}
-                className={`px-6 py-2.5 rounded-lg font-medium transition-all duration-200 ml-1 ${
-                  filter === "away"
-                    ? "bg-green-600 text-white shadow-md"
-                    : "text-gray-600 hover:text-gray-800 hover:bg-gray-50"
-                }`}
-              >
-                <Plane className="w-4 h-4 mr-2" />
-                {content.filterLabels.away}
-              </Button>
+            <div className="bg-white rounded-xl p-2 shadow-lg border border-gray-100">
+              <div className="flex gap-1">
+                <Button
+                  variant={filter === "all" ? "default" : "ghost"}
+                  onClick={() => setFilter("all")}
+                  className={`px-6 py-2 rounded-lg font-medium transition-all duration-200 ${
+                    filter === "all" ? "bg-green-600 text-white shadow-md" : "text-gray-700 hover:bg-gray-50"
+                  }`}
+                >
+                  Alla Matcher
+                </Button>
+                <Button
+                  variant={filter === "home" ? "default" : "ghost"}
+                  onClick={() => setFilter("home")}
+                  className={`px-6 py-2 rounded-lg font-medium transition-all duration-200 ${
+                    filter === "home" ? "bg-green-600 text-white shadow-md" : "text-gray-700 hover:bg-gray-50"
+                  }`}
+                >
+                  Hemma
+                </Button>
+                <Button
+                  variant={filter === "away" ? "default" : "ghost"}
+                  onClick={() => setFilter("away")}
+                  className={`px-6 py-2 rounded-lg font-medium transition-all duration-200 ${
+                    filter === "away" ? "bg-green-600 text-white shadow-md" : "text-gray-700 hover:bg-gray-50"
+                  }`}
+                >
+                  Borta
+                </Button>
+              </div>
             </div>
           </div>
 
-          {loading && <p className="text-center text-gray-600 mb-8">{content.loadingMessage}</p>}
+          {loading && <p className="text-center text-gray-600 mb-8">Laddar matcher...</p>}
           {error && (
             <div className="text-center mb-8">
-              <p className="text-red-500 mb-2">Kunde inte ladda matcher. Försök igen senare.</p>
-              <p className="text-sm text-gray-600">{error}</p>
+              <p className="text-red-500 mb-2">{error}</p>
             </div>
           )}
-          {!loading && !error && Object.keys(sortedGroupedMatches).length === 0 && (
+          {!loading && !error && Object.keys(groupedMatches).length === 0 && (
             <p className="text-lg text-gray-700 text-center mb-12">Inga matcher hittades</p>
           )}
-          {!loading && !error && Object.keys(sortedGroupedMatches).length > 0 && (
+          {!loading && !error && Object.keys(groupedMatches).length > 0 && (
             <div className="space-y-12 mb-16">
-              {Object.entries(sortedGroupedMatches).map(([monthYear, matches]) => (
+              {Object.entries(groupedMatches).map(([monthYear, matches]) => (
                 <section key={monthYear}>
                   <h2 className="text-2xl font-bold text-orange-500 mb-6 text-center md:text-left">{monthYear}</h2>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {matches.map((match) => (
                       <Card
                         key={match.id}
-                        className="bg-white shadow-lg rounded-lg flex flex-col transition hover:shadow-xl p-6"
+                        className="bg-white shadow-lg rounded-lg border-0 hover:shadow-xl transition-all duration-300 hover:-translate-y-1 relative"
                       >
-                        <CardHeader className="p-0 pb-4">
-                          <CardTitle className="text-xl font-semibold text-gray-800 mb-2 flex items-center">
-                            {match.isHome ? (
-                              <Home className="w-5 h-5 mr-2 text-green-600" />
-                            ) : (
-                              <Plane className="w-5 h-5 mr-2 text-blue-600" />
-                            )}
+                        <CardHeader className="p-6">
+                          <CardTitle className="text-lg font-bold text-gray-900 mb-3 leading-tight">
                             {match.title}
                           </CardTitle>
-                          <div className="flex items-center text-sm text-gray-500 mb-2">
-                            <CalendarDays className="w-4 h-4 mr-1" />
-                            <span>{formatDate(match.date)}</span>
-                            <Clock className="w-4 h-4 ml-4 mr-1" />
-                            <span>{match.time}</span>
+                          <div className="space-y-3">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center text-gray-600">
+                                <CalendarDays className="w-4 h-4 mr-2 text-green-600" />
+                                <span className="font-medium">{formatDate(match.date)}</span>
+                              </div>
+                              <div className="flex items-center text-gray-600">
+                                <Clock className="w-4 h-4 mr-2 text-green-600" />
+                                <span className="font-medium">{match.time}</span>
+                              </div>
+                            </div>
+                            {match.location && (
+                              <div className="pt-2 border-t border-gray-100">
+                                <p className="text-sm text-gray-600 flex items-start">
+                                  <span className="font-semibold text-gray-800 mr-2">Plats:</span>
+                                  <span className="flex-1">{match.location}</span>
+                                </p>
+                              </div>
+                            )}
+                            <div className="pt-2">
+                              <span
+                                className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
+                                  match.isHome ? "bg-green-100 text-green-800" : "bg-blue-100 text-blue-800"
+                                }`}
+                              >
+                                {match.isHome ? "Hemma" : "Borta"}
+                              </span>
+                            </div>
                           </div>
-                          {match.opponent && (
-                            <p className="text-sm text-gray-600 mb-1">
-                              <strong>Motståndare:</strong> {match.opponent}
-                            </p>
-                          )}
-                          {match.location && (
-                            <p className="text-sm text-gray-600">
-                              <strong>Plats:</strong> {match.location}
-                            </p>
-                          )}
                         </CardHeader>
-                        <CardContent className="flex-grow flex flex-col justify-between p-0" />
                       </Card>
                     ))}
                   </div>

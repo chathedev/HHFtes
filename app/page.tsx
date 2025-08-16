@@ -5,14 +5,13 @@ import Image from "next/image"
 import Link from "next/link"
 import { useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardHeader, CardTitle } from "@/components/ui/card"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import {
   ArrowRight,
   CalendarDays,
   Clock,
-  Goal,
   Heart,
   TrendingUp,
   Users,
@@ -26,8 +25,8 @@ import {
 import { Header } from "@/components/header"
 import Footer from "@/components/footer"
 import { defaultContent } from "@/lib/default-content"
-import { getUpcomingMatchesServer } from "@/lib/get-matches"
 import type { FullContent, Partner } from "@/lib/content-types"
+import { format } from "date-fns"
 
 // Define types for matches
 interface Match {
@@ -36,14 +35,8 @@ interface Match {
   title: string // Match title
 }
 
-// Helper function for formatting match dates
-const formatMatchDate = (dateString: string) => {
-  const date = new Date(dateString)
-  return date.toLocaleDateString("sv-SE", {
-    weekday: "short",
-    day: "numeric",
-    month: "short",
-  })
+const extractTeamFromTitle = (title: string): string => {
+  return ""
 }
 
 // Data fetching function (kept separate as it's a server-side utility)
@@ -69,6 +62,66 @@ async function getDynamicContent(): Promise<FullContent> {
   }
 }
 
+async function getUpcomingMatches(): Promise<Match[]> {
+  try {
+    console.log("[v0] Fetching upcoming matches from API...")
+    const response = await fetch("https://api.harnosandshf.se/api/events?days=365&limit=500&nocache=1", {
+      method: "GET",
+      mode: "cors",
+      cache: "no-store",
+      headers: {
+        "Cache-Control": "no-cache",
+        Accept: "application/json",
+      },
+    })
+
+    console.log("[v0] Response status:", response.status, "ok:", response.ok)
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`)
+    }
+
+    const data = await response.json()
+    console.log("[v0] API response data:", JSON.stringify(data).substring(0, 500) + "...")
+
+    const events = data.events || []
+    console.log("[v0] Events array length:", events.length)
+
+    if (!Array.isArray(events)) {
+      return []
+    }
+
+    // Transform and filter for upcoming matches only
+    const now = new Date()
+    const transformedMatches: Match[] = events
+      .map((event: any) => {
+        const startDate = new Date(event.start || new Date())
+        const date = startDate.toISOString().split("T")[0]
+        // Extract time directly from ISO string (HH:MM format)
+        const timeString = event.start ? event.start.split("T")[1]?.substring(0, 5) : "00:00"
+
+        return {
+          date: date,
+          time: timeString,
+          title: event.title || "Match",
+        }
+      })
+      .filter((match) => new Date(match.date) >= now)
+      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+      .slice(0, 3)
+
+    console.log("[v0] Transformed upcoming matches:", transformedMatches.length)
+    return transformedMatches
+  } catch (error) {
+    console.error("Failed to fetch upcoming matches:", error)
+    return []
+  }
+}
+
+const formatMatchDate = (date: string): string => {
+  return format(new Date(date), "dd MMM yyyy")
+}
+
 export default function HomePage() {
   const searchParams = useSearchParams()
   const isEditorMode = searchParams?.get("editor") === "true"
@@ -89,9 +142,8 @@ export default function HomePage() {
         setContent(defaultContent)
       }
 
-      // Fetch upcoming matches
       try {
-        const matches = await getUpcomingMatchesServer()
+        const matches = await getUpcomingMatches()
         setUpcomingMatches(matches)
       } catch (e: any) {
         setMatchesError(e.message || "Failed to fetch upcoming matches.")
@@ -257,66 +309,86 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* Upcoming Events Section */}
-        <section className="py-16">
+        <section className="py-16 bg-gray-50">
           <div className="container mx-auto px-4">
-            <Card className="bg-white rounded-lg shadow-lg overflow-hidden max-w-2xl mx-auto">
-              <CardHeader className="p-6 flex flex-col items-center text-center border-b border-gray-200">
-                <Goal className="w-16 h-16 text-green-600 mb-4" />
-                <CardTitle className="text-3xl font-bold text-green-600 mb-2">KOMMANDE MATCHER</CardTitle>
-                <p className="text-gray-600 text-lg">Håll dig uppdaterad med våra nästa matcher!</p>
-              </CardHeader>
-              <CardContent className="p-6">
-                {matchesLoading && <p className="text-center text-gray-600">Laddar matcher...</p>}
-                {matchesError && (
-                  <p className="text-center text-red-500">
-                    Fel: {matchesError}. Detta kan bero på problem med att hämta data.
-                  </p>
-                )}
-
-                {!matchesLoading && !matchesError && upcomingMatches.length === 0 && null}
-
-                {!matchesLoading && !matchesError && upcomingMatches.length > 0 && (
-                  <div className="space-y-4 mb-6">
-                    {upcomingMatches.slice(0, 5).map(
-                      (
-                        match,
-                        index, // Display up to 5 matches
-                      ) => (
-                        <div
-                          key={index}
-                          className="flex items-center gap-4 p-3 bg-gray-50 rounded-md border border-gray-200"
-                        >
-                          <div className="flex-shrink-0 text-center">
-                            <CalendarDays className="w-6 h-6 text-orange-500" />
-                            <span className="block text-xs text-gray-600">{formatMatchDate(match.date)}</span>
-                          </div>
-                          <div className="flex-grow">
-                            <h4 className="font-semibold text-gray-800">{match.title}</h4>
-                            <div className="flex items-center text-sm text-gray-500 mt-1">
-                              <Clock className="w-4 h-4 mr-1" />
-                              <span>{match.time}</span>
-                            </div>
-                          </div>
+            <h2 className="text-3xl font-bold text-center text-green-700 mb-8">Kommande Matcher</h2>
+            <div className="max-w-4xl mx-auto">
+              {matchesLoading && (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                  {[1, 2, 3].map((i) => (
+                    <Card key={i} className="bg-white shadow-lg rounded-lg p-6 animate-pulse">
+                      <CardHeader className="p-0 pb-4">
+                        <div className="h-5 bg-gray-200 rounded mb-2"></div>
+                        <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+                        <div className="flex items-center space-x-4">
+                          <div className="h-4 bg-gray-200 rounded w-20"></div>
+                          <div className="h-4 bg-gray-200 rounded w-16"></div>
                         </div>
-                      ),
-                    )}
-                  </div>
-                )}
+                      </CardHeader>
+                    </Card>
+                  ))}
+                </div>
+              )}
 
-                <div className="text-center">
+              {matchesError && (
+                <div className="text-center py-8">
+                  <p className="text-gray-500 mb-4">Inga matcher hittades</p>
                   <Button
-                    asChild
-                    className="bg-orange-500 hover:bg-orange-600 text-white px-8 py-3 rounded-md text-lg font-semibold transition-colors"
+                    onClick={() => {
+                      setMatchesLoading(true)
+                      setMatchesError(null)
+                      getUpcomingMatches()
+                        .then(setUpcomingMatches)
+                        .catch((e) => setMatchesError(e.message))
+                        .finally(() => setMatchesLoading(false))
+                    }}
+                    variant="outline"
+                    className="text-green-600 border-green-600 hover:bg-green-50"
                   >
-                    <Link href="/matcher">
-                      Visa Alla Matcher
-                      <ArrowRight className="ml-2 h-5 w-5" />
-                    </Link>
+                    Försök igen
                   </Button>
                 </div>
-              </CardContent>
-            </Card>
+              )}
+
+              {!matchesLoading && !matchesError && upcomingMatches.length > 0 && (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                  {upcomingMatches.slice(0, 3).map((match, index) => (
+                    <Card
+                      key={index}
+                      className="bg-white shadow-lg rounded-lg p-6 hover:shadow-xl transition-shadow duration-200 relative"
+                    >
+                      <CardHeader className="p-0 pb-4">
+                        <CardTitle className="text-lg font-semibold text-gray-800 mb-2">{match.title}</CardTitle>
+                        <div className="flex items-center text-sm text-gray-500 mb-2">
+                          <CalendarDays className="w-4 h-4 mr-1" />
+                          <span>{formatMatchDate(match.date)}</span>
+                          <Clock className="w-4 h-4 ml-4 mr-1" />
+                          <span>{match.time}</span>
+                        </div>
+                      </CardHeader>
+                    </Card>
+                  ))}
+                </div>
+              )}
+
+              {!matchesLoading && !matchesError && upcomingMatches.length === 0 && (
+                <div className="text-center py-8">
+                  <p className="text-gray-500">Inga kommande matcher just nu</p>
+                </div>
+              )}
+
+              <div className="text-center">
+                <Button
+                  asChild
+                  className="bg-orange-500 hover:bg-orange-600 text-white px-8 py-3 rounded-md text-lg font-semibold transition-colors"
+                >
+                  <Link href="/matcher">
+                    Visa Alla Matcher
+                    <ArrowRight className="ml-2 h-5 w-5" />
+                  </Link>
+                </Button>
+              </div>
+            </div>
           </div>
         </section>
 
