@@ -33,9 +33,34 @@ interface Match {
   date: string // YYYY-MM-DD
   time: string // HH:MM or "Heldag"
   title: string // Match title
+  location?: string // Match location
 }
 
 const extractTeamFromTitle = (title: string): string => {
+  return ""
+}
+
+const extractTeamFromLocation = (location: string): string => {
+  if (!location) return ""
+
+  const locationLower = location.toLowerCase()
+
+  // Check for youth teams first (P10, P11, P12, P13, P14, P15, P16, etc.)
+  const youthMatch = location.match(/p(\d{1,2})/i)
+  if (youthMatch) {
+    return `P${youthMatch[1]}`
+  }
+
+  // Check for men's team (herr)
+  if (locationLower.includes("herr")) {
+    return "Herr"
+  }
+
+  // Check for women's team (dam)
+  if (locationLower.includes("dam")) {
+    return "Dam"
+  }
+
   return ""
 }
 
@@ -104,6 +129,7 @@ async function getUpcomingMatches(): Promise<Match[]> {
           date: date,
           time: timeString,
           title: event.title || "Match",
+          location: event.location || "", // Added location field
         }
       })
       .filter((match) => new Date(match.date) >= now)
@@ -357,7 +383,14 @@ export default function HomePage() {
                       key={index}
                       className="bg-white shadow-lg rounded-lg p-6 hover:shadow-xl transition-shadow duration-200 relative"
                     >
-                      <CardHeader className="p-0 pb-4">
+                      {extractTeamFromLocation(match.location || "") && (
+                        <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 z-10">
+                          <div className="bg-green-600 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg">
+                            {extractTeamFromLocation(match.location || "")}
+                          </div>
+                        </div>
+                      )}
+                      <CardHeader className="p-0 pb-4 pt-4">
                         <CardTitle className="text-lg font-semibold text-gray-800 mb-2">{match.title}</CardTitle>
                         <div className="flex items-center text-sm text-gray-500 mb-2">
                           <CalendarDays className="w-4 h-4 mr-1" />

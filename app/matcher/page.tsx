@@ -164,6 +164,30 @@ export default function MatcherPage() {
     return ""
   }
 
+  const extractTeamFromLocation = (location: string): string => {
+    if (!location) return ""
+
+    const locationLower = location.toLowerCase()
+
+    // Check for youth teams first (P10, P11, P12, P13, P14, P15, P16, etc.)
+    const youthMatch = location.match(/p(\d{1,2})/i)
+    if (youthMatch) {
+      return `P${youthMatch[1]}`
+    }
+
+    // Check for men's team (herr)
+    if (locationLower.includes("herr")) {
+      return "Herr"
+    }
+
+    // Check for women's team (dam)
+    if (locationLower.includes("dam")) {
+      return "Dam"
+    }
+
+    return ""
+  }
+
   const filteredMatches = allMatches.filter((match) => {
     if (filter === "home") return match.isHome
     if (filter === "away") return !match.isHome
@@ -281,7 +305,14 @@ export default function MatcherPage() {
                         key={match.id}
                         className="bg-white shadow-lg rounded-lg border-0 hover:shadow-xl transition-all duration-300 hover:-translate-y-1 relative"
                       >
-                        <CardHeader className="p-6">
+                        {extractTeamFromLocation(match.location) && (
+                          <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 z-10">
+                            <div className="bg-green-600 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg">
+                              {extractTeamFromLocation(match.location)}
+                            </div>
+                          </div>
+                        )}
+                        <CardHeader className="p-6 pt-8">
                           <CardTitle className="text-lg font-bold text-gray-900 mb-3 leading-tight">
                             {match.title}
                           </CardTitle>
