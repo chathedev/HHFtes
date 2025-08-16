@@ -59,15 +59,97 @@ export default function MatcherPage() {
   useEffect(() => {
     const fetchMatches = async () => {
       try {
-        const filterParam = filter !== "all" ? `?filter=${filter}` : ""
-        const response = await fetch(`/api/matches${filterParam}`)
+        setLoading(true)
+        setError(null)
+
+        console.log("[v0] Fetching matches from API...")
+
+        const response = await fetch("https://api.harnosandshf.se/api/events?days=365&limit=500", {
+          method: "GET",
+          mode: "cors", // Explicitly set CORS mode
+          cache: "no-store",
+          headers: {
+            "Cache-Control": "no-cache",
+            Accept: "application/json",
+          },
+        })
+
+        console.log("[v0] Response status:", response.status)
+        console.log("[v0] Response ok:", response.ok)
+
         if (!response.ok) {
-          throw new Error("Failed to fetch matches")
+          throw new Error(`HTTP error! status: ${response.status}`)
         }
-        const matches = await response.json()
-        setAllMatches(matches)
+
+        const data = await response.json()
+        console.log("[v0] Raw API response:", data)
+        console.log("[v0] Type of response:", typeof data)
+        console.log("[v0] Is array:", Array.isArray(data))
+
+        let events = data
+
+        // Check if the response is wrapped in an object
+        if (data && typeof data === "object" && !Array.isArray(data)) {
+          // Try common property names for event arrays
+          if (Array.isArray(data.events)) {
+            events = data.events
+          } else if (Array.isArray(data.data)) {
+            events = data.data
+          } else if (Array.isArray(data.items)) {
+            events = data.items
+          } else if (Array.isArray(data.results)) {
+            events = data.results
+          } else {
+            console.log("[v0] Response object keys:", Object.keys(data))
+            throw new Error("API response does not contain a recognizable events array")
+          }
+        }
+
+        // Ensure events is an array
+        if (!Array.isArray(events)) {
+          console.log("[v0] Events is not an array:", events)
+          throw new Error("API response is not in expected format")
+        }
+
+        console.log("[v0] Processing", events.length, "events")
+
+        const transformedMatches: Match[] = events.map((event: any, index: number) => ({
+          id: event.id || `event-${index}`,
+          title: event.title || event.name || "Okänd match",
+          date: event.date || event.start_date || new Date().toISOString().split("T")[0],
+          time: event.time || event.start_time || "Okänd tid",
+          opponent: event.opponent || event.away_team || event.home_team || "",
+          location: event.location || event.venue || "",
+          isHome:
+            event.isHome !== undefined
+              ? event.isHome
+              : event.type === "home" || event.location?.toLowerCase().includes("härnösand"),
+          eventType: event.eventType || event.type || "match",
+        }))
+
+        console.log("[v0] Transformed matches:", transformedMatches.length)
+
+        let filteredMatches = transformedMatches
+        if (filter === "home") {
+          filteredMatches = transformedMatches.filter((match) => match.isHome)
+        } else if (filter === "away") {
+          filteredMatches = transformedMatches.filter((match) => !match.isHome)
+        }
+
+        console.log("[v0] Filtered matches:", filteredMatches.length)
+        setAllMatches(filteredMatches)
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Unknown error")
+        console.error("[v0] Failed to fetch matches:", err)
+        let errorMessage = "Kunde inte ladda matcher. Försök igen senare."
+
+        if (err instanceof TypeError && err.message.includes("Failed to fetch")) {
+          errorMessage = "Kunde inte ansluta till servern. Kontrollera din internetanslutning."
+        } else if (err instanceof Error) {
+          errorMessage = `Fel vid hämtning av matcher: ${err.message}`
+        }
+
+        setError(errorMessage)
+        setAllMatches([])
       } finally {
         setLoading(false)
       }
@@ -228,9 +310,14 @@ export default function MatcherPage() {
           </div>
 
           {loading && <p className="text-center text-gray-600 mb-8">{content.loadingMessage}</p>}
-          {error && <p className="text-center text-red-500 mb-8">{content.errorMessage}</p>}
+          {error && (
+            <div className="text-center mb-8">
+              <p className="text-red-500 mb-2">Kunde inte ladda matcher. Försök igen senare.</p>
+              <p className="text-sm text-gray-600">{error}</p>
+            </div>
+          )}
           {!loading && !error && Object.keys(sortedGroupedMatches).length === 0 && (
-            <p className="text-lg text-gray-700 text-center mb-12">{content.noMatchesMessage}</p>
+            <p className="text-lg text-gray-700 text-center mb-12">Inga matcher hittades</p>
           )}
           {!loading && !error && Object.keys(sortedGroupedMatches).length > 0 && (
             <div className="space-y-12 mb-16">
