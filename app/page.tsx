@@ -5,23 +5,10 @@ import Image from "next/image"
 import Link from "next/link"
 import { useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
-import { Card, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card } from "@/components/ui/card"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
-import {
-  ArrowRight,
-  CalendarDays,
-  Clock,
-  Heart,
-  TrendingUp,
-  Users,
-  Star,
-  Plus,
-  Minus,
-  Trophy,
-  Award,
-  History,
-} from "lucide-react"
+import { ArrowRight, Heart, TrendingUp, Users, Star, Plus, Minus, Trophy, Award, History } from "lucide-react"
 import { Header } from "@/components/header"
 import Footer from "@/components/footer"
 import { defaultContent } from "@/lib/default-content"
@@ -330,96 +317,6 @@ export default function HomePage() {
                   {content.stats.yearsHistory}
                 </div>
                 <div className="text-sm">År av Historia</div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section className="py-16 bg-gray-50">
-          <div className="container mx-auto px-4">
-            <h2 className="text-3xl font-bold text-center text-green-700 mb-8">Kommande Matcher</h2>
-            <div className="max-w-4xl mx-auto">
-              {matchesLoading && (
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                  {[1, 2, 3].map((i) => (
-                    <Card key={i} className="bg-white shadow-lg rounded-lg p-6 animate-pulse">
-                      <CardHeader className="p-0 pb-4">
-                        <div className="h-5 bg-gray-200 rounded mb-2"></div>
-                        <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
-                        <div className="flex items-center space-x-4">
-                          <div className="h-4 bg-gray-200 rounded w-20"></div>
-                          <div className="h-4 bg-gray-200 rounded w-16"></div>
-                        </div>
-                      </CardHeader>
-                    </Card>
-                  ))}
-                </div>
-              )}
-
-              {matchesError && (
-                <div className="text-center py-8">
-                  <p className="text-gray-500 mb-4">Inga matcher hittades</p>
-                  <Button
-                    onClick={() => {
-                      setMatchesLoading(true)
-                      setMatchesError(null)
-                      getUpcomingMatches()
-                        .then(setUpcomingMatches)
-                        .catch((e) => setMatchesError(e.message))
-                        .finally(() => setMatchesLoading(false))
-                    }}
-                    variant="outline"
-                    className="text-green-600 border-green-600 hover:bg-green-50"
-                  >
-                    Försök igen
-                  </Button>
-                </div>
-              )}
-
-              {!matchesLoading && !matchesError && upcomingMatches.length > 0 && (
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                  {upcomingMatches.slice(0, 3).map((match, index) => (
-                    <Card
-                      key={index}
-                      className="bg-white shadow-lg rounded-lg p-6 hover:shadow-xl transition-shadow duration-200 relative"
-                    >
-                      {extractTeamFromLocation(match.location || "") && (
-                        <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 z-10">
-                          <div className="bg-green-600 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg">
-                            {extractTeamFromLocation(match.location || "")}
-                          </div>
-                        </div>
-                      )}
-                      <CardHeader className="p-0 pb-4 pt-4">
-                        <CardTitle className="text-lg font-semibold text-gray-800 mb-2">{match.title}</CardTitle>
-                        <div className="flex items-center text-sm text-gray-500 mb-2">
-                          <CalendarDays className="w-4 h-4 mr-1" />
-                          <span>{formatMatchDate(match.date)}</span>
-                          <Clock className="w-4 h-4 ml-4 mr-1" />
-                          <span>{match.time}</span>
-                        </div>
-                      </CardHeader>
-                    </Card>
-                  ))}
-                </div>
-              )}
-
-              {!matchesLoading && !matchesError && upcomingMatches.length === 0 && (
-                <div className="text-center py-8">
-                  <p className="text-gray-500">Inga kommande matcher just nu</p>
-                </div>
-              )}
-
-              <div className="text-center">
-                <Button
-                  asChild
-                  className="bg-orange-500 hover:bg-orange-600 text-white px-8 py-3 rounded-md text-lg font-semibold transition-colors"
-                >
-                  <Link href="/matcher">
-                    Visa Alla Matcher
-                    <ArrowRight className="ml-2 h-5 w-5" />
-                  </Link>
-                </Button>
               </div>
             </div>
           </div>
