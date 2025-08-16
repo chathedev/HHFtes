@@ -192,7 +192,7 @@ export default function HomePage() {
         <section className="relative w-full h-screen flex items-center justify-center overflow-hidden">
           <Image
             src={content.hero.imageUrl || "/placeholder.svg"}
-            alt="Härnösands HF Team"
+            alt="Härnösands HF herrlag och damlag 2025"
             fill
             quality={90}
             priority
@@ -211,8 +211,7 @@ export default function HomePage() {
                 "data-field-path": "home.hero.title",
               })}
             >
-              {content.hero.title.split(" ")[0]}{" "}
-              <span className="text-orange-400">{content.hero.title.split(" ").slice(1).join(" ")}</span>
+              LAGET <span className="text-orange-500">FÖRE ALLT</span>
             </h1>
             <p
               className="text-lg sm:text-xl md:text-2xl mb-10 max-w-3xl mx-auto animate-fade-in-up delay-200 text-shadow-md"
@@ -257,6 +256,11 @@ export default function HomePage() {
               </Button>
             </div>
           </div>
+        </section>
+
+        {/* SEO H1 Section */}
+        <section className="sr-only" aria-hidden="true">
+          <h1>Härnösands HF – Handboll i Härnösand</h1>
         </section>
 
         {/* Stats Section */}
@@ -458,7 +462,7 @@ export default function HomePage() {
                 <div className="relative h-[400px] rounded-lg overflow-hidden shadow-xl">
                   <Image
                     src={content.aboutClub.imageSrc || "/placeholder.svg"}
-                    alt={content.aboutClub.imageAlt}
+                    alt="Härnösands HF ungdomslag"
                     fill
                     className="object-cover"
                     loading="lazy"

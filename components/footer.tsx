@@ -10,6 +10,7 @@ export default function Footer() {
           <div className="space-y-4">
             <h3 className="text-xl font-bold text-orange-400">Härnösands HF</h3>
             <p className="text-gray-300">Härnösands Handbollsförening - En förening för alla som älskar handboll.</p>
+            <p className="text-sm text-gray-400">Härnösands HF – Handboll i Härnösand</p>
             <div className="flex space-x-4">
               <Link
                 href="https://www.facebook.com/profile.php?id=61566621756014"
@@ -36,22 +37,22 @@ export default function Footer() {
             <ul className="space-y-2">
               <li>
                 <Link href="/matcher" className="text-gray-300 hover:text-white transition-colors">
-                  Matcher
-                </Link>
-              </li>
-              <li>
-                <Link href="/kalender" className="text-gray-300 hover:text-white transition-colors">
-                  Kalender
-                </Link>
-              </li>
-              <li>
-                <Link href="/lag" className="text-gray-300 hover:text-white transition-colors">
-                  Lag
+                  Se matcher för Härnösands HF
                 </Link>
               </li>
               <li>
                 <Link href="/nyheter" className="text-gray-300 hover:text-white transition-colors">
-                  Nyheter
+                  Läs nyheter från Härnösands HF
+                </Link>
+              </li>
+              <li>
+                <Link href="/lag" className="text-gray-300 hover:text-white transition-colors">
+                  Våra handbollslag i Härnösand
+                </Link>
+              </li>
+              <li>
+                <Link href="/kontakt" className="text-gray-300 hover:text-white transition-colors">
+                  Kontakta Härnösands HF
                 </Link>
               </li>
             </ul>
@@ -69,6 +70,7 @@ export default function Footer() {
                 <MapPin size={16} />
                 <span>Härnösand, Sverige</span>
               </div>
+              <p className="text-sm text-gray-400 mt-2">Medlem i Svenska Handbollförbundet</p>
             </div>
           </div>
 
@@ -89,7 +91,13 @@ export default function Footer() {
 
         {/* Bottom Section */}
         <div className="border-t border-gray-700 mt-8 pt-8 flex flex-col md:flex-row justify-between items-center">
-          <p className="text-gray-400 text-sm">© 2024 Härnösands HF. Alla rättigheter förbehållna.</p>
+          <div className="text-center md:text-left mb-4 md:mb-0">
+            <p className="text-gray-400 text-sm mb-2">© 2024 Härnösands HF. Alla rättigheter förbehållna.</p>
+            <p className="text-gray-500 text-xs">
+              Detta är Härnösands HF:s officiella hemsida. Tidigare låg hemsidan på laget.se men från 2025 hittar du all
+              information här på harnosandshf.se.
+            </p>
+          </div>
 
           {/* WBY Credit with Blue Gradient */}
           <div className="mt-4 md:mt-0">

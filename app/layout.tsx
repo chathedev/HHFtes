@@ -10,11 +10,11 @@ const inter = Inter({ subsets: ["latin"] })
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_VERCEL_URL || "http://localhost:3000"),
   title: {
-    default: "Härnösands HF - Handbollsklubb | Laget Före Allt",
-    template: "%s | Härnösands HF - Handbollsklubb",
+    default: "Härnösands HF – Officiell hemsida för handboll i Härnösand",
+    template: "%s | Härnösands HF – Officiell hemsida för handboll i Härnösand",
   },
   description:
-    "Härnösands Handbollsförening (HHF) - Härnösands främsta handbollsklubb sedan 1970. Följ våra A-lag, ungdomslag, matcher, nyheter och träningar. Laget Före Allt!",
+    "Härnösands HF – Officiell hemsida för handboll i Härnösand. Matcher, nyheter, lag, ungdomsverksamhet och kontakt.",
   keywords: [
     "Härnösands HF",
     "Härnösands Handbollsförening",
@@ -96,7 +96,7 @@ export const metadata: Metadata = {
   creator: "Härnösands HF",
   publisher: "Härnösands HF",
   openGraph: {
-    title: "Härnösands HF - Handbollsklubb | Laget Före Allt",
+    title: "Härnösands HF – Officiell hemsida för handboll i Härnösand",
     description:
       "Härnösands Handbollsförening (HHF) – Härnösands främsta handbollsklubb med stolthet, gemenskap och passion för sporten. A-lag, ungdomslag, träningar och matcher.",
     url: "https://www.harnosandshf.se",
@@ -115,7 +115,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Härnösands HF - Handbollsklubb | Laget Före Allt",
+    title: "Härnösands HF – Officiell hemsida för handboll i Härnösand",
     description:
       "Härnösands Handbollsförening (HHF) – Härnösands främsta handbollsklubb med stolthet, gemenskap och passion för sporten. A-lag, ungdomslag, träningar och matcher.",
     images: ["/opengraph-image.png"],
@@ -140,7 +140,7 @@ export const metadata: Metadata = {
   ],
   manifest: "/manifest.json",
   alternates: {
-    canonical: "https://www.harnosandshf.se",
+    canonical: "https://harnosandshf.se",
   },
   category: "Sports",
   classification: "Handbollsklubb",
@@ -170,17 +170,6 @@ export default function RootLayout({
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <meta name="theme-color" content="#15803d" />
         <meta name="format-detection" content="telephone=no" />
-        <div style={{ display: "none", visibility: "hidden", position: "absolute", left: "-9999px" }}>
-          <h1>Härnösands HF Handbollsförening</h1>
-          <p>
-            Härnösands HF är Härnösands främsta handbollsklubb med A-lag herr, A-lag dam och ungdomslag för alla åldrar.
-            Vi tränar i Öbackahallen och spelar matcher i svenska handbollsserier.
-          </p>
-          <span>
-            handboll härnösand, härnösands hf, hhf, handbollsklubb, a-lag handboll, ungdomshandboll, träning, matcher,
-            västernorrland, ångermanland, öbackahallen, laget före allt
-          </span>
-        </div>
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
@@ -237,6 +226,22 @@ export default function RootLayout({
               },
               {
                 "@context": "https://schema.org",
+                "@type": "SportsTeam",
+                name: "Härnösands HF",
+                sport: "Handboll",
+                url: "https://harnosandshf.se",
+                foundingDate: "2024",
+                location: {
+                  "@type": "Place",
+                  name: "Härnösand, Sverige",
+                },
+                memberOf: {
+                  "@type": "SportsOrganization",
+                  name: "Svenska Handbollsförbundet",
+                },
+              },
+              {
+                "@context": "https://schema.org",
                 "@type": "WebSite",
                 name: "Härnösands HF",
                 url: "https://www.harnosandshf.se",
@@ -283,6 +288,17 @@ export default function RootLayout({
         />
       </head>
       <body className={`${inter.className} bg-white`}>
+        <div style={{ display: "none", visibility: "hidden", position: "absolute", left: "-9999px" }}>
+          <h1>Härnösands HF Handbollsförening</h1>
+          <p>
+            Härnösands HF är Härnösands främsta handbollsklubb med A-lag herr, A-lag dam och ungdomslag för alla åldrar.
+            Vi tränar i Öbackahallen och spelar matcher i svenska handbollsserier.
+          </p>
+          <span>
+            handboll härnösand, härnösands hf, hhf, handbollsklubb, a-lag handboll, ungdomshandboll, träning, matcher,
+            västernorrland, ångermanland, öbackahallen, laget före allt
+          </span>
+        </div>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
           <ScrollToTop />
           {children}
