@@ -12,28 +12,29 @@ import { useState, useEffect } from "react"
 
 interface NewsApiResponse {
   updatedAt: string
+  source: string
   count: number
   items: NewsApiItem[]
 }
 
 interface NewsApiItem {
   title: string
+  image: string | null
+  text: string
   link: string
-  guid: string
   pubDate: string
-  description: string
-  enclosure: string | null
+  isoDate: string
   categories: string[]
 }
 
 interface NewsItem {
-  guid: string
   title: string
   link: string
-  description: string
-  cleanDescription: string
-  pubDate: string
-  image?: string
+  text: string
+  cleanText: string
+  isoDate: string
+  image: string | null
+  categories: string[]
 }
 
 function formatDate(dateStr?: string) {
@@ -126,13 +127,13 @@ export default function NyheterPage() {
         console.log("[v0] Received news data:", newsData.count, "items")
 
         const transformedNews = newsData.items.map((item) => ({
-          guid: item.guid,
           title: item.title,
           link: item.link,
-          description: item.description,
-          cleanDescription: cleanHtmlContent(item.description),
-          pubDate: item.pubDate,
-          image: item.enclosure,
+          text: item.text,
+          cleanText: cleanHtmlContent(item.text),
+          isoDate: item.isoDate,
+          image: item.image,
+          categories: item.categories,
         }))
 
         console.log("[v0] Transformed news:", transformedNews.length, "items")
@@ -151,7 +152,7 @@ export default function NyheterPage() {
   const filteredNews = news.filter(
     (item) =>
       item.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.cleanDescription.toLowerCase().includes(searchTerm.toLowerCase()),
+      item.cleanText.toLowerCase().includes(searchTerm.toLowerCase()),
   )
 
   return (
@@ -194,15 +195,15 @@ export default function NyheterPage() {
 
           {!loading && !error && (
             <ul className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredNews.map((item) => (
+              {filteredNews.map((item, index) => (
                 <li
-                  key={item.guid}
+                  key={`${item.link}-${index}`}
                   className="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
                 >
                   {item.image && (
                     <div className="relative overflow-hidden">
                       <Image
-                        src={item.image || "/placeholder.svg?height=300&width=600&text=Nyheter"}
+                        src={item.image || "/placeholder.svg"}
                         alt={item.title}
                         width={600}
                         height={300}
@@ -214,10 +215,19 @@ export default function NyheterPage() {
                   )}
                   <div className="p-6">
                     <h3 className="text-xl font-bold leading-tight text-gray-900 mb-2 line-clamp-2">{item.title}</h3>
-                    {item.pubDate && (
-                      <p className="text-sm text-green-600 font-medium mb-3">{formatDate(item.pubDate)}</p>
+                    {item.isoDate && (
+                      <p className="text-sm text-green-600 font-medium mb-3">{formatDate(item.isoDate)}</p>
                     )}
-                    <p className="text-gray-700 mb-4 line-clamp-3">{item.cleanDescription}</p>
+                    <p className="text-gray-700 mb-4 line-clamp-3">{item.cleanText}</p>
+                    {item.categories && item.categories.length > 0 && (
+                      <div className="flex flex-wrap gap-1 mb-4">
+                        {item.categories.map((category, catIndex) => (
+                          <span key={catIndex} className="px-2 py-1 bg-green-100 text-green-700 text-xs rounded-full">
+                            {category}
+                          </span>
+                        ))}
+                      </div>
+                    )}
                     <div className="flex justify-between items-center pt-4 border-t border-gray-100">
                       <Button
                         asChild
