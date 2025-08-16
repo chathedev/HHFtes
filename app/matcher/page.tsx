@@ -113,19 +113,58 @@ export default function MatcherPage() {
 
         console.log("[v0] Processing", events.length, "events")
 
-        const transformedMatches: Match[] = events.map((event: any, index: number) => ({
-          id: event.id || `event-${index}`,
-          title: event.title || event.name || "Okänd match",
-          date: event.date || event.start_date || new Date().toISOString().split("T")[0],
-          time: event.time || event.start_time || "Okänd tid",
-          opponent: event.opponent || event.away_team || event.home_team || "",
-          location: event.location || event.venue || "",
-          isHome:
-            event.isHome !== undefined
-              ? event.isHome
-              : event.type === "home" || event.location?.toLowerCase().includes("härnösand"),
-          eventType: event.eventType || event.type || "match",
-        }))
+        const transformedMatches: Match[] = events.map((event: any, index: number) => {
+          // Extract date and time from ISO datetime string
+          const startDate = new Date(event.start || new Date())
+          const date = startDate.toISOString().split("T")[0] // YYYY-MM-DD format
+          const time = startDate.toLocaleTimeString("sv-SE", {
+            hour: "2-digit",
+            minute: "2-digit",
+            timeZone: "Europe/Stockholm",
+          })
+
+          // Clean up title to extract readable team names
+          let cleanTitle = event.title || "Okänd match"
+          if (cleanTitle.includes("alt='Logo' class/>")) {
+            // Remove HTML-like logo references and clean up
+            cleanTitle = cleanTitle
+              .replace(/s\/gklubb\/\d+(_\d+)?'\s*alt='Logo'\s*class\/>/g, "Lag")
+              .replace(/\s*-\s*/, " vs ")
+              .trim()
+
+            // If we still have generic "Lag vs Lag", try to extract from location
+            if (cleanTitle === "Lag vs Lag" || cleanTitle === "Lag") {
+              cleanTitle = event.location ? `Match i ${event.location}` : "Handbollsmatch"
+            }
+          }
+
+          // Determine if it's a home game based on location
+          const isHome = event.location?.toLowerCase().includes("härnösand") || false
+
+          // Extract opponent from title or use location info
+          let opponent = ""
+          if (event.title && event.title.includes(" - ")) {
+            const parts = event.title.split(" - ")
+            // Try to determine which part is the opponent (not Härnösands HF)
+            opponent = parts.find((part) => !part.includes("26031")) || ""
+            if (opponent.includes("alt='Logo' class/>")) {
+              opponent = event.location || "Okänd motståndare"
+            }
+          } else {
+            opponent = event.location || ""
+          }
+
+          return {
+            id: event.id || `event-${index}`,
+            title: cleanTitle,
+            date: date,
+            time: time,
+            opponent: opponent,
+            location: event.location || "",
+            isHome: isHome,
+            eventType: event.eventType || "match",
+          }
+        })
 
         console.log("[v0] Transformed matches:", transformedMatches.length)
 
