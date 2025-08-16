@@ -322,6 +322,29 @@ export default function HomePage() {
           </div>
         </section>
 
+        <section className="py-8 bg-orange-50">
+          <div className="container mx-auto px-4 text-center">
+            <div className="bg-white rounded-lg shadow-md p-6 max-w-2xl mx-auto border-l-4 border-orange-500">
+              <h3 className="text-xl font-semibold text-gray-800 mb-3">Under tiden</h3>
+              <p className="text-gray-600 mb-4">
+                Medan vi utvecklar vår nya matchvisning kan du se alla matcher på Profixio:
+              </p>
+              <Button
+                asChild
+                className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-md font-semibold transition-colors"
+              >
+                <a
+                  href="https://www.profixio.com/app/tournaments?term=&filters[open_registration]=0&filters[kampoppsett]=0&filters[land_id]=se&filters[type]=seriespill&filters[idrett]=HB&filters[listingtype]=matches&filters[season]=765&dateTo=2026-04-30&klubbid=26031&dateFrom=2025-08-16"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Visa Matcher på Profixio
+                </a>
+              </Button>
+            </div>
+          </div>
+        </section>
+
         {/* About Club Section */}
         <section className="py-16">
           <div className="container mx-auto px-4">

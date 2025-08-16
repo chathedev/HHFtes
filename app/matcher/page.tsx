@@ -150,6 +150,23 @@ export default function MatcherPage() {
                 </Button>
               </div>
             </div>
+
+            <div className="bg-orange-50 rounded-lg shadow-md p-6 mt-8 border-l-4 border-green-600">
+              <h3 className="text-xl font-semibold text-gray-800 mb-3">Under tiden</h3>
+              <p className="text-gray-600 mb-4">Du kan se alla våra matcher direkt på Profixio:</p>
+              <Button
+                asChild
+                className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-md font-semibold transition-colors"
+              >
+                <a
+                  href="https://www.profixio.com/app/tournaments?term=&filters[open_registration]=0&filters[kampoppsett]=0&filters[land_id]=se&filters[type]=seriespill&filters[idrett]=HB&filters[listingtype]=matches&filters[season]=765&dateTo=2026-04-30&klubbid=26031&dateFrom=2025-08-16"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Visa Matcher på Profixio
+                </a>
+              </Button>
+            </div>
           </div>
 
           {/* FAQ Section */}
