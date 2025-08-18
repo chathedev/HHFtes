@@ -110,10 +110,9 @@ export default function NyheterPage() {
   useEffect(() => {
     async function fetchNews() {
       try {
-        console.log("[v0] Fetching news directly from API...")
-        const response = await fetch("https://api.harnosandshf.se/api/news?limit=20", {
+        console.log("[v0] Fetching news from internal API...")
+        const response = await fetch("/api/news", {
           headers: {
-            "User-Agent": "Mozilla/5.0 (compatible; HHF/1.0)",
             Accept: "application/json",
           },
           cache: "no-store", // Disable caching for fresh data
