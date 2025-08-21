@@ -171,7 +171,19 @@ export default function HomePage() {
 
   const partnersForDisplay = Array.isArray(content.partners) ? content.partners.filter((p) => p.visibleInCarousel) : []
 
-  const partnersByTier: Record<string, Partner[]> = partnersForDisplay.reduce(
+  const grannstadenPartner: Partner = {
+    id: "grannstaden",
+    src: "/grannstaden.svg",
+    alt: "Grannstaden",
+    tier: "Platinapartner",
+    visibleInCarousel: true,
+    linkUrl: "https://grannstaden.se/", // Added link to Grannstaden website
+  }
+
+  // Add Grannstaden to the partners list
+  const allPartnersForDisplay = [...partnersForDisplay, grannstadenPartner]
+
+  const partnersByTier: Record<string, Partner[]> = allPartnersForDisplay.reduce(
     (acc, partner) => {
       if (!acc[partner.tier]) {
         acc[partner.tier] = []
