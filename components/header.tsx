@@ -29,7 +29,7 @@ function Header() {
   }, [])
 
   // Keep only the paths that will remain in the navigation
-  const visiblePaths = ["/", "/nyheter", "/lag", "/kontakt", "/matcher"]
+  const visiblePaths = ["/", "/nyheter", "/lag", "/kontakt", "/bli-medlem"]
 
   if (!visiblePaths.includes(pathname)) {
     return null
@@ -39,7 +39,7 @@ function Header() {
     { name: "Hem", href: "/" },
     { name: "Nyheter", href: "/nyheter" },
     { name: "Lag", href: "/lag" },
-    { name: "Matcher", href: "/matcher" },
+    { name: "Bli Medlem", href: "/bli-medlem" },
     { name: "Kontakt", href: "/kontakt" },
   ]
 

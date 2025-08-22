@@ -8,20 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
-import {
-  ArrowRight,
-  Heart,
-  TrendingUp,
-  Users,
-  Star,
-  Plus,
-  Minus,
-  Trophy,
-  Award,
-  History,
-  Calendar,
-  Clock,
-} from "lucide-react"
+import { ArrowRight, Heart, TrendingUp, Users, Star, Plus, Minus, Trophy, Award, History } from "lucide-react"
 import { Header } from "@/components/header"
 import Footer from "@/components/footer"
 import { defaultContent } from "@/lib/default-content"
@@ -143,6 +130,14 @@ export default function HomePage() {
   const [matchesLoading, setMatchesLoading] = useState(true)
   const [matchesError, setMatchesError] = useState<string | null>(null)
   const [openTier, setOpenTier] = useState<string | null>("Diamantpartner") // Default open for partners
+
+  const getProfixioUrl = () => {
+    const yesterday = new Date()
+    yesterday.setDate(yesterday.getDate() - 1)
+    const dateFrom = yesterday.toISOString().split("T")[0] // Format: YYYY-MM-DD
+
+    return `https://www.profixio.com/app/tournaments?term=&filters[open_registration]=0&filters[kampoppsett]=0&filters[land_id]=se&filters[type]=seriespill&filters[idrett]=HB&filters[listingtype]=matches&filters[season]=765&dateTo=2026-04-30&klubbid=26031&dateFrom=${dateFrom}`
+  }
 
   useEffect(() => {
     const fetchData = async () => {
@@ -337,60 +332,23 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* Upcoming Matches Section */}
-        {upcomingMatches.length > 0 ? (
-          <section className="py-8 bg-green-50">
-            <div className="container mx-auto px-4">
-              <h3 className="text-2xl font-bold text-center text-green-700 mb-6">Kommande Matcher</h3>
-              <div className="grid gap-4 md:grid-cols-3 max-w-4xl mx-auto">
-                {upcomingMatches.map((match, index) => (
-                  <Card key={index} className="p-4 hover:shadow-lg transition-shadow duration-300">
-                    <div className="space-y-2">
-                      <h4 className="font-semibold text-gray-900 text-sm line-clamp-2">{match.title}</h4>
-                      <div className="text-xs text-gray-600 space-y-1">
-                        {match.date && (
-                          <div className="flex items-center gap-1">
-                            <Calendar className="w-3 h-3 text-green-600" />
-                            <span>{formatMatchDate(match.date)}</span>
-                          </div>
-                        )}
-                        {match.time && (
-                          <div className="flex items-center gap-1">
-                            <Clock className="w-3 h-3 text-green-600" />
-                            <span>{match.time}</span>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </Card>
-                ))}
-              </div>
-              <div className="text-center mt-6">
-                <Button
-                  asChild
-                  className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-md font-semibold transition-colors"
-                >
-                  <Link href="/matcher">Se Alla Matcher</Link>
-                </Button>
-              </div>
+        {/* Matches Section - Simplified to just Profixio button */}
+        <section className="py-8 bg-green-50">
+          <div className="container mx-auto px-4 text-center">
+            <div className="bg-white rounded-lg shadow-md p-6 max-w-2xl mx-auto border-l-4 border-green-500">
+              <h3 className="text-xl font-semibold text-gray-800 mb-3">Matcher</h3>
+              <p className="text-gray-600 mb-4">Se alla kommande matcher för Härnösands HF:</p>
+              <Button
+                asChild
+                className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-md font-semibold transition-colors"
+              >
+                <Link href={getProfixioUrl()} target="_blank" rel="noopener noreferrer">
+                  Se Matcher
+                </Link>
+              </Button>
             </div>
-          </section>
-        ) : (
-          <section className="py-8 bg-green-50">
-            <div className="container mx-auto px-4 text-center">
-              <div className="bg-white rounded-lg shadow-md p-6 max-w-2xl mx-auto border-l-4 border-green-500">
-                <h3 className="text-xl font-semibold text-gray-800 mb-3">Matcher</h3>
-                <p className="text-gray-600 mb-4">Se alla kommande matcher för Härnösands HF:</p>
-                <Button
-                  asChild
-                  className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-md font-semibold transition-colors"
-                >
-                  <Link href="/matcher">Se Matcher</Link>
-                </Button>
-              </div>
-            </div>
-          </section>
-        )}
+          </div>
+        </section>
 
         {/* About Club Section */}
         <section className="py-16">
