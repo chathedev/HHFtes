@@ -8,7 +8,20 @@ import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
-import { ArrowRight, Heart, TrendingUp, Users, Star, Plus, Minus, Trophy, Award, History } from "lucide-react"
+import {
+  ArrowRight,
+  Heart,
+  TrendingUp,
+  Users,
+  Star,
+  Plus,
+  Minus,
+  Trophy,
+  Award,
+  History,
+  Calendar,
+  Clock,
+} from "lucide-react"
 import { Header } from "@/components/header"
 import Footer from "@/components/footer"
 import { defaultContent } from "@/lib/default-content"
@@ -76,13 +89,11 @@ async function getDynamicContent(): Promise<FullContent> {
 
 async function getUpcomingMatches(): Promise<Match[]> {
   try {
-    console.log("[v0] Fetching upcoming matches from API...")
-    const response = await fetch("https://api.harnosandshf.se/api/events?days=365&limit=500&nocache=1", {
+    console.log("[v0] Fetching upcoming matches from new API...")
+    const response = await fetch("https://m-api.harnosandshf.se/matches", {
       method: "GET",
-      mode: "cors",
       cache: "no-store",
       headers: {
-        "Cache-Control": "no-cache",
         Accept: "application/json",
       },
     })
@@ -96,35 +107,23 @@ async function getUpcomingMatches(): Promise<Match[]> {
     const data = await response.json()
     console.log("[v0] API response data:", JSON.stringify(data).substring(0, 500) + "...")
 
-    const events = data.events || []
-    console.log("[v0] Events array length:", events.length)
+    const matches = data.matches || []
+    console.log("[v0] Matches array length:", matches.length)
 
-    if (!Array.isArray(events)) {
+    if (!Array.isArray(matches)) {
       return []
     }
 
-    // Transform and filter for upcoming matches only
-    const now = new Date()
-    const transformedMatches: Match[] = events
-      .map((event: any) => {
-        const startDate = new Date(event.start || new Date())
-        const date = startDate.toISOString().split("T")[0]
-        // Extract time directly from ISO string (HH:MM format)
-        const timeString = event.start ? event.start.split("T")[1]?.substring(0, 5) : "00:00"
+    // Return first 3 matches for home page
+    const upcomingMatches = matches.slice(0, 3).map((match: any) => ({
+      date: match.date || "",
+      time: match.time || "",
+      title: match.title || "Match",
+      location: match.location || "",
+    }))
 
-        return {
-          date: date,
-          time: timeString,
-          title: event.title || "Match",
-          location: event.location || "", // Added location field
-        }
-      })
-      .filter((match) => new Date(match.date) >= now)
-      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
-      .slice(0, 3)
-
-    console.log("[v0] Transformed upcoming matches:", transformedMatches.length)
-    return transformedMatches
+    console.log("[v0] Transformed upcoming matches:", upcomingMatches.length)
+    return upcomingMatches
   } catch (error) {
     console.error("Failed to fetch upcoming matches:", error)
     return []
@@ -338,28 +337,60 @@ export default function HomePage() {
           </div>
         </section>
 
-        <section className="py-8 bg-orange-50">
-          <div className="container mx-auto px-4 text-center">
-            <div className="bg-white rounded-lg shadow-md p-6 max-w-2xl mx-auto border-l-4 border-orange-500">
-              <h3 className="text-xl font-semibold text-gray-800 mb-3">Under tiden</h3>
-              <p className="text-gray-600 mb-4">
-                Medan vi utvecklar vår nya matchvisning kan du se alla matcher på Profixio:
-              </p>
-              <Button
-                asChild
-                className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-md font-semibold transition-colors"
-              >
-                <a
-                  href="https://www.profixio.com/app/tournaments?term=&filters[open_registration]=0&filters[kampoppsett]=0&filters[land_id]=se&filters[type]=seriespill&filters[idrett]=HB&filters[listingtype]=matches&filters[season]=765&dateTo=2026-04-30&klubbid=26031&dateFrom=2025-08-16"
-                  target="_blank"
-                  rel="noopener noreferrer"
+        {/* Upcoming Matches Section */}
+        {upcomingMatches.length > 0 ? (
+          <section className="py-8 bg-green-50">
+            <div className="container mx-auto px-4">
+              <h3 className="text-2xl font-bold text-center text-green-700 mb-6">Kommande Matcher</h3>
+              <div className="grid gap-4 md:grid-cols-3 max-w-4xl mx-auto">
+                {upcomingMatches.map((match, index) => (
+                  <Card key={index} className="p-4 hover:shadow-lg transition-shadow duration-300">
+                    <div className="space-y-2">
+                      <h4 className="font-semibold text-gray-900 text-sm line-clamp-2">{match.title}</h4>
+                      <div className="text-xs text-gray-600 space-y-1">
+                        {match.date && (
+                          <div className="flex items-center gap-1">
+                            <Calendar className="w-3 h-3 text-green-600" />
+                            <span>{formatMatchDate(match.date)}</span>
+                          </div>
+                        )}
+                        {match.time && (
+                          <div className="flex items-center gap-1">
+                            <Clock className="w-3 h-3 text-green-600" />
+                            <span>{match.time}</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </Card>
+                ))}
+              </div>
+              <div className="text-center mt-6">
+                <Button
+                  asChild
+                  className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-md font-semibold transition-colors"
                 >
-                  Visa Matcher på Profixio
-                </a>
-              </Button>
+                  <Link href="/matcher">Se Alla Matcher</Link>
+                </Button>
+              </div>
             </div>
-          </div>
-        </section>
+          </section>
+        ) : (
+          <section className="py-8 bg-green-50">
+            <div className="container mx-auto px-4 text-center">
+              <div className="bg-white rounded-lg shadow-md p-6 max-w-2xl mx-auto border-l-4 border-green-500">
+                <h3 className="text-xl font-semibold text-gray-800 mb-3">Matcher</h3>
+                <p className="text-gray-600 mb-4">Se alla kommande matcher för Härnösands HF:</p>
+                <Button
+                  asChild
+                  className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-md font-semibold transition-colors"
+                >
+                  <Link href="/matcher">Se Matcher</Link>
+                </Button>
+              </div>
+            </div>
+          </section>
+        )}
 
         {/* About Club Section */}
         <section className="py-16">
