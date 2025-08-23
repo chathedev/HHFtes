@@ -333,19 +333,32 @@ export default function HomePage() {
         </section>
 
         {/* Matches Section - Simplified to just Profixio button */}
-        <section className="py-8 bg-green-50">
-          <div className="container mx-auto px-4 text-center">
-            <div className="bg-white rounded-lg shadow-md p-6 max-w-2xl mx-auto border-l-4 border-green-500">
-              <h3 className="text-xl font-semibold text-gray-800 mb-3">Matcher</h3>
-              <p className="text-gray-600 mb-4">Se alla kommande matcher för Härnösands HF:</p>
-              <Button
-                asChild
-                className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-md font-semibold transition-colors"
-              >
-                <Link href={getProfixioUrl()} target="_blank" rel="noopener noreferrer">
-                  Se Matcher
-                </Link>
-              </Button>
+        <section className="py-12 bg-white">
+          <div className="container mx-auto px-4">
+            <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+              <div className="bg-white rounded-lg shadow-md p-6 border-l-4 border-green-500">
+                <h3 className="text-xl font-semibold text-gray-800 mb-3">Matcher</h3>
+                <p className="text-gray-600 mb-4">Se alla kommande matcher för Härnösands HF:</p>
+                <Button
+                  asChild
+                  className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-md font-semibold transition-colors w-full"
+                >
+                  <Link href={getProfixioUrl()} target="_blank" rel="noopener noreferrer">
+                    Se Matcher
+                  </Link>
+                </Button>
+              </div>
+
+              <div className="bg-white rounded-lg shadow-md p-6 border-l-4 border-orange-500">
+                <h3 className="text-xl font-semibold text-gray-800 mb-3">Biljetter</h3>
+                <p className="text-gray-600 mb-4">Köp biljetter till våra hemmamatcher:</p>
+                <Button
+                  asChild
+                  className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-md font-semibold transition-colors w-full"
+                >
+                  <Link href="/kop-biljett">Köp Biljetter</Link>
+                </Button>
+              </div>
             </div>
           </div>
         </section>

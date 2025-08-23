@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { Facebook, Instagram, Mail, MapPin, ExternalLink } from "lucide-react"
+import { Facebook, Instagram, Mail, MapPin, ExternalLink } from 'lucide-react'
 
 export default function Footer() {
   return (
@@ -35,11 +35,6 @@ export default function Footer() {
           <div className="space-y-4">
             <h3 className="text-xl font-bold text-orange-400">Snabblänkar</h3>
             <ul className="space-y-2">
-              <li>
-                <Link href="/matcher" className="text-gray-300 hover:text-white transition-colors">
-                  Se matcher för Härnösands HF
-                </Link>
-              </li>
               <li>
                 <Link href="/nyheter" className="text-gray-300 hover:text-white transition-colors">
                   Läs nyheter från Härnösands HF
