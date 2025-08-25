@@ -212,11 +212,6 @@ export default function RootLayout({
                 location: {
                   "@type": "Place",
                   name: "Öbackahallen",
-                  address: {
-                    "@type": "PostalAddress",
-                    addressLocality: "Härnösand",
-                    addressCountry: "SE",
-                  },
                 },
                 contactPoint: {
                   "@type": "ContactPoint",
@@ -272,14 +267,20 @@ export default function RootLayout({
                   {
                     "@type": "ListItem",
                     position: 3,
-                    name: "Matcher",
-                    item: "https://www.harnosandshf.se/matcher",
+                    name: "Nyheter",
+                    item: "https://www.harnosandshf.se/nyheter",
                   },
                   {
                     "@type": "ListItem",
                     position: 4,
-                    name: "Nyheter",
-                    item: "https://www.harnosandshf.se/nyheter",
+                    name: "Bli Medlem",
+                    item: "https://www.harnosandshf.se/bli-medlem",
+                  },
+                  {
+                    "@type": "ListItem",
+                    position: 5,
+                    name: "Köp Biljett",
+                    item: "https://www.harnosandshf.se/kop-biljett",
                   },
                 ],
               },

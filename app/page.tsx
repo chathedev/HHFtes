@@ -13,43 +13,6 @@ import { Header } from "@/components/header"
 import Footer from "@/components/footer"
 import { defaultContent } from "@/lib/default-content"
 import type { FullContent, Partner } from "@/lib/content-types"
-import { format } from "date-fns"
-
-// Define types for matches
-interface Match {
-  date: string // YYYY-MM-DD
-  time: string // HH:MM or "Heldag"
-  title: string // Match title
-  location?: string // Match location
-}
-
-const extractTeamFromTitle = (title: string): string => {
-  return ""
-}
-
-const extractTeamFromLocation = (location: string): string => {
-  if (!location) return ""
-
-  const locationLower = location.toLowerCase()
-
-  // Check for youth teams first (P10, P11, P12, P13, P14, P15, P16, etc.)
-  const youthMatch = location.match(/p(\d{1,2})/i)
-  if (youthMatch) {
-    return `P${youthMatch[1]}`
-  }
-
-  // Check for men's team (herr)
-  if (locationLower.includes("herr")) {
-    return "Herr"
-  }
-
-  // Check for women's team (dam)
-  if (locationLower.includes("dam")) {
-    return "Dam"
-  }
-
-  return ""
-}
 
 // Data fetching function (kept separate as it's a server-side utility)
 const BACKEND_API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL || "https://api.nuredo.se"
@@ -74,70 +37,12 @@ async function getDynamicContent(): Promise<FullContent> {
   }
 }
 
-async function getUpcomingMatches(): Promise<Match[]> {
-  try {
-    console.log("[v0] Fetching upcoming matches from new API...")
-    const response = await fetch("https://m-api.harnosandshf.se/matches", {
-      method: "GET",
-      cache: "no-store",
-      headers: {
-        Accept: "application/json",
-      },
-    })
-
-    console.log("[v0] Response status:", response.status, "ok:", response.ok)
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`)
-    }
-
-    const data = await response.json()
-    console.log("[v0] API response data:", JSON.stringify(data).substring(0, 500) + "...")
-
-    const matches = data.matches || []
-    console.log("[v0] Matches array length:", matches.length)
-
-    if (!Array.isArray(matches)) {
-      return []
-    }
-
-    // Return first 3 matches for home page
-    const upcomingMatches = matches.slice(0, 3).map((match: any) => ({
-      date: match.date || "",
-      time: match.time || "",
-      title: match.title || "Match",
-      location: match.location || "",
-    }))
-
-    console.log("[v0] Transformed upcoming matches:", upcomingMatches.length)
-    return upcomingMatches
-  } catch (error) {
-    console.error("Failed to fetch upcoming matches:", error)
-    return []
-  }
-}
-
-const formatMatchDate = (date: string): string => {
-  return format(new Date(date), "dd MMM yyyy")
-}
-
 export default function HomePage() {
   const searchParams = useSearchParams()
   const isEditorMode = searchParams?.get("editor") === "true"
 
   const [content, setContent] = useState<FullContent>(defaultContent)
-  const [upcomingMatches, setUpcomingMatches] = useState<Match[]>([])
-  const [matchesLoading, setMatchesLoading] = useState(true)
-  const [matchesError, setMatchesError] = useState<string | null>(null)
   const [openTier, setOpenTier] = useState<string | null>("Diamantpartner") // Default open for partners
-
-  const getProfixioUrl = () => {
-    const yesterday = new Date()
-    yesterday.setDate(yesterday.getDate() - 1)
-    const dateFrom = yesterday.toISOString().split("T")[0] // Format: YYYY-MM-DD
-
-    return `https://www.profixio.com/app/tournaments?term=&filters[open_registration]=0&filters[kampoppsett]=0&filters[land_id]=se&filters[type]=seriespill&filters[idrett]=HB&filters[listingtype]=matches&filters[season]=765&dateTo=2026-04-30&klubbid=26031&dateFrom=${dateFrom}`
-  }
 
   useEffect(() => {
     const fetchData = async () => {
@@ -147,16 +52,6 @@ export default function HomePage() {
       } catch (error) {
         console.error("Failed to load dynamic content:", error)
         setContent(defaultContent)
-      }
-
-      try {
-        const matches = await getUpcomingMatches()
-        setUpcomingMatches(matches)
-      } catch (e: any) {
-        setMatchesError(e.message || "Failed to fetch upcoming matches.")
-        console.error("Client-side fetch error for homepage upcoming matches:", e)
-      } finally {
-        setMatchesLoading(false)
       }
     }
 
@@ -327,37 +222,6 @@ export default function HomePage() {
                   {content.stats.yearsHistory}
                 </div>
                 <div className="text-sm">År av Historia</div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Matches Section - Simplified to just Profixio button */}
-        <section className="py-12 bg-white">
-          <div className="container mx-auto px-4">
-            <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
-              <div className="bg-white rounded-lg shadow-md p-6 border-l-4 border-green-500">
-                <h3 className="text-xl font-semibold text-gray-800 mb-3">Matcher</h3>
-                <p className="text-gray-600 mb-4">Se alla kommande matcher för Härnösands HF:</p>
-                <Button
-                  asChild
-                  className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-md font-semibold transition-colors w-full"
-                >
-                  <Link href={getProfixioUrl()} target="_blank" rel="noopener noreferrer">
-                    Se Matcher
-                  </Link>
-                </Button>
-              </div>
-
-              <div className="bg-white rounded-lg shadow-md p-6 border-l-4 border-orange-500">
-                <h3 className="text-xl font-semibold text-gray-800 mb-3">Biljetter</h3>
-                <p className="text-gray-600 mb-4">Köp biljetter till våra hemmamatcher:</p>
-                <Button
-                  asChild
-                  className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-md font-semibold transition-colors w-full"
-                >
-                  <Link href="/kop-biljett">Köp Biljetter</Link>
-                </Button>
               </div>
             </div>
           </div>

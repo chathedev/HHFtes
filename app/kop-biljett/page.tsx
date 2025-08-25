@@ -80,7 +80,13 @@ export default function KopBiljettPage() {
                   variant="outline"
                   className="border-green-600 text-green-600 hover:bg-green-50 px-8 py-3 text-lg bg-transparent"
                 >
-                  <a href="/matcher">Se Kommande Matcher</a>
+                  <a
+                    href="https://www.profixio.com/app/tournaments?term=&filters[open_registration]=0&filters[kampoppsett]=0&filters[land_id]=se&filters[type]=seriespill&filters[idrett]=HB&filters[listingtype]=matches&filters[season]=765&dateTo=2026-04-30&klubbid=26031&dateFrom=2025-01-15"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Se Kommande Matcher
+                  </a>
                 </Button>
               </div>
             </div>
