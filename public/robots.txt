@@ -2,7 +2,7 @@ User-agent: *
 Allow: /
 
 # Sitemap
-Sitemap: https://harnosandshf.se/sitemap.xml
+Sitemap: https://www.harnosandshf.se/sitemap.xml
 
 # Crawl-delay for respectful crawling
 Crawl-delay: 1

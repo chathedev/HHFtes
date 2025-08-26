@@ -164,6 +164,42 @@ export default function HomePage() {
           <h1>Härnösands HF – Handboll i Härnösand</h1>
         </section>
 
+        <section className="py-12 bg-white">
+          <div className="container mx-auto px-4">
+            <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+              <div className="bg-white rounded-lg shadow-md p-6 border-l-4 border-green-500">
+                <h3 className="text-xl font-bold text-green-700 mb-3">Se Matcher</h3>
+                <p className="text-gray-600 mb-4">
+                  Följ våra lag och se kommande matcher. Håll dig uppdaterad med spelschema och resultat.
+                </p>
+                <Link
+                  href="https://www.profixio.com/app/tournaments?term=&filters[open_registration]=0&filters[kampoppsett]=0&filters[land_id]=se&filters[type]=seriespill&filters[idrett]=HB&filters[listingtype]=matches&filters[season]=765&dateTo=2026-04-30&klubbid=26031&dateFrom=2025-01-15"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-md font-medium transition-colors"
+                >
+                  Se Matcher
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Link>
+              </div>
+
+              <div className="bg-white rounded-lg shadow-md p-6 border-l-4 border-orange-500">
+                <h3 className="text-xl font-bold text-orange-600 mb-3">Köp Biljetter</h3>
+                <p className="text-gray-600 mb-4">
+                  Köp biljetter till våra hemmamatcher och stötta laget. Upplev handboll på nära håll!
+                </p>
+                <Link
+                  href="/kop-biljett"
+                  className="inline-flex items-center bg-orange-500 hover:bg-orange-600 text-white px-6 py-2 rounded-md font-medium transition-colors"
+                >
+                  Köp Biljetter
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Link>
+              </div>
+            </div>
+          </div>
+        </section>
+
         {/* Stats Section */}
         <section className="text-white py-12 bg-green-600/90">
           <div className="container mx-auto px-4">
