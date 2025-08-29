@@ -166,7 +166,27 @@ export default function HomePage() {
 
         <section className="py-12 bg-white">
           <div className="container mx-auto px-4">
-            <div className="grid md:grid-cols-1 gap-6 max-w-2xl mx-auto">
+            <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+              <div className="bg-white rounded-lg shadow-md p-6 border-l-4 border-green-500">
+                <h3 className="text-xl font-bold text-green-600 mb-3">Se Matcher</h3>
+                <p className="text-gray-600 mb-4">
+                  Se våra kommande matcher och följ laget genom säsongen. Stötta oss på plats!
+                </p>
+                <Link
+                  href={(() => {
+                    const yesterday = new Date()
+                    yesterday.setDate(yesterday.getDate() - 1)
+                    const dateFrom = yesterday.toISOString().split("T")[0]
+                    return `https://www.profixio.com/app/tournaments?term=&filters[open_registration]=0&filters[kampoppsett]=0&filters[land_id]=se&filters[type]=seriespill&filters[idrett]=HB&filters[listingtype]=matches&filters[season]=765&dateTo=2026-04-30&klubbid=26031&dateFrom=${dateFrom}`
+                  })()}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded-md font-medium transition-colors"
+                >
+                  Se Matcher
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Link>
+              </div>
               <div className="bg-white rounded-lg shadow-md p-6 border-l-4 border-orange-500">
                 <h3 className="text-xl font-bold text-orange-600 mb-3">Köp Biljetter</h3>
                 <p className="text-gray-600 mb-4">

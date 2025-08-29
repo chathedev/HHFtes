@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Header } from "@/components/header"
 import Footer from "@/components/footer"
-import { Ticket, Calendar, MapPin, Clock } from "lucide-react"
+import { Ticket, Calendar, MapPin, Clock, ExternalLink } from "lucide-react"
 
 export default function KopBiljettPage() {
   return (
@@ -16,19 +16,28 @@ export default function KopBiljettPage() {
             <Ticket className="w-16 h-16 mx-auto mb-4" />
             <h1 className="text-4xl md:text-5xl font-bold mb-4">Köp Biljetter</h1>
             <p className="text-xl mb-8 max-w-3xl mx-auto">
-              Kom och upplev spännande handbollsmatcher med Härnösands HF! Köp dina biljetter enkelt online.
+              Kom och upplev spännande handbollsmatcher med Härnösands HF! Köp dina biljetter enkelt online via
+              Clubmate.
             </p>
+            <Button
+              asChild
+              className="bg-white text-green-700 hover:bg-gray-100 px-8 py-4 text-lg font-semibold rounded-md inline-flex items-center gap-2"
+            >
+              <a href="https://clubs.clubmate.se/harnosandshf/" target="_blank" rel="noopener noreferrer">
+                Köp Biljetter Nu
+                <ExternalLink className="w-5 h-5" />
+              </a>
+            </Button>
           </div>
         </section>
 
-        {/* Coming Soon Section */}
         <section className="py-16 bg-white">
           <div className="container mx-auto px-4">
             <div className="max-w-4xl mx-auto text-center">
-              <h2 className="text-3xl font-bold text-green-700 mb-8">Biljettförsäljning Kommer Snart</h2>
+              <h2 className="text-3xl font-bold text-green-700 mb-8">Enkelt & Smidigt via Clubmate</h2>
               <p className="text-lg text-gray-700 mb-12 max-w-2xl mx-auto">
-                Vi arbetar för att göra det så enkelt som möjligt för dig att köpa biljetter till våra matcher. Snart
-                kommer du att kunna köpa biljetter direkt här på hemsidan.
+                Vi har gjort det enkelt för dig att köpa biljetter till våra matcher. Genom vår partner Clubmate kan du
+                nu köpa biljetter direkt online med säker betalning.
               </p>
 
               <div className="grid md:grid-cols-3 gap-8 mb-12">
@@ -40,8 +49,8 @@ export default function KopBiljettPage() {
 
                 <Card className="p-6 text-center bg-orange-50 border-orange-200">
                   <MapPin className="w-12 h-12 text-orange-500 mx-auto mb-4" />
-                  <h3 className="text-xl font-semibold mb-3 text-gray-800">Enkelt & Smidigt</h3>
-                  <p className="text-gray-600">Välj dina platser och betala säkert online</p>
+                  <h3 className="text-xl font-semibold mb-3 text-gray-800">Säker Betalning</h3>
+                  <p className="text-gray-600">Betala säkert med kort eller Swish via Clubmate</p>
                 </Card>
 
                 <Card className="p-6 text-center bg-green-50 border-green-200">
@@ -52,41 +61,39 @@ export default function KopBiljettPage() {
               </div>
 
               <Button
-                disabled
-                className="bg-green-500 text-white px-8 py-4 text-lg font-semibold rounded-md cursor-not-allowed opacity-60"
+                asChild
+                className="bg-green-600 hover:bg-green-700 text-white px-8 py-4 text-lg font-semibold rounded-md inline-flex items-center gap-2"
               >
-                Kommer Snart
+                <a href="https://clubs.clubmate.se/harnosandshf/" target="_blank" rel="noopener noreferrer">
+                  Köp Biljetter via Clubmate
+                  <ExternalLink className="w-5 h-5" />
+                </a>
               </Button>
             </div>
           </div>
         </section>
 
-        {/* Information Section */}
         <section className="py-16 bg-green-50">
           <div className="container mx-auto px-4">
             <div className="max-w-3xl mx-auto text-center">
-              <h2 className="text-3xl font-bold text-green-700 mb-8">Under tiden</h2>
+              <h2 className="text-3xl font-bold text-green-700 mb-8">Så här fungerar det</h2>
               <p className="text-lg text-gray-700 mb-8">
-                Medan vi förbereder vår nya biljettlösning kan du fortfarande köpa biljetter till våra matcher. Kontakta
-                oss för mer information om kommande matcher och biljettpriser.
+                Genom att klicka på knappen ovan kommer du till vår officiella biljettpartner Clubmate där du enkelt kan
+                köpa biljetter till våra matcher. Du kan betala med kort eller Swish och få din biljett direkt på mejl.
               </p>
 
               <div className="flex flex-col sm:flex-row justify-center gap-4">
-                <Button asChild className="bg-green-600 hover:bg-green-700 text-white px-8 py-3 text-lg">
-                  <a href="/kontakt">Kontakta Oss</a>
-                </Button>
                 <Button
                   asChild
-                  variant="outline"
-                  className="border-green-600 text-green-600 hover:bg-green-50 px-8 py-3 text-lg bg-transparent"
+                  className="bg-green-600 hover:bg-green-700 text-white px-8 py-3 text-lg inline-flex items-center gap-2"
                 >
-                  <a
-                    href="https://www.profixio.com/app/tournaments?term=&filters[open_registration]=0&filters[kampoppsett]=0&filters[land_id]=se&filters[type]=seriespill&filters[idrett]=HB&filters[listingtype]=matches&filters[season]=765&dateTo=2026-04-30&klubbid=26031&dateFrom=2025-01-15"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    Se Kommande Matcher
+                  <a href="https://clubs.clubmate.se/harnosandshf/" target="_blank" rel="noopener noreferrer">
+                    Köp Biljetter Nu
+                    <ExternalLink className="w-4 h-4" />
                   </a>
+                </Button>
+                <Button asChild className="bg-orange-500 hover:bg-orange-600 text-white px-8 py-3 text-lg">
+                  <a href="/kontakt">Kontakta Oss</a>
                 </Button>
               </div>
             </div>
