@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { Facebook, Instagram, Mail, MapPin, ExternalLink } from "lucide-react"
+import { Mail, MapPin, ExternalLink } from "lucide-react"
 
 export default function Footer() {
   return (
@@ -13,24 +13,6 @@ export default function Footer() {
               Härnösands Handbollsförening - En förening för alla som älskar handboll.
             </p>
             <p className="text-sm text-gray-400 hidden md:block">Härnösands HF – Handboll i Härnösand</p>
-            <div className="flex justify-center md:justify-start space-x-4">
-              <Link
-                href="https://www.facebook.com/profile.php?id=61566621756014"
-                className="text-gray-400 hover:text-orange-400 transition-colors"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <Facebook size={20} />
-              </Link>
-              <Link
-                href="https://www.instagram.com/harnosandshf"
-                className="text-gray-400 hover:text-orange-400 transition-colors"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <Instagram size={20} />
-              </Link>
-            </div>
           </div>
 
           <div className="space-y-4 hidden md:block">
