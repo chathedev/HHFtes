@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { useSearchParams } from "next/navigation"
@@ -8,55 +8,55 @@ import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
-import { ArrowRight, Heart, TrendingUp, Users, Star, Plus, Minus, Trophy, Award, History } from "lucide-react"
+import { ArrowRight, Users, Star, Plus, Minus, Trophy, Award, History } from "lucide-react"
 import { Header } from "@/components/header"
 import Footer from "@/components/footer"
 import { defaultContent } from "@/lib/default-content"
 import type { FullContent, Partner } from "@/lib/content-types"
 
-// Data fetching function (kept separate as it's a server-side utility)
 const BACKEND_API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL || "https://api.nuredo.se"
 
-async function getDynamicContent(): Promise<FullContent> {
-  try {
-    const res = await fetch(`${BACKEND_API_URL}/api/content`, { cache: "no-store" })
-    if (!res.ok) {
-      console.error(`Failed to fetch content from backend: ${res.statusText}`)
-      return defaultContent
-    }
-    const data = (await res.json()) as Partial<FullContent>
+// async function getDynamicContent(): Promise<FullContent> {
+//   if (!BACKEND_API_URL || BACKEND_API_URL === "https://api.nuredo.se") {
+//     console.log("[v0] Using default content - no valid backend API configured")
+//     return defaultContent
+//   }
 
-    // Guarantee partners is an array
-    const fetchedPartners = Array.isArray(data.partners) ? data.partners : defaultContent.partners
+//   try {
+//     console.log("[v0] Attempting to fetch from:", `${BACKEND_API_URL}/api/content`)
+//     const res = await fetch(`${BACKEND_API_URL}/api/content`, {
+//       cache: "no-store",
+//       signal: AbortSignal.timeout(5000),
+//     })
 
-    // Merge with defaults to ensure all fields exist
-    return { ...defaultContent, ...data, partners: fetchedPartners }
-  } catch (err) {
-    console.error("Error fetching dynamic content:", err)
-    return defaultContent
-  }
-}
+//     if (!res.ok) {
+//       console.log("[v0] Backend fetch failed with status:", res.status, res.statusText)
+//       return defaultContent
+//     }
+
+//     const data = (await res.json()) as Partial<FullContent>
+//     console.log("[v0] Successfully fetched dynamic content")
+
+//     // Guarantee partners is an array
+//     const fetchedPartners = Array.isArray(data.partners) ? data.partners : defaultContent.partners
+
+//     // Merge with defaults to ensure all fields exist
+//     return { ...defaultContent, ...data, partners: fetchedPartners }
+//   } catch (err) {
+//     console.log(
+//       "[v0] Error fetching dynamic content, using defaults:",
+//       err instanceof Error ? err.message : "Unknown error",
+//     )
+//     return defaultContent
+//   }
+// }
 
 export default function HomePage() {
   const searchParams = useSearchParams()
   const isEditorMode = searchParams?.get("editor") === "true"
 
-  const [content, setContent] = useState<FullContent>(defaultContent)
+  const [content] = useState<FullContent>(defaultContent)
   const [openTier, setOpenTier] = useState<string | null>("Diamantpartner") // Default open for partners
-
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const dynamicContent = await getDynamicContent()
-        setContent(dynamicContent)
-      } catch (error) {
-        console.error("Failed to load dynamic content:", error)
-        setContent(defaultContent)
-      }
-    }
-
-    fetchData()
-  }, [isEditorMode])
 
   const partnersForDisplay = Array.isArray(content.partners) ? content.partners.filter((p) => p.visibleInCarousel) : []
 
@@ -66,7 +66,8 @@ export default function HomePage() {
     alt: "Grannstaden",
     tier: "Platinapartner",
     visibleInCarousel: true,
-    linkUrl: "https://grannstaden.se/", // Added link to Grannstaden website
+    linkUrl: "https://grannstaden.se/",
+    benefits: [],
   }
 
   // Add Grannstaden to the partners list
@@ -164,46 +165,6 @@ export default function HomePage() {
           <h1>Härnösands HF – Handboll i Härnösand</h1>
         </section>
 
-        <section className="py-12 bg-white">
-          <div className="container mx-auto px-4">
-            <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
-              <div className="bg-white rounded-lg shadow-md p-6 border-l-4 border-green-500">
-                <h3 className="text-xl font-bold text-green-600 mb-3">Se Matcher</h3>
-                <p className="text-gray-600 mb-4">
-                  Se våra kommande matcher och följ laget genom säsongen. Stötta oss på plats!
-                </p>
-                <Link
-                  href={(() => {
-                    const yesterday = new Date()
-                    yesterday.setDate(yesterday.getDate() - 1)
-                    const dateFrom = yesterday.toISOString().split("T")[0]
-                    return `https://www.profixio.com/app/tournaments?term=&filters[open_registration]=0&filters[kampoppsett]=0&filters[land_id]=se&filters[type]=seriespill&filters[idrett]=HB&filters[listingtype]=matches&filters[season]=765&dateTo=2026-04-30&klubbid=26031&dateFrom=${dateFrom}`
-                  })()}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded-md font-medium transition-colors"
-                >
-                  Se Matcher
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </Link>
-              </div>
-              <div className="bg-white rounded-lg shadow-md p-6 border-l-4 border-orange-500">
-                <h3 className="text-xl font-bold text-orange-600 mb-3">Köp Biljetter</h3>
-                <p className="text-gray-600 mb-4">
-                  Köp biljetter till våra hemmamatcher och stötta laget. Upplev handboll på nära håll!
-                </p>
-                <Link
-                  href="/kop-biljett"
-                  className="inline-flex items-center bg-orange-500 hover:bg-orange-600 text-white px-6 py-2 rounded-md font-medium transition-colors"
-                >
-                  Köp Biljetter
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </Link>
-              </div>
-            </div>
-          </div>
-        </section>
-
         {/* Stats Section */}
         <section className="text-white py-12 bg-green-600/90">
           <div className="container mx-auto px-4">
@@ -267,6 +228,79 @@ export default function HomePage() {
           </div>
         </section>
 
+        {/* Cards Section */}
+        <section className="py-12 bg-white">
+          <div className="container mx-auto px-4">
+            <div className="text-center mb-8">
+              <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
+                Upplev <span className="text-orange-500">Handboll</span> Live
+              </h2>
+              <p className="text-gray-600 max-w-xl mx-auto">
+                Följ våra matcher och stötta laget. Varje match är en upplevelse värd att dela.
+              </p>
+            </div>
+
+            <div className="grid md:grid-cols-2 gap-6 max-w-3xl mx-auto">
+              {/* Se Matcher Card */}
+              <div className="group bg-white rounded-lg border border-gray-200 hover:border-green-300 transition-all duration-200 overflow-hidden">
+                <div className="p-6">
+                  <div className="flex items-center mb-4">
+                    <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center mr-3">
+                      <Trophy className="w-5 h-5 text-green-600" />
+                    </div>
+                    <h3 className="text-xl font-semibold text-gray-900">Se Matcher</h3>
+                  </div>
+
+                  <p className="text-gray-600 mb-6 text-sm leading-relaxed">
+                    Följ våra kommande matcher och upplev spänningen live. Stötta laget och var en del av vår
+                    handbollsfamilj.
+                  </p>
+
+                  <Link
+                    href={(() => {
+                      const yesterday = new Date()
+                      yesterday.setDate(yesterday.getDate() - 1)
+                      const dateFrom = yesterday.toISOString().split("T")[0]
+                      return `https://www.profixio.com/app/tournaments?term=&filters[open_registration]=0&filters[kampoppsett]=0&filters[land_id]=se&filters[type]=seriespill&filters[idrett]=HB&filters[listingtype]=matches&filters[season]=765&dateTo=2026-04-30&klubbid=26031&dateFrom=${dateFrom}`
+                    })()}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center text-green-600 hover:text-green-700 font-medium text-sm group-hover:translate-x-1 transition-transform"
+                  >
+                    Se Alla Matcher
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Link>
+                </div>
+              </div>
+
+              {/* Köp Biljetter Card */}
+              <div className="group bg-white rounded-lg border border-gray-200 hover:border-orange-300 transition-all duration-200 overflow-hidden">
+                <div className="p-6">
+                  <div className="flex items-center mb-4">
+                    <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center mr-3">
+                      <Star className="w-5 h-5 text-orange-600" />
+                    </div>
+                    <h3 className="text-xl font-semibold text-gray-900">Köp Biljetter</h3>
+                  </div>
+
+                  <p className="text-gray-600 mb-6 text-sm leading-relaxed">
+                    Säkra din plats på läktaren och upplev handboll på nära håll. Varje biljett stödjer vårt lag och vår
+                    utveckling.
+                  </p>
+
+                  <Link
+                    href="/kop-biljett"
+                    className="inline-flex items-center text-orange-600 hover:text-orange-700 font-medium text-sm group-hover:translate-x-1 transition-transform"
+                  >
+                    Köp Biljetter Nu
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
         {/* About Club Section */}
         <section className="py-16">
           <div className="container mx-auto px-4">
@@ -303,50 +337,6 @@ export default function HomePage() {
                 </p>
 
                 <div className="grid grid-cols-3 gap-4 mb-8">
-                  <div className="border border-gray-200 rounded-lg p-4 text-center">
-                    <Heart className="w-8 h-8 text-green-600 mx-auto mb-2" />
-                    <h4 className="font-medium mb-1 text-black">Passion</h4>
-                    <p
-                      className="text-xs text-gray-600"
-                      {...(isEditorMode && {
-                        "data-editable": "true",
-                        "data-field-path": "home.aboutClub.passionText",
-                      })}
-                    >
-                      {content.aboutClub.passionText}
-                    </p>
-                  </div>
-
-                  <div className="border border-gray-200 rounded-lg p-4 text-center">
-                    <TrendingUp className="w-8 h-8 text-orange-500 mx-auto mb-2" />
-                    <h4 className="font-medium mb-1 text-black">Utveckling</h4>
-                    <p
-                      className="text-xs text-gray-600"
-                      {...(isEditorMode && {
-                        "data-editable": "true",
-                        "data-field-path": "home.aboutClub.developmentText",
-                      })}
-                    >
-                      {content.aboutClub.developmentText}
-                    </p>
-                  </div>
-
-                  <div className="border border-gray-200 rounded-lg p-4 text-center">
-                    <Users className="w-8 h-8 text-green-600 mx-auto mb-2" />
-                    <h4 className="font-medium mb-1 text-black">Gemenskap</h4>
-                    <p
-                      className="text-xs text-gray-600"
-                      {...(isEditorMode && {
-                        "data-editable": "true",
-                        "data-field-path": "home.aboutClub.communityText",
-                      })}
-                    >
-                      {content.aboutClub.communityText}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex flex-wrap gap-4">
                   <Link
                     href={content.aboutClub.button1Link}
                     className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-2 rounded-md font-medium transition-colors"

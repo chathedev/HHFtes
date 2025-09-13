@@ -15,22 +15,32 @@ async function fetchMatchesFromAPI(): Promise<Match[]> {
   const url = `https://api.harnosandshf.se/api/events?limit=25&days=365`
 
   try {
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), 8000) // 8 second timeout
+
     const response = await fetch(url, {
       headers: {
         "User-Agent": "Mozilla/5.0 (compatible; HHF/1.0)",
         Accept: "application/json",
       },
+      signal: controller.signal,
       next: { revalidate: 3600 }, // Revalidate every hour
     })
 
+    clearTimeout(timeoutId)
+
     if (!response.ok) {
-      console.warn(`Failed to fetch matches from API: ${response.statusText}`)
+      console.warn(`Failed to fetch matches from API: ${response.status} ${response.statusText}`)
       return []
     }
 
     const data = await response.json()
 
-    // Filter and transform events that are matches
+    if (!Array.isArray(data)) {
+      console.warn("API returned non-array data:", typeof data)
+      return []
+    }
+
     const matches: Match[] = data
       .filter(
         (event: any) =>
@@ -65,11 +75,9 @@ function extractOpponent(title: string): string {
   const vsMatch = title.match(/vs\.?\s+(.+)/i) || title.match(/mot\s+(.+)/i)
   if (vsMatch) return vsMatch[1].trim()
 
-  // Handle dash-separated format like "Team A - Team B"
   const dashMatch = title.match(/(.+?)\s*-\s*(.+)/)
   if (dashMatch) {
     const [, team1, team2] = dashMatch
-    // Assume first team is home team, second is opponent
     return team2.trim()
   }
 
@@ -94,7 +102,6 @@ function determineIfHome(title: string, location: string): boolean {
     return false
   }
 
-  // Default assumption: if location contains club name or common home venues
   return locationLower.includes("härnösand") || locationLower.includes("sporthall")
 }
 
@@ -105,22 +112,33 @@ export async function GET(request: Request) {
 
     const matches = await fetchMatchesFromAPI()
 
-    // Filter out past matches and sort by date
+    if (!Array.isArray(matches)) {
+      console.error("fetchMatchesFromAPI did not return an array")
+      return NextResponse.json([])
+    }
+
     const now = new Date()
     let upcomingMatches = matches
       .filter((match) => {
-        const matchDate = new Date(
-          `${match.date}T${match.time.replace("Okänd tid", "00:00").replace("Heldag", "00:00")}`,
-        )
-        return matchDate >= now
+        try {
+          const matchDate = new Date(
+            `${match.date}T${match.time.replace("Okänd tid", "00:00").replace("Heldag", "00:00")}`,
+          )
+          return matchDate >= now
+        } catch {
+          return false
+        }
       })
       .sort((a, b) => {
-        const dateA = new Date(`${a.date}T${a.time.replace("Okänd tid", "00:00").replace("Heldag", "00:00")}`)
-        const dateB = new Date(`${b.date}T${b.time.replace("Okänd tid", "00:00").replace("Heldag", "00:00")}`)
-        return dateA.getTime() - dateB.getTime()
+        try {
+          const dateA = new Date(`${a.date}T${a.time.replace("Okänd tid", "00:00").replace("Heldag", "00:00")}`)
+          const dateB = new Date(`${b.date}T${b.time.replace("Okänd tid", "00:00").replace("Heldag", "00:00")}`)
+          return dateA.getTime() - dateB.getTime()
+        } catch {
+          return 0
+        }
       })
 
-    // Apply home/away filter if specified
     if (filter === "home") {
       upcomingMatches = upcomingMatches.filter((match) => match.isHome)
     } else if (filter === "away") {
@@ -130,6 +148,6 @@ export async function GET(request: Request) {
     return NextResponse.json(upcomingMatches)
   } catch (error) {
     console.error("Error in GET /api/matches:", error)
-    return NextResponse.json({ error: "Failed to fetch matches" }, { status: 500 })
+    return NextResponse.json([])
   }
 }

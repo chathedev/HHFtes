@@ -1,6 +1,5 @@
 import Link from "next/link"
 import { Header } from "@/components/header"
-import Footer from "@/components/footer"
 import { Home, Ticket, Instagram, ExternalLink } from "lucide-react"
 
 export default function LinksPage() {
@@ -76,7 +75,7 @@ export default function LinksPage() {
           </div>
         </div>
       </main>
-      <Footer />
+      {/* Removed Footer component */}
     </div>
   )
 }

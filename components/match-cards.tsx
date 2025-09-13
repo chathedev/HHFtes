@@ -16,15 +16,38 @@ interface Match {
 export default function MatchCards() {
   const [upcomingMatches, setUpcomingMatches] = useState<Match[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     const fetchMatches = async () => {
       try {
-        const response = await fetch("/api/matches")
+        const controller = new AbortController()
+        const timeoutId = setTimeout(() => controller.abort(), 5000) // 5 second timeout
+
+        const response = await fetch("/api/matches", {
+          signal: controller.signal,
+          headers: {
+            Accept: "application/json",
+          },
+        })
+
+        clearTimeout(timeoutId)
+
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+        }
+
         const matches = await response.json()
-        setUpcomingMatches(matches)
+        setUpcomingMatches(Array.isArray(matches) ? matches : [])
+        setError(null)
       } catch (error) {
         console.error("Error fetching matches:", error)
+        if (error instanceof Error && error.name === "AbortError") {
+          setError("Timeout - kunde inte ladda matcher")
+        } else {
+          setError("Kunde inte ladda matcher just nu")
+        }
+        setUpcomingMatches([]) // Ensure we have an empty array
       } finally {
         setLoading(false)
       }
@@ -34,12 +57,17 @@ export default function MatchCards() {
   }, [])
 
   const formatDate = (dateString: string) => {
-    const date = new Date(dateString)
-    return date.toLocaleDateString("sv-SE", {
-      weekday: "short",
-      day: "numeric",
-      month: "short",
-    })
+    try {
+      const date = new Date(dateString)
+      if (isNaN(date.getTime())) return dateString
+      return date.toLocaleDateString("sv-SE", {
+        weekday: "short",
+        day: "numeric",
+        month: "short",
+      })
+    } catch {
+      return dateString
+    }
   }
 
   return (
@@ -54,9 +82,11 @@ export default function MatchCards() {
 
               {loading ? (
                 <p className="text-gray-600 text-sm">Laddar matcher...</p>
+              ) : error ? (
+                <p className="text-red-600 text-sm">{error}</p>
               ) : upcomingMatches.length > 0 ? (
                 <div className="space-y-3 w-full">
-                  {upcomingMatches.map((match) => (
+                  {upcomingMatches.slice(0, 3).map((match) => (
                     <div key={match.id} className="border-l-4 border-orange-500 pl-3 text-left">
                       <div className="font-semibold text-sm text-gray-800">{match.opponent}</div>
                       <div className="flex items-center text-xs text-gray-600 mt-1">
