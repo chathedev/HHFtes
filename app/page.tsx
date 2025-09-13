@@ -101,7 +101,7 @@ export default function HomePage() {
               >
                 {content.hero.description}
               </p>
-              <div className="flex flex-col sm:flex-row justify-center gap-6 animate-fade-in-up delay-400">
+              <div className="flex flex-col sm:flex-row justify-center gap-6 animate-fade-in-up delay-400 mb-12">
                 <Button
                   asChild
                   className="bg-orange-500 hover:bg-orange-600 text-white px-10 py-4 rounded-md text-lg font-semibold shadow-lg transition-transform duration-300 hover:scale-105 focus:outline-none focus:ring-4 focus:ring-orange-300"
@@ -134,34 +134,26 @@ export default function HomePage() {
                   </Link>
                 </Button>
               </div>
-            </div>
-          </section>
 
-          {/* Social Media Section */}
-          <section className="py-8 bg-gradient-to-r from-orange-500 to-green-600">
-            <div className="container mx-auto px-4">
-              <div className="flex flex-col items-center justify-center text-white">
-                <h2 className="text-xl md:text-2xl font-bold mb-4 text-center">Följ oss på sociala medier</h2>
-                <div className="flex space-x-6">
-                  <Link
-                    href="https://www.facebook.com/profile.php?id=61566621756014"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="group flex items-center space-x-3 bg-white/20 hover:bg-white/30 backdrop-blur-sm rounded-full px-6 py-3 transition-all duration-300 hover:scale-105"
-                  >
-                    <Facebook className="w-6 h-6" />
-                    <span className="font-semibold hidden sm:block">Facebook</span>
-                  </Link>
-                  <Link
-                    href="https://www.instagram.com/harnosandshf"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="group flex items-center space-x-3 bg-white/20 hover:bg-white/30 backdrop-blur-sm rounded-full px-6 py-3 transition-all duration-300 hover:scale-105"
-                  >
-                    <Instagram className="w-6 h-6" />
-                    <span className="font-semibold hidden sm:block">Instagram</span>
-                  </Link>
-                </div>
+              <div className="flex justify-center space-x-6 animate-fade-in-up delay-600">
+                <Link
+                  href="https://www.facebook.com/profile.php?id=61566621756014"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="group flex items-center space-x-2 bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-full px-4 py-2 transition-all duration-300 hover:scale-105"
+                >
+                  <Facebook className="w-5 h-5" />
+                  <span className="font-medium hidden sm:block">Facebook</span>
+                </Link>
+                <Link
+                  href="https://www.instagram.com/harnosandshf"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="group flex items-center space-x-2 bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-full px-4 py-2 transition-all duration-300 hover:scale-105"
+                >
+                  <Instagram className="w-5 h-5" />
+                  <span className="font-medium hidden sm:block">Instagram</span>
+                </Link>
               </div>
             </div>
           </section>

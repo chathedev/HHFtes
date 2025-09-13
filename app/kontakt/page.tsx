@@ -4,7 +4,7 @@ import type React from "react"
 
 import { Header } from "@/components/header"
 import Footer from "@/components/footer"
-import { Mail, Facebook, Instagram, User, MessageSquare, Send } from "lucide-react"
+import { Mail, User, MessageSquare, Send } from "lucide-react"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -372,39 +372,6 @@ ${formData.message}`
                   </Button>
                 </div>
               </form>
-            </div>
-          </div>
-
-          {/* Social Media Section */}
-          <div className="mt-12 text-center">
-            <h2
-              className="text-3xl font-bold text-gray-800 mb-6"
-              {...(isEditorMode && { "data-editable": "true", "data-field-path": "kontakt.socialMedia.title" })}
-            >
-              {content.socialMedia.title}
-            </h2>
-            <div className="flex justify-center space-x-6">
-              <a
-                href={content.socialMedia.facebookUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-gray-700 hover:text-blue-600 transition-colors"
-                {...(isEditorMode && { "data-editable": "true", "data-field-path": "kontakt.socialMedia.facebookUrl" })}
-              >
-                <Facebook className="w-10 h-10" />
-              </a>
-              <a
-                href={content.socialMedia.instagramUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-gray-700 hover:text-pink-600 transition-colors"
-                {...(isEditorMode && {
-                  "data-editable": "true",
-                  "data-field-path": "kontakt.socialMedia.instagramUrl",
-                })}
-              >
-                <Instagram className="w-10 h-10" />
-              </a>
             </div>
           </div>
 

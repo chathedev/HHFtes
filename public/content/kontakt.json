@@ -50,11 +50,6 @@
     "messagePlaceholder": "Skriv ditt meddelande här...",
     "submitButton": "Skicka meddelande"
   },
-  "socialMedia": {
-    "title": "Följ oss på sociala medier",
-    "facebookUrl": "https://www.facebook.com/harnosandshf",
-    "instagramUrl": "https://www.instagram.com/harnosandshf"
-  },
   "faq": {
     "title": "Vanliga frågor om att börja träna",
     "items": [
