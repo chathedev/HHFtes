@@ -90,7 +90,7 @@ export default function LagPage() {
           {
             name: "P16 (09/10)",
             link: "https://www.laget.se/HarnosandsHFP16",
-            instagramLink: "https://www.instagram.com/harnosands_hf_p14/",
+            instagramLink: "https://www.instagram.com/harnosandshfp16/",
           },
           { name: "P-11", link: "https://www.laget.se/HHFP11" },
           { name: "P-12", link: "https://www.laget.se/HarnosandsHFP2012" },
