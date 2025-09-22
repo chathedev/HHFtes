@@ -334,12 +334,12 @@ export default function HomePage() {
                     {content.aboutClub.paragraph2}
                   </p>
 
-                  <div className="grid grid-cols-3 gap-4 mb-8">
-                    <div className="border border-gray-200 rounded-lg p-4 text-center">
-                      <Heart className="w-8 h-8 text-green-600 mx-auto mb-2" />
-                      <h4 className="font-medium mb-1 text-black">Passion</h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
+                    <div className="border border-gray-200 rounded-lg p-6 text-center">
+                      <Heart className="w-8 h-8 text-green-600 mx-auto mb-3" />
+                      <h4 className="font-medium mb-2 text-black text-base">Passion</h4>
                       <p
-                        className="text-xs text-gray-600"
+                        className="text-sm text-gray-600 leading-relaxed"
                         {...(isEditorMode && {
                           "data-editable": "true",
                           "data-field-path": "home.aboutClub.passionText",
@@ -349,11 +349,11 @@ export default function HomePage() {
                       </p>
                     </div>
 
-                    <div className="border border-gray-200 rounded-lg p-4 text-center">
-                      <TrendingUp className="w-8 h-8 text-orange-500 mx-auto mb-2" />
-                      <h4 className="font-medium mb-1 text-black">Utveckling</h4>
+                    <div className="border border-gray-200 rounded-lg p-6 text-center">
+                      <TrendingUp className="w-8 h-8 text-orange-500 mx-auto mb-3" />
+                      <h4 className="font-medium mb-2 text-black text-base">Utveckling</h4>
                       <p
-                        className="text-xs text-gray-600"
+                        className="text-sm text-gray-600 leading-relaxed"
                         {...(isEditorMode && {
                           "data-editable": "true",
                           "data-field-path": "home.aboutClub.developmentText",
@@ -363,11 +363,11 @@ export default function HomePage() {
                       </p>
                     </div>
 
-                    <div className="border border-gray-200 rounded-lg p-4 text-center">
-                      <Users className="w-8 h-8 text-green-600 mx-auto mb-2" />
-                      <h4 className="font-medium mb-1 text-black">Gemenskap</h4>
+                    <div className="border border-gray-200 rounded-lg p-6 text-center">
+                      <Users className="w-8 h-8 text-green-600 mx-auto mb-3" />
+                      <h4 className="font-medium mb-2 text-black text-base">Gemenskap</h4>
                       <p
-                        className="text-xs text-gray-600"
+                        className="text-sm text-gray-600 leading-relaxed"
                         {...(isEditorMode && {
                           "data-editable": "true",
                           "data-field-path": "home.aboutClub.communityText",
