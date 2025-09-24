@@ -287,7 +287,9 @@ export default function HomePage() {
                     </p>
 
                     <Link
-                      href="/kop-biljett"
+                      href="https://clubs.clubmate.se/harnosandshf/overview/"
+                      target="_blank"
+                      rel="noopener noreferrer"
                       className="inline-flex items-center text-orange-600 hover:text-orange-700 font-medium text-sm group-hover:translate-x-1 transition-transform"
                     >
                       Köp Biljetter Nu
