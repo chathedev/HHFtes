@@ -64,7 +64,7 @@ export default function KopBiljettPage() {
                 asChild
                 className="bg-green-600 hover:bg-green-700 text-white px-8 py-4 text-lg font-semibold rounded-md inline-flex items-center gap-2"
               >
-                <a href="https://clubs.clubmate.se/harnosandshf/" target="_blank" rel="noopener noreferrer">
+                <a href="https://clubs.clubmate.se/harnosandshf/overview/" target="_blank" rel="noopener noreferrer">
                   Köp Biljetter via Clubmate
                   <ExternalLink className="w-5 h-5" />
                 </a>
