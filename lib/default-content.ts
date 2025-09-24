@@ -114,17 +114,6 @@ export const defaultContent: FullContent = {
       linkUrl: "https://westerlinds.nu",
     },
     {
-      id: "sundfrakt",
-      src: "https://az729104.cdn.laget.se/11313552.jpg",
-      alt: "Sundfrakt",
-      width: 150,
-      height: 75,
-      tier: "Diamantpartner",
-      benefits: ["Huvudsponsor", "Logotyp på matchställ", "Exklusiva event"],
-      visibleInCarousel: true,
-      linkUrl: "https://www.sundfrakt.se",
-    },
-    {
       id: "forsakringskonsult",
       src: "https://az729104.cdn.laget.se/11308402.jpg",
       alt: "Försäkringskonsult",

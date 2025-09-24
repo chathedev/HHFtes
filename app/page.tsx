@@ -518,7 +518,6 @@ export default function HomePage() {
                                     >
                                       {partner.alt}
                                     </h4>
-
                                     {partner.linkUrl && (
                                       <div className="absolute inset-0 bg-black bg-opacity-70 flex items-center justify-center rounded-lg transition-opacity duration-300 opacity-0 group-hover:opacity-100">
                                         <Button

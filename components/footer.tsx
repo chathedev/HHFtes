@@ -85,7 +85,7 @@ export default function Footer() {
             >
               <span className="text-gray-400">Byggd av</span>
               <span className="bg-gradient-to-r from-blue-400 to-blue-600 bg-clip-text text-transparent font-bold group-hover:from-blue-300 group-hover:to-blue-500 transition-all duration-300">
-                WBY
+                Websites by you
               </span>
               <ExternalLink
                 size={10}
