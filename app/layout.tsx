@@ -7,8 +7,21 @@ import { ScrollToTop } from "@/components/scroll-to-top"
 
 const inter = Inter({ subsets: ["latin"] })
 
+const resolveSiteUrl = () => {
+  const rawUrl =
+    process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_VERCEL_URL || "http://localhost:3000"
+
+  if (/^https?:\/\//i.test(rawUrl)) {
+    return rawUrl
+  }
+
+  return `https://${rawUrl}`
+}
+
+const siteUrl = resolveSiteUrl().replace(/\/$/, "")
+
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_VERCEL_URL || "http://localhost:3000"),
+  metadataBase: new URL(siteUrl),
   title: {
     default: "Härnösands HF – Officiell hemsida för handboll i Härnösand",
     template: "%s | Härnösands HF – Officiell hemsida för handboll i Härnösand",
@@ -99,7 +112,7 @@ export const metadata: Metadata = {
     title: "Härnösands HF – Officiell hemsida för handboll i Härnösand",
     description:
       "Härnösands Handbollsförening (HHF) – Härnösands främsta handbollsklubb med stolthet, gemenskap och passion för sporten. A-lag, ungdomslag, träningar och matcher.",
-    url: "https://www.harnosandshf.se",
+    url: siteUrl,
     siteName: "Härnösands HF",
     images: [
       {
@@ -175,15 +188,15 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{
             __html: JSON.stringify([
               {
-                "@context": "https://schema.org",
-                "@type": "SportsOrganization",
-                name: "Härnösands HF",
-                alternateName: ["HHF", "Härnösands Handbollsförening"],
-                description:
-                  "Härnösands Handbollsförening - Härnösands främsta handbollsklubb med A-lag, ungdomslag och träningar för alla åldrar",
-                url: "https://www.harnosandshf.se",
-                logo: "https://www.harnosandshf.se/logo.png",
-                image: "https://www.harnosandshf.se/opengraph-image.png",
+    "@context": "https://schema.org",
+    "@type": "SportsOrganization",
+    name: "Härnösands HF",
+    alternateName: ["HHF", "Härnösands Handbollsförening"],
+    description:
+      "Härnösands Handbollsförening - Härnösands främsta handbollsklubb med A-lag, ungdomslag och träningar för alla åldrar",
+    url: siteUrl,
+    logo: `${siteUrl}/logo.png`,
+    image: `${siteUrl}/opengraph-image.png`,
                 sport: "Handball",
                 slogan: "Laget Före Allt",
                 foundingDate: "1970",
