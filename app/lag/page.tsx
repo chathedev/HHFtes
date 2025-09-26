@@ -78,7 +78,7 @@ export default function LagPage() {
           { name: "F-11", link: "https://www.laget.se/HHK-F11" },
           { name: "F-12", link: "https://www.laget.se/HHK-F12" },
           { name: "F-13", link: "https://www.laget.se/HHF-F13" },
-          { name: "F-14", link: "https://www.laget.se/HarnosandsHK-F-14" },
+          { name: "F-14", link: "https://www.laget.se/HHK-F14" },
           { name: "F-15", link: "https://www.laget.se/HarnosandsHK-F-15" },
           { name: "F-16", link: "https://www.laget.se/HarnosandsHK-F-16" },
           { name: "F-17", link: "https://www.laget.se/HarnosandsHK-F-17" },
@@ -90,7 +90,7 @@ export default function LagPage() {
           {
             name: "P16 (09/10)",
             link: "https://www.laget.se/HarnosandsHFP16",
-            instagramLink: "https://www.instagram.com/harnosandshfp16/",
+            instagramLink: "https://www.instagram.com/harnosandshfp16",
           },
           { name: "P-11", link: "https://www.laget.se/HHFP11" },
           { name: "P-12", link: "https://www.laget.se/HarnosandsHFP2012" },
