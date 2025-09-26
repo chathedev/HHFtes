@@ -33,7 +33,12 @@ export default function LinksPage() {
             </Link>
 
             {/* Tickets Link */}
-            <Link href="https://harnosandshf.se/kop-biljett" className="block w-full">
+            <Link
+              href="https://clubs.clubmate.se/harnosandshf/overview/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="block w-full"
+            >
               <div className="bg-white rounded-lg shadow-lg p-6 border-l-4 border-orange-500 hover:shadow-xl transition-all duration-300 hover:scale-105">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-4">

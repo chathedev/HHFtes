@@ -16,7 +16,7 @@ export default function LagPage() {
   useEffect(() => {
     const loadContent = async () => {
       try {
-        const response = await fetch("/content/lag.json")
+        const response = await fetch("/content/lag.json", { cache: "no-store" })
         if (response.ok) {
           const data = await response.json()
           setContent(data)
@@ -78,7 +78,7 @@ export default function LagPage() {
           { name: "F-11", link: "https://www.laget.se/HHK-F11" },
           { name: "F-12", link: "https://www.laget.se/HHK-F12" },
           { name: "F-13", link: "https://www.laget.se/HHF-F13" },
-          { name: "F-14", link: "https://www.laget.se/HHK-F14" },
+          { name: "F-14", link: "https://www.laget.se/HarnosandsHK-F-14" },
           { name: "F-15", link: "https://www.laget.se/HarnosandsHK-F-15" },
           { name: "F-16", link: "https://www.laget.se/HarnosandsHK-F-16" },
           { name: "F-17", link: "https://www.laget.se/HarnosandsHK-F-17" },
