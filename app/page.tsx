@@ -4,7 +4,7 @@ import { useMemo, useState } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { useSearchParams } from "next/navigation"
-import { ArrowRight, CalendarDays, Clock, MapPin, Users, Trophy, Sparkles, Heart } from "lucide-react"
+import { ArrowRight, Facebook, Instagram, Heart } from "lucide-react"
 import { Header } from "@/components/header"
 import Footer from "@/components/footer"
 import { Button } from "@/components/ui/button"
@@ -18,48 +18,6 @@ export default function HomePage() {
   const isEditorMode = searchParams?.get("editor") === "true"
 
   const [content] = useState<FullContent>(defaultContent)
-
-  const heroMetrics = useMemo(
-    () => [
-      {
-        label: "Lag i spel",
-        value: content.stats.totalTeams,
-        icon: Users,
-      },
-      {
-        label: "A-lag",
-        value: content.stats.aTeams,
-        icon: Trophy,
-      },
-      {
-        label: "Ungdomslag",
-        value: content.stats.youthTeams,
-        icon: Sparkles,
-      },
-    ],
-    [content.stats.totalTeams, content.stats.aTeams, content.stats.youthTeams],
-  )
-
-  const highlightCards = [
-    {
-      title: "Upplev matcherna",
-      body: "Se våra kommande matcher, följ resultaten och planera nästa hemmakväll på Högslätten.",
-      link: "https://www.profixio.com/app/tournaments?term=&filters[open_registration]=0&filters[kampoppsett]=0&filters[land_id]=se&filters[type]=seriespill&filters[idrett]=HB&filters[listingtype]=matches&filters[season]=765&dateTo=2026-04-30&klubbid=26031&dateFrom=2024-09-01",
-      linkLabel: "Se spelschemat",
-    },
-    {
-      title: "Bli en del av klubben",
-      body: "Vi välkomnar nya spelare, ledare och ideella krafter. Hör av dig så guidar vi dig rätt.",
-      link: "/kontakt",
-      linkLabel: "Kontakta oss",
-    },
-    {
-      title: "23 lag – ett HHF",
-      body: "Upptäck alla våra lag från handbollsskolan till senior. Hitta ditt lag och häng med!",
-      link: "/lag",
-      linkLabel: "Utforska lagen",
-    },
-  ]
 
   const partnersForDisplay = useMemo(
     () => (Array.isArray(content.partners) ? content.partners.filter((partner) => partner.visibleInCarousel) : []),
@@ -78,21 +36,33 @@ export default function HomePage() {
 
   const marqueePartners = useMemo(() => [...partnersForDisplay, grannstadenPartner], [partnersForDisplay])
 
-  const featuredMatch = {
-    opponent: "Täby HBK",
-    competition: "Division 2 Norra",
-    date: "26 januari 2025",
-    time: "16:00",
-    location: "Högslättens Sporthall",
-    infoUrl: "/kop-biljett",
-  }
+  const actionCards = [
+    {
+      title: "Se matcher och schema",
+      body: "Följ våra seniormatcher och ungdomsturneringar under säsongen.",
+      link: "https://www.profixio.com/app/tournaments?term=&filters[open_registration]=0&filters[kampoppsett]=0&filters[land_id]=se&filters[type]=seriespill&filters[idrett]=HB&filters[listingtype]=matches&filters[season]=765&dateTo=2026-04-30&klubbid=26031&dateFrom=2024-09-01",
+      external: true,
+    },
+    {
+      title: "Hitta ditt lag",
+      body: "Från handbollsskolan till senior – hitta rätt lag och börja spela med oss.",
+      link: "/lag",
+      external: false,
+    },
+    {
+      title: "Bli partner",
+      body: "Samarbeta med Härnösands HF och stötta föreningen både på och utanför planen.",
+      link: "/partners",
+      external: false,
+    },
+  ]
 
   return (
     <ErrorBoundary>
-      <div className="bg-slate-50 text-slate-900">
+      <div className="bg-white text-slate-900">
         <Header />
         <main>
-          <section className="relative isolate overflow-hidden bg-white pt-28 pb-20">
+          <section className="relative isolate overflow-hidden pt-28 pb-24">
             <div className="absolute inset-0">
               <Image
                 src={content.hero.imageUrl || "/placeholder.svg"}
@@ -100,114 +70,95 @@ export default function HomePage() {
                 fill
                 priority
                 quality={85}
-                className="object-cover opacity-20"
+                className="object-cover"
                 {...(isEditorMode && {
                   "data-editable": "true",
                   "data-field-path": "home.hero.imageUrl",
                 })}
               />
-              <div className="absolute inset-0 bg-gradient-to-r from-white via-white/90 to-white" />
+              <div className="absolute inset-0 bg-gradient-to-br from-slate-950/75 via-slate-900/70 to-green-900/60" />
             </div>
 
-            <div className="relative mx-auto flex max-w-6xl flex-col gap-16 px-6 lg:flex-row lg:items-center">
-              <div className="flex-1 space-y-8">
-                <span className="inline-flex items-center gap-2 rounded-full bg-green-100 px-4 py-1 text-xs font-semibold uppercase tracking-[0.3em] text-green-700">
-                  Härnösands HF
-                </span>
-
-                <div className="space-y-6">
-                  <h1
-                    className="text-4xl font-black leading-tight text-slate-900 sm:text-5xl md:text-6xl"
-                    {...(isEditorMode && {
-                      "data-editable": "true",
-                      "data-field-path": "home.hero.title",
-                    })}
-                  >
-                    {content.hero.title}
-                  </h1>
-                  <p
-                    className="max-w-2xl text-lg text-slate-600 md:text-xl"
-                    {...(isEditorMode && {
-                      "data-editable": "true",
-                      "data-field-path": "home.hero.description",
-                    })}
-                  >
-                    {content.hero.description}
-                  </p>
-                </div>
-
-                <div className="flex flex-col gap-4 sm:flex-row">
-                  <Button asChild className="bg-green-600 px-6 py-6 text-base font-semibold text-white hover:bg-green-700">
-                    <Link href={content.hero.button1Link}>
-                      {content.hero.button1Text}
-                      <ArrowRight className="ml-2 h-4 w-4" />
-                    </Link>
-                  </Button>
-                  <Button
-                    asChild
-                    variant="outline"
-                    className="border border-slate-200 bg-white px-6 py-6 text-base font-semibold text-slate-900 hover:bg-slate-100"
-                  >
-                    <Link href={content.hero.button2Link}>{content.hero.button2Text}</Link>
-                  </Button>
-                </div>
-
-                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                  {heroMetrics.map(({ label, value, icon: Icon }) => (
-                    <Card key={label} className="border border-slate-200 bg-white/80 p-5">
-                      <div className="flex items-center gap-3">
-                        <Icon className="h-6 w-6 text-green-600" />
-                        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">{label}</p>
-                      </div>
-                      <p className="mt-3 text-3xl font-bold text-slate-900">{value}</p>
-                    </Card>
-                  ))}
-                </div>
+            <div className="relative mx-auto flex max-w-5xl flex-col items-center gap-10 px-6 text-center text-white">
+              <span className="inline-flex items-center gap-3 rounded-full bg-white/10 px-6 py-2 text-xs font-semibold uppercase tracking-[0.35em] backdrop-blur">
+                Härnösands HF
+              </span>
+              <div className="space-y-6">
+                <h1
+                  className="text-balance text-4xl font-black leading-tight sm:text-5xl md:text-6xl"
+                  {...(isEditorMode && {
+                    "data-editable": "true",
+                    "data-field-path": "home.hero.title",
+                  })}
+                >
+                  {content.hero.title}
+                </h1>
+                <p
+                  className="mx-auto max-w-3xl text-lg text-white/80 md:text-xl"
+                  {...(isEditorMode && {
+                    "data-editable": "true",
+                    "data-field-path": "home.hero.description",
+                  })}
+                >
+                  {content.hero.description}
+                </p>
               </div>
 
-              <Card className="w-full max-w-sm border border-slate-200 bg-white p-8 shadow-md">
-                <p className="text-xs font-semibold uppercase tracking-[0.3em] text-green-700">Nästa match</p>
-                <h2 className="mt-4 text-2xl font-bold text-slate-900">Härnösands HF vs {featuredMatch.opponent}</h2>
-                <p className="mt-2 text-sm text-slate-500">{featuredMatch.competition}</p>
-
-                <div className="mt-6 space-y-3 text-sm text-slate-600">
-                  <div className="flex items-center gap-2">
-                    <CalendarDays className="h-4 w-4 text-green-600" />
-                    <span>{featuredMatch.date}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Clock className="h-4 w-4 text-green-600" />
-                    <span>{featuredMatch.time}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <MapPin className="h-4 w-4 text-green-600" />
-                    <span>{featuredMatch.location}</span>
-                  </div>
-                </div>
-
-                <Button asChild className="mt-6 w-full bg-orange-500 text-white hover:bg-orange-600">
-                  <Link href={featuredMatch.infoUrl}>Köp biljett</Link>
+              <div className="flex flex-col gap-4 sm:flex-row">
+                <Button asChild className="min-w-[180px] bg-orange-500 px-8 py-6 text-base font-semibold text-white hover:bg-orange-600">
+                  <Link href={content.hero.button1Link}>
+                    {content.hero.button1Text}
+                    <ArrowRight className="ml-3 h-5 w-5" />
+                  </Link>
                 </Button>
-                <p className="mt-4 text-xs text-slate-500">
-                  Volontärer och matchvärdar behövs – anmäl intresse när du säkrar din plats!
-                </p>
-              </Card>
+                <Button
+                  asChild
+                  variant="outline"
+                  className="min-w-[180px] border border-white/40 bg-white/10 px-8 py-6 text-base font-semibold text-white hover:bg-white/20"
+                >
+                  <Link href={content.hero.button2Link}>{content.hero.button2Text}</Link>
+                </Button>
+              </div>
+
+              <div className="flex items-center gap-4 text-sm text-white/70">
+                <span>Följ oss</span>
+                <div className="flex gap-3">
+                  <Link
+                    href="https://www.facebook.com/profile.php?id=61566621756014"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/30 bg-white/10 hover:bg-white/20"
+                  >
+                    <Facebook className="h-5 w-5" />
+                  </Link>
+                  <Link
+                    href="https://www.instagram.com/harnosandshf"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/30 bg-white/10 hover:bg-white/20"
+                  >
+                    <Instagram className="h-5 w-5" />
+                  </Link>
+                </div>
+              </div>
             </div>
           </section>
 
-          <section className="bg-slate-50 py-16">
-            <div className="mx-auto grid max-w-6xl gap-6 px-6 md:grid-cols-3">
-              {highlightCards.map((item) => (
-                <Card key={item.title} className="flex h-full flex-col border border-slate-200 bg-white p-6 shadow-sm">
-                  <h3 className="text-xl font-semibold text-slate-900">{item.title}</h3>
-                  <p className="mt-3 text-sm text-slate-600">{item.body}</p>
+          <section className="bg-white py-16">
+            <div className="mx-auto grid max-w-5xl gap-6 px-6 md:grid-cols-3">
+              {actionCards.map((item) => (
+                <Card key={item.title} className="flex h-full flex-col justify-between border border-slate-200 bg-white/90 p-6 shadow-sm">
+                  <div className="space-y-3">
+                    <h3 className="text-xl font-semibold text-slate-900">{item.title}</h3>
+                    <p className="text-sm text-slate-600">{item.body}</p>
+                  </div>
                   <Link
                     href={item.link}
-                    target={item.link.startsWith("http") ? "_blank" : undefined}
-                    rel={item.link.startsWith("http") ? "noopener noreferrer" : undefined}
-                    className="mt-auto inline-flex items-center gap-2 text-sm font-semibold text-green-700 hover:text-green-800"
+                    target={item.external ? "_blank" : undefined}
+                    rel={item.external ? "noopener noreferrer" : undefined}
+                    className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-green-700 hover:text-green-800"
                   >
-                    {item.linkLabel}
+                    Läs mer
                     <ArrowRight className="h-4 w-4" />
                   </Link>
                 </Card>
@@ -215,10 +166,10 @@ export default function HomePage() {
             </div>
           </section>
 
-          <section className="bg-white py-20">
-            <div className="mx-auto flex max-w-6xl flex-col gap-12 px-6 lg:flex-row lg:items-center">
+          <section className="bg-slate-50 py-20">
+            <div className="mx-auto flex max-w-6xl flex-col gap-10 px-6 lg:flex-row lg:items-center">
               <div className="flex-1 space-y-6">
-                <span className="inline-flex items-center gap-2 rounded-full bg-orange-100 px-4 py-1 text-xs font-semibold uppercase tracking-[0.3em] text-orange-600">
+                <span className="inline-flex items-center gap-2 rounded-full bg-green-100 px-4 py-1 text-xs font-semibold uppercase tracking-[0.3em] text-green-700">
                   Om klubben
                 </span>
                 <h2
@@ -256,7 +207,7 @@ export default function HomePage() {
                   <Button
                     asChild
                     variant="outline"
-                    className="border border-slate-200 bg-white px-6 py-6 text-base font-semibold text-slate-900 hover:bg-slate-100"
+                    className="border border-green-200 bg-white px-6 py-6 text-base font-semibold text-green-700 hover:bg-green-50"
                   >
                     <Link href={content.aboutClub.button2Link}>{content.aboutClub.button2Text}</Link>
                   </Button>
@@ -264,7 +215,7 @@ export default function HomePage() {
               </div>
 
               <div className="flex-1">
-                <Card className="overflow-hidden border border-slate-200 bg-slate-100">
+                <Card className="overflow-hidden border border-green-100 bg-white shadow-md">
                   <div className="relative h-80 w-full">
                     <Image
                       src={content.aboutClub.imageSrc || "/placeholder.svg"}
@@ -280,28 +231,27 @@ export default function HomePage() {
                       })}
                     />
                   </div>
-                  <div className="flex items-center justify-between bg-white px-6 py-5">
+                  <div className="flex items-center justify-between bg-green-50 px-6 py-5">
                     <div className="flex items-center gap-3">
-                      <Heart className="h-5 w-5 text-orange-500" />
-                      <p className="text-sm font-semibold text-slate-700">{content.aboutClub.statLabel}</p>
+                      <Heart className="h-5 w-5 text-green-600" />
+                      <p className="text-sm font-semibold text-green-800">{content.aboutClub.statLabel}</p>
                     </div>
-                    <p className="text-3xl font-bold text-slate-900">{content.aboutClub.statNumber}</p>
+                    <p className="text-3xl font-bold text-green-900">{content.aboutClub.statNumber}</p>
                   </div>
                 </Card>
               </div>
             </div>
           </section>
 
-          <section className="bg-slate-50 py-16">
-            <div className="mx-auto flex max-w-6xl flex-col gap-10 px-6">
-              <div className="flex flex-col gap-3 text-center">
-                <span className="mx-auto inline-flex items-center gap-2 rounded-full bg-green-100 px-4 py-1 text-xs font-semibold uppercase tracking-[0.3em] text-green-700">
+          <section className="bg-white py-16">
+            <div className="mx-auto flex max-w-6xl flex-col gap-8 px-6">
+              <div className="text-center">
+                <span className="inline-flex items-center gap-2 rounded-full bg-orange-100 px-4 py-1 text-xs font-semibold uppercase tracking-[0.3em] text-orange-600">
                   Våra partners
                 </span>
-                <h2 className="text-2xl font-bold text-slate-900 md:text-3xl">Tillsammans gör vi handbollen starkare</h2>
-                <p className="mx-auto max-w-2xl text-sm text-slate-600">
-                  Tack till alla företag och organisationer som stöttar Härnösands HF och hjälper ungdomar och seniorer
-                  att utvecklas.
+                <h2 className="mt-4 text-2xl font-bold text-slate-900 md:text-3xl">Tillsammans skapar vi handbollsglädje</h2>
+                <p className="mt-3 text-sm text-slate-600">
+                  Stort tack till alla företag och organisationer som möjliggör vår verksamhet.
                 </p>
               </div>
 
@@ -309,7 +259,7 @@ export default function HomePage() {
                 {marqueePartners.map((partner) => (
                   <div
                     key={partner.id}
-                    className="flex h-28 items-center justify-center rounded-2xl border border-slate-200 bg-white p-6"
+                    className="flex h-28 items-center justify-center rounded-2xl border border-slate-200 bg-slate-50 p-6"
                   >
                     <Image
                       src={partner.src}
@@ -324,26 +274,23 @@ export default function HomePage() {
             </div>
           </section>
 
-          <section className="bg-white py-20">
-            <div className="mx-auto flex max-w-4xl flex-col items-center gap-6 px-6 text-center">
-              <span className="inline-flex items-center gap-2 rounded-full bg-orange-100 px-4 py-1 text-xs font-semibold uppercase tracking-[0.3em] text-orange-600">
-                Bli en del av laget
-              </span>
-              <h2 className="text-3xl font-bold text-slate-900 md:text-4xl">Vi bygger framtidens HHF – häng på!</h2>
-              <p className="max-w-2xl text-base text-slate-600">
-                Oavsett om du vill spela, bidra som ledare eller stötta från läktaren finns det en plats för dig i
-                föreningen. Hör av dig så berättar vi mer.
+          <section className="bg-gradient-to-br from-green-600 via-green-700 to-green-500 py-16">
+            <div className="mx-auto flex max-w-4xl flex-col items-center gap-6 px-6 text-center text-white">
+              <h2 className="text-3xl font-bold md:text-4xl">Redo att bli en del av Härnösands HF?</h2>
+              <p className="max-w-2xl text-base text-white/90">
+                Vi välkomnar spelare, ledare, volontärer och supportrar. Hör av dig så hittar vi rätt roll för dig i
+                föreningen.
               </p>
               <div className="flex flex-col gap-4 sm:flex-row">
-                <Button asChild className="min-w-[180px] bg-green-600 px-6 py-6 text-base font-semibold text-white hover:bg-green-700">
+                <Button asChild className="min-w-[180px] bg-white text-green-700 hover:bg-slate-100">
                   <Link href="/kontakt">Kontakta oss</Link>
                 </Button>
                 <Button
                   asChild
                   variant="outline"
-                  className="min-w-[180px] border border-slate-200 bg-white px-6 py-6 text-base font-semibold text-slate-900 hover:bg-slate-100"
+                  className="min-w-[180px] border border-white/40 bg-transparent text-white hover:bg-white/10"
                 >
-                  <Link href="/lag">Se alla lag</Link>
+                  <Link href="/lag">Utforska lagen</Link>
                 </Button>
               </div>
             </div>
