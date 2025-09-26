@@ -4,21 +4,11 @@ import { Inter } from "next/font/google"
 import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
 import { ScrollToTop } from "@/components/scroll-to-top"
+import { getSiteUrl } from "@/lib/site-url"
 
 const inter = Inter({ subsets: ["latin"] })
 
-const resolveSiteUrl = () => {
-  const rawUrl =
-    process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_VERCEL_URL || "http://localhost:3000"
-
-  if (/^https?:\/\//i.test(rawUrl)) {
-    return rawUrl
-  }
-
-  return `https://${rawUrl}`
-}
-
-const siteUrl = resolveSiteUrl().replace(/\/$/, "")
+const siteUrl = getSiteUrl()
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),

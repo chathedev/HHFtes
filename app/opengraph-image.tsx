@@ -1,4 +1,5 @@
 import { ImageResponse } from "next/og"
+import { getSiteUrl } from "@/lib/site-url"
 
 // Image metadata
 export const size = {
@@ -10,6 +11,8 @@ export const contentType = "image/png"
 
 // Image generation
 export default async function Image() {
+  const siteUrl = getSiteUrl()
+
   return new ImageResponse(
     <div
       style={{
@@ -28,7 +31,7 @@ export default async function Image() {
       }}
     >
       <img
-        src={`${process.env.NEXT_PUBLIC_VERCEL_URL || "http://localhost:3000"}/shield-logo.png`}
+        src={`${siteUrl}/shield-logo.png`}
         alt="Härnösands HF Logo"
         width="150"
         height="150"
